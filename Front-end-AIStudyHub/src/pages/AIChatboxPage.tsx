@@ -81,14 +81,16 @@ function ChatStarfieldBg() {
 }
 
 /* ── Static data ──────────────────────────────────────── */
-const chatHistory = [
-  { id: 1, title: 'Dark Matter & Rotation Curves',    time: '2 min ago',  active: true  },
-  { id: 2, title: 'Quantum Entanglement Basics',       time: '1 hour ago', active: false },
-  { id: 3, title: 'Neural Network Architecture',      time: 'Yesterday',  active: false },
-  { id: 4, title: 'Exoplanet Atmosphere Analysis',    time: '2 days ago', active: false },
-  { id: 5, title: 'String Theory Overview',           time: '3 days ago', active: false },
-  { id: 6, title: 'Planck Constant Adjustments',      time: '4 days ago', active: false },
-  { id: 7, title: 'Galaxy Morphology Deep Dive',      time: '5 days ago', active: false },
+const semesters = [
+  { id: 1, label: 'Fall 2026'   },
+  { id: 2, label: 'Spring 2026' },
+  { id: 3, label: 'Fall 2025'   },
+]
+
+const subjects = [
+  { name: 'Quantum Mechanics',    active: true  },
+  { name: 'Neural Networks',      active: false },
+  { name: 'Celestial Navigation', active: false },
 ]
 
 const sourceFiles = [
@@ -101,6 +103,7 @@ const sourceFiles = [
 export default function AIChatboxPage() {
   const [collapsed, setCollapsed] = useState(true)
   const [msg, setMsg] = useState('')
+  const [selectedSem, setSelectedSem] = useState(1)
 
   /* glass style — matches HTML .glass-panel */
   const cg = 'bg-white/[0.02] backdrop-blur-[24px] border border-white/[0.08] transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)] hover:border-white/15 hover:bg-white/[0.04]'
@@ -151,34 +154,36 @@ export default function AIChatboxPage() {
           {/* ── Left column ──────────────────────────────── */}
           <div className="col-span-3 flex flex-col gap-6 overflow-hidden">
 
-            {/* Chat History */}
-            <section className={`${cg} rounded-[32px] p-6 flex-1 flex flex-col overflow-hidden`}>
-              <div className="flex justify-between items-center mb-5 flex-shrink-0">
-                <h3 className="text-[11px] tracking-[0.2em] text-white/40 uppercase font-semibold">Chat History</h3>
-                <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] tracking-widest uppercase text-white/60 hover:bg-white/10 hover:text-white transition-all">
-                  {icon('add', 'text-[14px]')}
-                  New
-                </button>
+            {/* Academic Subjects */}
+            <section className={`${cg} rounded-[32px] p-6 flex flex-col gap-4 flex-shrink-0`}>
+              <h3 className="text-[11px] tracking-[0.2em] text-white/40 uppercase font-semibold">Academic Subjects</h3>
+
+              {/* Semester selector */}
+              <div className="flex gap-1.5 flex-wrap">
+                {semesters.map(sem => (
+                  <button
+                    key={sem.id}
+                    onClick={() => setSelectedSem(sem.id)}
+                    className={`px-3 py-1 rounded-full text-[10px] tracking-[0.08em] uppercase font-medium transition-all border ${
+                      selectedSem === sem.id
+                        ? 'bg-white/10 border-white/20 text-white'
+                        : 'bg-transparent border-white/5 text-white/40 hover:bg-white/5 hover:text-white/60'
+                    }`}
+                  >{sem.label}</button>
+                ))}
               </div>
-              <div className="flex-1 overflow-y-auto custom-scrollbar space-y-1 pr-1">
-                {chatHistory.map(item => (
+
+              {/* Subject list */}
+              <div className="space-y-2">
+                {subjects.map(s => (
                   <div
-                    key={item.id}
-                    className={`flex items-start gap-3 px-4 py-3 rounded-2xl cursor-pointer group transition-all ${
-                      item.active
-                        ? 'bg-white/8 border-r-2 border-r-white'
-                        : 'hover:bg-white/5'
+                    key={s.name}
+                    className={`flex items-center justify-between px-4 py-3 rounded-2xl border cursor-pointer group transition-all ${
+                      s.active ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-transparent border-white/5 hover:bg-white/10'
                     }`}
                   >
-                    {icon('forum', `text-[16px] flex-shrink-0 mt-0.5 transition-colors ${
-                      item.active ? 'text-white' : 'text-white/30 group-hover:text-white/60'
-                    }`)}
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-sm leading-snug truncate transition-colors ${
-                        item.active ? 'text-white font-medium' : 'text-white/60 group-hover:text-white'
-                      }`}>{item.title}</p>
-                      <p className="text-[10px] text-white/30 mt-0.5">{item.time}</p>
-                    </div>
+                    <span className={`text-sm ${s.active ? 'text-white' : 'text-white/60'}`}>{s.name}</span>
+                    {icon('arrow_forward', 'text-[18px] opacity-0 group-hover:opacity-60 transition-all -translate-x-2 group-hover:translate-x-0')}
                   </div>
                 ))}
               </div>

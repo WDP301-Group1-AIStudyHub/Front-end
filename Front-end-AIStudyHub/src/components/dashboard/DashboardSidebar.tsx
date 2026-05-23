@@ -11,6 +11,14 @@ const navItems = [
   { icon: 'settings',     label: 'Settings',  path: '/settings'  },
 ]
 
+const recentChats = [
+  { id: 1, title: 'Dark Matter & Rotation Curves',  time: '2 min ago',  active: true  },
+  { id: 2, title: 'Quantum Entanglement Basics',    time: '1 hour ago', active: false },
+  { id: 3, title: 'Neural Network Architecture',   time: 'Yesterday',  active: false },
+  { id: 4, title: 'Exoplanet Atmosphere Analysis', time: '2 days ago', active: false },
+  { id: 5, title: 'String Theory Overview',        time: '3 days ago', active: false },
+]
+
 export default function DashboardSidebar({ collapsed, onToggle }: DashboardSidebarProps) {
   const activePath = window.location.pathname
 
@@ -47,7 +55,7 @@ export default function DashboardSidebar({ collapsed, onToggle }: DashboardSideb
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 flex flex-col gap-8 w-full items-center">
+      <nav className="flex-shrink-0 flex flex-col gap-8 w-full items-center">
         {navItems.map(item => {
           const isActive = activePath === item.path
           return (
@@ -73,10 +81,48 @@ export default function DashboardSidebar({ collapsed, onToggle }: DashboardSideb
         })}
       </nav>
 
+      {/* Recent Chats — visible only when expanded */}
+      {!collapsed ? (
+        <div className="flex-1 flex flex-col overflow-hidden w-full px-3 pt-5 min-h-0 border-t border-white/5 mt-6">
+          <div className="flex justify-between items-center mb-3 flex-shrink-0">
+            <span className="text-[9px] tracking-[0.2em] text-white/30 uppercase font-semibold">Recent Chats</span>
+            <button
+              onClick={() => { window.location.href = '/aichatbox' }}
+              className="w-5 h-5 flex items-center justify-center rounded-md bg-white/5 hover:bg-white/10 transition-colors"
+            >
+              <span className="material-symbols-outlined text-[14px] text-white/50" style={{ fontVariationSettings: "'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 24" }}>add</span>
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto custom-scrollbar space-y-0.5 pr-1">
+            {recentChats.map(chat => (
+              <div
+                key={chat.id}
+                className={`flex items-start gap-2.5 px-3 py-2 rounded-xl cursor-pointer group transition-all ${
+                  chat.active ? 'bg-white/[0.08]' : 'hover:bg-white/5'
+                }`}
+              >
+                <span
+                  className="material-symbols-outlined text-[14px] flex-shrink-0 mt-0.5 text-white/30 group-hover:text-white/60 transition-colors"
+                  style={{ fontVariationSettings: "'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 24" }}
+                >forum</span>
+                <div className="flex-1 min-w-0">
+                  <p className={`text-[11px] leading-snug truncate transition-colors ${
+                    chat.active ? 'text-white font-medium' : 'text-white/50 group-hover:text-white/80'
+                  }`}>{chat.title}</p>
+                  <p className="text-[9px] text-white/25 mt-0.5">{chat.time}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="flex-1" />
+      )}
+
       {/* Footer */}
-      <div className="mt-auto flex flex-col items-center gap-6 w-full pb-4">
+      <div className="mt-auto flex flex-col items-center gap-2 w-full pb-2 pt-3 border-t border-white/5">
         <button
-          className="relative w-12 h-12 rounded-full border-2 border-white/10 overflow-hidden cursor-pointer bg-transparent p-0 transition-all duration-300 shadow-[0_0_15px_rgba(255,255,255,0.05)] hover:border-white/40 hover:shadow-[0_0_20px_rgba(255,255,255,0.15)] active:scale-95"
+          className="relative w-8 h-8 rounded-full border border-white/10 overflow-hidden cursor-pointer bg-transparent p-0 transition-all duration-300 hover:border-white/40 active:scale-95"
           title="User Profile"
         >
           <img
@@ -84,18 +130,15 @@ export default function DashboardSidebar({ collapsed, onToggle }: DashboardSideb
             alt="User Avatar"
             className="block w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500"
           />
-          <div className="absolute inset-0 bg-white/[0.05] opacity-0 hover:opacity-100 transition-opacity" />
         </button>
         <button
           className="flex bg-transparent border-none cursor-pointer text-[rgba(196,199,200,0.6)] opacity-60 hover:opacity-100 transition-opacity p-0"
           title="Support"
         >
           <span
-            className="material-symbols-outlined text-[24px]"
+            className="material-symbols-outlined text-[20px]"
             style={{ fontVariationSettings: "'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 24" }}
-          >
-            help_outline
-          </span>
+          >help_outline</span>
         </button>
         <button
           className="flex bg-transparent border-none cursor-pointer text-[rgba(196,199,200,0.6)] opacity-60 hover:opacity-100 transition-opacity p-0"
@@ -103,11 +146,9 @@ export default function DashboardSidebar({ collapsed, onToggle }: DashboardSideb
           onClick={() => { window.location.href = '/login' }}
         >
           <span
-            className="material-symbols-outlined text-[24px]"
+            className="material-symbols-outlined text-[20px]"
             style={{ fontVariationSettings: "'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 24" }}
-          >
-            logout
-          </span>
+          >logout</span>
         </button>
       </div>
     </aside>
