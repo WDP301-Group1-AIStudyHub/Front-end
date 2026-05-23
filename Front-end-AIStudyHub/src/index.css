@@ -1,111 +1,325 @@
-:root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+/* ─────────────────────────────────────────────────────────
+   AI Study Hub — global styles
+   Tailwind CSS v4 · custom layers for complex selectors,
+   keyframes, and pseudo-element rules.
+   ───────────────────────────────────────────────────────── */
+@import "tailwindcss";
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
-
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
+@theme {
+  --font-sans: 'Manrope', system-ui, -apple-system, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
+/* ── Base resets ─────────────────────────────────────── */
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html, body, #root {
+    width: 100%;
+    max-width: none;
+    min-height: 100%;
+    margin: 0;
+    padding: 0;
+    background: #0e0e0e;
+    color: #e5e2e1;
+    overflow-x: hidden;
+    font-family: 'Manrope', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
-  #social .button-icon {
-    filter: invert(1) brightness(2);
+  #root { display: block; }
+
+  a    { color: inherit; text-decoration: none; }
+  button { border: none; cursor: pointer; font: inherit; }
+  img  { display: block; }
+}
+
+/* ── Keyframes ───────────────────────────────────────── */
+@keyframes lp-rotate-spiral {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to   { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@keyframes lp-shooting {
+  0%   { transform: rotate(315deg) translateX(0); opacity: 1; }
+  70%  { opacity: 1; }
+  100% { transform: rotate(315deg) translateX(-1000px); opacity: 0; }
+}
+
+@keyframes lp-pulse-border {
+  0%   { box-shadow: 0 0 0 0   rgba(255, 255, 255, 0.4); }
+  70%  { box-shadow: 0 0 0 15px rgba(255, 255, 255, 0);   }
+  100% { box-shadow: 0 0 0 0   rgba(255, 255, 255, 0);   }
+}
+
+@keyframes lp-soft-pulse {
+  0%, 100% { opacity: 0.3;  }
+  50%       { opacity: 0.55; }
+}
+
+@keyframes db-ripple-anim {
+  to { transform: scale(4); opacity: 0; }
+}
+
+@keyframes db-pulse {
+  0%, 100% { opacity: 1;   transform: scale(1);   }
+  50%       { opacity: 0.4; transform: scale(0.8); }
+}
+
+@keyframes lib-twinkle {
+  0%, 100% { opacity: 0.1; transform: scale(1);   }
+  50%       { opacity: 0.8; transform: scale(1.2); }
+}
+
+@keyframes chat-shoot {
+  0%   { transform: translateX(0) translateY(0) rotate(-45deg); opacity: 1; }
+  100% { transform: translateX(-1000px) translateY(1000px) rotate(-45deg); opacity: 0; }
+}
+
+/* ── Components: complex selectors / pseudo-elements ─── */
+@layer components {
+
+  /* Galaxy background */
+  .lp-galaxy-bg {
+    position: fixed;
+    top: 0; left: 0;
+    z-index: -1;
+    width: 100vw; height: 100vh;
+    overflow: hidden;
+    pointer-events: none;
+    background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
   }
-}
 
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-}
-
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
-}
-
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
+  .lp-spiral-container {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 200vmax; height: 200vmax;
+    transform: translate(-50%, -50%);
+    background-image:
+      radial-gradient(2px 2px at 20px 30px, #eee, rgba(0,0,0,0)),
+      radial-gradient(2px 2px at 40px 70px, #fff, rgba(0,0,0,0)),
+      radial-gradient(1px 1px at 90px 40px, #ddd, rgba(0,0,0,0));
+    background-repeat: repeat;
+    background-size: 200px 200px;
+    opacity: 0.3;
+    animation: lp-rotate-spiral 240s linear infinite;
   }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
+
+  .lp-shooting-star {
+    position: absolute;
+    width: 2px; height: 2px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow:
+      0 0 0 4px  rgba(255,255,255,0.1),
+      0 0 0 8px  rgba(255,255,255,0.1),
+      0 0 20px   rgba(255,255,255,1);
+    animation: lp-shooting 3s linear infinite;
   }
-}
-p {
-  margin: 0;
-}
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
-}
+  .lp-shooting-star::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 100px; height: 1px;
+    transform: translateY(-50%);
+    background: linear-gradient(90deg, #fff, transparent);
+  }
 
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+  /* Gradient headline glow */
+  .lp-stellar-text-glow {
+    text-shadow: 0 0 20px rgba(255,255,255,0.2);
+  }
+
+  /* Pulsing CTA animation */
+  .lp-pulsing-btn {
+    animation: lp-pulse-border 2s infinite;
+  }
+
+  /* CTA card overlay pulse */
+  .lp-soft-pulse {
+    animation: lp-soft-pulse 2s ease-in-out infinite;
+  }
+
+  /* ── Auth: divider line ───────────────────────────── */
+  .auth-divider {
+    position: relative;
+    margin: 34px 0 24px;
+    text-align: center;
+  }
+
+  .auth-divider::before {
+    content: '';
+    position: absolute;
+    top: 50%; right: 0; left: 0;
+    height: 1px;
+    background: rgba(255,255,255,0.06);
+  }
+
+  .auth-divider-label {
+    position: relative;
+    padding: 0 16px;
+    background: #171717;
+    color: rgba(196,199,200,0.42);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  /* ── Auth: split-info glow blob ─────────────────── */
+  .auth-split-glow {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .auth-split-glow::before {
+    content: '';
+    position: absolute;
+    top: -96px; left: -96px;
+    width: 192px; height: 192px;
+    border-radius: 9999px;
+    background: rgba(255,255,255,0.05);
+    filter: blur(80px);
+  }
+
+  /* ── Auth: floating label ────────────────────────── */
+  .fl-input {
+    width: 100%;
+    height: 52px;
+    padding: 18px 0 8px;
+    border: none;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+    color: #fff;
+    background: transparent;
+    outline: none;
+  }
+
+  .fl-label {
+    position: absolute;
+    top: 18px; left: 0;
+    color: rgba(196,199,200,0.62);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    transition: transform 160ms ease, opacity 160ms ease;
+    pointer-events: none;
+  }
+
+  .fl-input:focus   ~ .fl-label,
+  .fl-input:not(:placeholder-shown) ~ .fl-label {
+    opacity: 0.72;
+    transform: translateY(-18px) scale(0.88);
+    transform-origin: left;
+  }
+
+  /* ── Auth: icon base ─────────────────────────────── */
+  .auth-icon {
+    display: inline-block;
+    flex-shrink: 0;
+    color: currentColor;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.8;
+  }
+
+  /* ── Landing page: SVG feature icons ─────────────── */
+  .lp-icon {
+    display: block;
+    width: 40px;
+    height: 40px;
+    margin-bottom: 24px;
+    color: #fff;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2.2;
+  }
+
+  /* ── Dashboard: dynamic ripple ───────────────────── */
+  .db-ripple {
+    position: fixed;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    width: 20px; height: 20px;
+    margin-left: -10px; margin-top: -10px;
+    transform: scale(0);
+    animation: db-ripple-anim 1.2s ease-out forwards;
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* ── Dashboard: pulse dot ────────────────────────── */
+  .db-pulse-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #fff;
+    flex-shrink: 0;
+    animation: db-pulse 2s ease-in-out infinite;
+  }
+
+  /* ── Library: starfield background ──────────────── */
+  .lib-starfield {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: -1;
+    background: radial-gradient(circle at center, #111 0%, #050505 100%);
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .lib-star {
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+    opacity: 0.3;
+    animation: lib-twinkle var(--duration, 3s) infinite ease-in-out;
+  }
+
+  /* ── Chat: celestial background ─────────────────────── */
+  .chat-starfield {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: -1;
+    background: radial-gradient(circle at center, #131313 0%, #0e0e0e 100%);
+    overflow: hidden;
+    perspective: 1000px;
+    pointer-events: none;
+  }
+
+  .chat-star {
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+    opacity: 0.3;
+    pointer-events: none;
+    transition: transform 0.1s ease-out;
+  }
+
+  .chat-nebula {
+    position: absolute;
+    width: 800px; height: 800px;
+    background: radial-gradient(circle, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0) 70%);
+    filter: blur(120px);
+    pointer-events: none;
+    transition: transform 0.2s ease-out;
+  }
+
+  .chat-shooting-star {
+    position: absolute;
+    width: 150px; height: 2px;
+    background: linear-gradient(90deg, white, transparent);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* ── Custom scrollbar ────────────────────────────────── */
+  .custom-scrollbar::-webkit-scrollbar       { width: 4px; }
+  .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+  .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
 }
