@@ -99,11 +99,23 @@ html[data-theme="light"] {
   --star-soft: rgba(39, 111, 201, 0.18);
   --star-line: rgba(39, 111, 201, 0.38);
   --accent-blue: #2f73d9;
+  --accent-sapphire: #2f73d9;
+  --accent-cyan: #19a7f3;
   --accent-teal: #18a99d;
   --accent-gold: #dca53d;
   --accent-coral: #f26f5b;
   --accent-violet: #8b5cf6;
+  --accent-emerald: #20b981;
+  --panel-sheen: rgba(255, 255, 255, 0.72);
+  --panel-aurora:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.8), rgba(239, 249, 255, 0.66) 44%, rgba(255, 249, 235, 0.58)),
+    radial-gradient(circle at 8% 12%, rgba(47, 115, 217, 0.14), transparent 36%),
+    radial-gradient(circle at 92% 18%, rgba(24, 169, 157, 0.12), transparent 34%),
+    radial-gradient(circle at 78% 92%, rgba(220, 165, 61, 0.14), transparent 34%);
+  --title-gradient: linear-gradient(100deg, #15233e 0%, #275eb8 36%, #0c8f91 68%, #b7791f 100%);
+  --row-tint: rgba(47, 115, 217, 0.06);
   --shadow-soft: 0 24px 70px -38px rgba(23, 36, 62, 0.38);
+  --glow-ring: 0 0 0 1px rgba(47, 115, 217, 0.12), 0 24px 70px -42px rgba(47, 115, 217, 0.52);
 }
 
 .dark,
@@ -151,11 +163,23 @@ html[data-theme="dark"] {
   --star-soft: rgba(105, 176, 255, 0.28);
   --star-line: rgba(244, 203, 117, 0.72);
   --accent-blue: #4f8ff7;
+  --accent-sapphire: #4f8ff7;
+  --accent-cyan: #38bdf8;
   --accent-teal: #42d7c9;
   --accent-gold: #f0bd57;
   --accent-coral: #ff806f;
   --accent-violet: #a78bfa;
+  --accent-emerald: #5ee5aa;
+  --panel-sheen: rgba(22, 43, 74, 0.76);
+  --panel-aurora:
+    linear-gradient(145deg, rgba(12, 29, 51, 0.88), rgba(11, 34, 62, 0.76) 48%, rgba(22, 34, 67, 0.74)),
+    radial-gradient(circle at 8% 10%, rgba(79, 143, 247, 0.22), transparent 38%),
+    radial-gradient(circle at 92% 12%, rgba(66, 215, 201, 0.18), transparent 34%),
+    radial-gradient(circle at 78% 90%, rgba(240, 189, 87, 0.16), transparent 34%);
+  --title-gradient: linear-gradient(100deg, #fff7df 0%, #78b8ff 35%, #57eadf 68%, #f0bd57 100%);
+  --row-tint: rgba(79, 143, 247, 0.09);
   --shadow-soft: 0 28px 80px -42px rgba(0, 0, 0, 0.74);
+  --glow-ring: 0 0 0 1px rgba(120, 184, 255, 0.12), 0 24px 70px -42px rgba(79, 143, 247, 0.68);
 }
 
 @layer base {
@@ -311,13 +335,277 @@ html[data-theme="dark"] {
   }
 }
 
+@keyframes celestial-aurora-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+    opacity: 0.74;
+  }
+  50% {
+    transform: translate3d(4vw, -3vh, 0) scale(1.08) rotate(8deg);
+    opacity: 0.95;
+  }
+}
+
+@keyframes celestial-orbit-turn {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes celestial-star-twinkle {
+  0%,
+  100% {
+    opacity: calc(var(--star-opacity, 0.5) * 0.45);
+    transform: scale(0.78);
+  }
+  50% {
+    opacity: var(--star-opacity, 0.9);
+    transform: scale(1.34);
+  }
+}
+
+@keyframes celestial-meteor-sweep {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) rotate(315deg) scaleX(0.34);
+  }
+  6% {
+    opacity: 1;
+  }
+  32% {
+    opacity: 1;
+  }
+  52%,
+  100% {
+    opacity: 0;
+    transform: translate3d(-76vw, 76vh, 0) rotate(315deg) scaleX(1);
+  }
+}
+
+@keyframes celestial-comet-arc {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) rotate(18deg) scale(0.8);
+  }
+  8% {
+    opacity: 0.9;
+  }
+  42% {
+    opacity: 0.86;
+  }
+  72%,
+  100% {
+    opacity: 0;
+    transform: translate3d(44vw, -30vh, 0) rotate(18deg) scale(1.08);
+  }
+}
+
+@keyframes celestial-starfield-pan {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-180px, 120px, 0);
+  }
+}
+
 @layer components {
+  .celestial-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+    background: var(--cosmos-veil);
+  }
+
+  .celestial-backdrop::before {
+    content: "";
+    position: absolute;
+    inset: -15%;
+    background:
+      radial-gradient(circle at 18% 18%, color-mix(in oklab, var(--accent-sapphire) 34%, transparent), transparent 24%),
+      radial-gradient(circle at 82% 12%, color-mix(in oklab, var(--accent-violet) 24%, transparent), transparent 26%),
+      radial-gradient(circle at 78% 78%, color-mix(in oklab, var(--accent-gold) 22%, transparent), transparent 30%),
+      radial-gradient(circle at 20% 82%, color-mix(in oklab, var(--accent-teal) 24%, transparent), transparent 28%);
+    filter: blur(22px);
+    animation: celestial-aurora-drift 18s ease-in-out infinite;
+  }
+
+  .celestial-backdrop::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(120deg, transparent 0 46%, color-mix(in oklab, var(--accent-cyan) 7%, transparent) 48%, transparent 52%),
+      linear-gradient(20deg, transparent 0 42%, color-mix(in oklab, var(--accent-gold) 5%, transparent) 45%, transparent 50%);
+    opacity: 0.8;
+    mix-blend-mode: screen;
+  }
+
+  .celestial-backdrop-subtle {
+    opacity: 0.72;
+  }
+
+  .celestial-backdrop-dramatic {
+    opacity: 1;
+  }
+
+  .celestial-aurora {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(70px);
+    mix-blend-mode: screen;
+    opacity: 0.42;
+    animation: celestial-aurora-drift 16s ease-in-out infinite;
+  }
+
+  .celestial-aurora-one {
+    top: -8%;
+    right: 8%;
+    width: 44vw;
+    height: 44vw;
+    background: color-mix(in oklab, var(--accent-sapphire) 48%, transparent);
+  }
+
+  .celestial-aurora-two {
+    bottom: -18%;
+    left: -6%;
+    width: 42vw;
+    height: 42vw;
+    background: color-mix(in oklab, var(--accent-teal) 38%, transparent);
+    animation-delay: -6s;
+  }
+
+  .celestial-aurora-three {
+    top: 28%;
+    left: 42%;
+    width: 34vw;
+    height: 34vw;
+    background: color-mix(in oklab, var(--accent-violet) 26%, transparent);
+    animation-delay: -11s;
+  }
+
+  .celestial-orbit {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    border-radius: 9999px;
+    border: 1px solid color-mix(in oklab, var(--accent-gold) 18%, transparent);
+    opacity: 0.28;
+    transform: translate(-50%, -50%);
+    animation: celestial-orbit-turn 120s linear infinite;
+  }
+
+  .celestial-orbit-one {
+    width: 92vmax;
+    height: 58vmax;
+  }
+
+  .celestial-orbit-two {
+    width: 120vmax;
+    height: 76vmax;
+    border-color: color-mix(in oklab, var(--accent-cyan) 13%, transparent);
+    animation-duration: 180s;
+    animation-direction: reverse;
+  }
+
+  .celestial-starfield {
+    position: absolute;
+    inset: -120px;
+    opacity: 0.7;
+    background-image:
+      radial-gradient(circle at 20px 30px, var(--star-color) 0 1px, transparent 1.4px),
+      radial-gradient(circle at 90px 120px, var(--star-soft) 0 1px, transparent 1.5px),
+      radial-gradient(circle at 160px 70px, var(--star-color) 0 1.2px, transparent 1.7px),
+      radial-gradient(circle at 220px 190px, var(--accent-gold) 0 1px, transparent 1.5px);
+    background-size: 260px 260px;
+    animation: celestial-starfield-pan 72s linear infinite;
+  }
+
+  .celestial-star {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    border-radius: 9999px;
+    background: var(--star-line);
+    box-shadow: 0 0 18px var(--star-line);
+    animation: celestial-star-twinkle 3.8s ease-in-out infinite;
+    animation-delay: var(--star-delay, 0s);
+  }
+
+  .celestial-meteor,
+  .celestial-comet {
+    position: absolute;
+    pointer-events: none;
+    transform-origin: left center;
+    will-change: transform, opacity;
+  }
+
+  .celestial-meteor {
+    width: 168px;
+    height: 2px;
+    border-radius: 9999px;
+    background: linear-gradient(90deg, var(--star-line), color-mix(in oklab, var(--accent-cyan) 72%, transparent) 36%, transparent);
+    box-shadow:
+      0 0 18px color-mix(in oklab, var(--accent-cyan) 68%, transparent),
+      0 0 36px color-mix(in oklab, var(--accent-sapphire) 44%, transparent);
+    opacity: 0;
+    animation: celestial-meteor-sweep var(--meteor-duration, 10s) linear infinite;
+    animation-delay: var(--meteor-delay, 0s);
+  }
+
+  .celestial-meteor::before {
+    content: "";
+    position: absolute;
+    left: -5px;
+    top: 50%;
+    width: 8px;
+    height: 8px;
+    border-radius: 9999px;
+    background: color-mix(in oklab, white 78%, var(--accent-gold));
+    box-shadow: 0 0 24px var(--accent-gold);
+    transform: translateY(-50%);
+  }
+
+  .celestial-meteor-1 {
+    background: linear-gradient(90deg, var(--accent-gold), color-mix(in oklab, var(--accent-coral) 58%, transparent), transparent);
+  }
+
+  .celestial-meteor-2 {
+    background: linear-gradient(90deg, var(--accent-violet), color-mix(in oklab, var(--accent-cyan) 58%, transparent), transparent);
+  }
+
+  .celestial-comet {
+    width: 220px;
+    height: 6px;
+    border-radius: 9999px;
+    background:
+      radial-gradient(circle at 0 50%, color-mix(in oklab, white 72%, var(--accent-gold)) 0 6px, transparent 7px),
+      linear-gradient(90deg, color-mix(in oklab, var(--accent-gold) 86%, transparent), color-mix(in oklab, var(--accent-cyan) 42%, transparent), transparent);
+    filter: drop-shadow(0 0 20px color-mix(in oklab, var(--accent-gold) 68%, transparent));
+    opacity: 0;
+    animation: celestial-comet-arc var(--comet-duration, 20s) ease-in-out infinite;
+    animation-delay: var(--comet-delay, 0s);
+  }
+
+  .celestial-comet-1 {
+    filter: drop-shadow(0 0 20px color-mix(in oklab, var(--accent-violet) 68%, transparent));
+    background:
+      radial-gradient(circle at 0 50%, color-mix(in oklab, white 72%, var(--accent-violet)) 0 6px, transparent 7px),
+      linear-gradient(90deg, color-mix(in oklab, var(--accent-violet) 82%, transparent), color-mix(in oklab, var(--accent-teal) 42%, transparent), transparent);
+  }
+
   .celestial-page {
     position: relative;
     isolation: isolate;
     overflow-x: hidden;
     color: var(--foreground);
-    background: var(--cosmos-veil);
+    background: transparent;
   }
 
   .celestial-page::before {
@@ -349,11 +637,98 @@ html[data-theme="dark"] {
   }
 
   .celestial-card {
+    position: relative;
     border: 1px solid var(--border);
     border-radius: var(--radius-xl);
-    background: var(--surface-glass);
+    background: var(--panel-aurora);
+    box-shadow: var(--shadow-soft), inset 0 1px 0 color-mix(in oklab, white 18%, transparent);
+    backdrop-filter: blur(22px);
+    transition:
+      transform 220ms ease,
+      border-color 220ms ease,
+      box-shadow 220ms ease,
+      background 220ms ease;
+  }
+
+  .celestial-card:hover {
+    border-color: color-mix(in oklab, var(--accent-sapphire) 34%, var(--border));
+    box-shadow: var(--glow-ring);
+  }
+
+  .celestial-panel {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    background:
+      linear-gradient(145deg, color-mix(in oklab, var(--panel-sheen) 72%, transparent), color-mix(in oklab, var(--surface-glass) 86%, transparent)),
+      radial-gradient(circle at 0% 0%, color-mix(in oklab, var(--accent-sapphire) 16%, transparent), transparent 32%);
     box-shadow: var(--shadow-soft);
     backdrop-filter: blur(22px);
+  }
+
+  .celestial-title {
+    background: var(--title-gradient);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    text-shadow: 0 0 34px color-mix(in oklab, var(--accent-sapphire) 26%, transparent);
+  }
+
+  .tone-blue,
+  .tone-sapphire { --tone-color: var(--accent-sapphire); }
+  .tone-cyan { --tone-color: var(--accent-cyan); }
+  .tone-teal { --tone-color: var(--accent-teal); }
+  .tone-gold { --tone-color: var(--accent-gold); }
+  .tone-coral { --tone-color: var(--accent-coral); }
+  .tone-violet { --tone-color: var(--accent-violet); }
+  .tone-emerald { --tone-color: var(--accent-emerald); }
+
+  .tone-surface {
+    border-color: color-mix(in oklab, var(--tone-color, var(--accent-sapphire)) 32%, var(--border));
+    background:
+      linear-gradient(145deg, color-mix(in oklab, var(--surface-glass) 86%, transparent), color-mix(in oklab, var(--tone-color, var(--accent-sapphire)) 12%, transparent)),
+      radial-gradient(circle at 12% 8%, color-mix(in oklab, var(--tone-color, var(--accent-sapphire)) 24%, transparent), transparent 38%);
+  }
+
+  .tone-text {
+    color: var(--tone-color, var(--accent-sapphire));
+  }
+
+  .celestial-table [data-slot="table-head"] {
+    color: color-mix(in oklab, var(--foreground) 72%, var(--accent-cyan));
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .celestial-table [data-slot="table-row"] {
+    border-color: color-mix(in oklab, var(--border) 78%, transparent);
+  }
+
+  .celestial-table [data-slot="table-body"] [data-slot="table-row"]:hover {
+    background:
+      linear-gradient(90deg, color-mix(in oklab, var(--accent-sapphire) 12%, transparent), transparent 70%),
+      var(--row-tint);
+  }
+
+  [data-slot="input"],
+  [data-slot="textarea"],
+  [data-slot="input-group"] {
+    background-color: color-mix(in oklab, var(--surface-glass) 76%, transparent);
+    box-shadow: inset 0 1px 0 color-mix(in oklab, white 10%, transparent);
+    backdrop-filter: blur(16px);
+  }
+
+  [data-slot="button"][data-variant="default"] {
+    background: linear-gradient(135deg, var(--accent-sapphire), var(--accent-cyan));
+    box-shadow: 0 16px 32px -24px var(--accent-sapphire);
+  }
+
+  [data-slot="button"][data-variant="secondary"],
+  [data-slot="button"][data-variant="outline"] {
+    background:
+      linear-gradient(145deg, color-mix(in oklab, var(--surface-glass) 84%, transparent), color-mix(in oklab, var(--accent-sapphire) 9%, transparent));
+    border-color: color-mix(in oklab, var(--border) 76%, var(--accent-sapphire));
   }
 
   .admin-icon-badge {
@@ -363,8 +738,11 @@ html[data-theme="dark"] {
     place-items: center;
     border-radius: calc(var(--radius) * 0.9);
     border: 1px solid color-mix(in oklab, currentColor 34%, transparent);
-    background: color-mix(in oklab, currentColor 13%, transparent);
+    background:
+      radial-gradient(circle at 30% 20%, color-mix(in oklab, white 24%, transparent), transparent 35%),
+      color-mix(in oklab, currentColor 15%, transparent);
     color: var(--accent-blue);
+    box-shadow: 0 0 26px color-mix(in oklab, currentColor 22%, transparent);
   }
 
   .admin-icon-badge svg {
@@ -547,8 +925,13 @@ html[data-theme="dark"] {
     border: none;
     border-bottom: 1px solid var(--input);
     color: var(--foreground);
-    background: transparent;
+    background:
+      linear-gradient(90deg, color-mix(in oklab, var(--accent-sapphire) 7%, transparent), transparent 58%),
+      transparent;
     outline: none;
+    transition:
+      border-color 160ms ease,
+      box-shadow 160ms ease;
   }
 
   .fl-label {
@@ -569,6 +952,7 @@ html[data-theme="dark"] {
 
   .fl-input:focus {
     border-bottom-color: var(--primary);
+    box-shadow: 0 12px 28px -24px var(--primary);
   }
 
   .fl-input:focus ~ .fl-label,
@@ -674,6 +1058,38 @@ html[data-theme="dark"] {
     border-radius: 10px;
     background: color-mix(in oklab, var(--foreground) 16%, transparent);
   }
+
+  [data-slot="sidebar-inner"] {
+    border-right: 1px solid color-mix(in oklab, var(--sidebar-border) 88%, transparent);
+    background:
+      linear-gradient(180deg, color-mix(in oklab, var(--sidebar) 92%, transparent), color-mix(in oklab, var(--accent-sapphire) 10%, var(--sidebar))),
+      radial-gradient(circle at 20% 8%, color-mix(in oklab, var(--accent-sapphire) 20%, transparent), transparent 30%),
+      radial-gradient(circle at 90% 70%, color-mix(in oklab, var(--accent-teal) 14%, transparent), transparent 36%);
+    box-shadow: 18px 0 70px -52px color-mix(in oklab, var(--accent-sapphire) 70%, transparent);
+    backdrop-filter: blur(24px);
+  }
+
+  [data-sidebar="menu-button"] {
+    border: 1px solid transparent;
+  }
+
+  [data-sidebar="menu-button"]:hover {
+    border-color: color-mix(in oklab, var(--sidebar-primary) 22%, transparent);
+    background: color-mix(in oklab, var(--sidebar-primary) 10%, transparent);
+  }
+
+  [data-sidebar="menu-button"][data-active="true"] {
+    border-color: color-mix(in oklab, var(--sidebar-primary) 36%, transparent);
+    background:
+      linear-gradient(90deg, color-mix(in oklab, var(--sidebar-primary) 24%, transparent), color-mix(in oklab, var(--accent-teal) 10%, transparent)),
+      color-mix(in oklab, var(--sidebar-accent) 90%, transparent);
+    box-shadow: inset 3px 0 0 var(--accent-gold), 0 12px 30px -24px var(--sidebar-primary);
+  }
+
+  [data-slot="sheet-content"] {
+    background: var(--panel-aurora);
+    backdrop-filter: blur(24px);
+  }
 }
 
 .lp-pulsing-btn,
@@ -740,6 +1156,26 @@ html[data-theme="light"] .from-black\/80 {
 html[data-theme="light"] .lp-image-overlay .text-white,
 html[data-theme="light"] .lp-image-overlay [class*="text-white"] {
   color: #fff !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .celestial-aurora,
+  .celestial-backdrop::before,
+  .celestial-starfield,
+  .celestial-orbit,
+  .celestial-star,
+  .celestial-meteor,
+  .celestial-comet,
+  .lp-spiral-container,
+  .lp-shooting-star {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+  }
+
+  .celestial-meteor,
+  .celestial-comet {
+    display: none;
+  }
 }
 
 @media (max-width: 900px) {

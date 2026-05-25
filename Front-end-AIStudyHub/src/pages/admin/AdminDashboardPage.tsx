@@ -55,7 +55,7 @@ export default function AdminDashboardPage() {
       </section>
 
       <section className="mt-8 grid gap-5 xl:grid-cols-[1fr_360px]">
-        <article className="celestial-card overflow-hidden">
+        <article className="celestial-card celestial-table tone-surface tone-sapphire overflow-hidden">
           <div className="flex items-center justify-between border-b border-border/70 p-5">
             <div>
               <h2 className="text-lg font-semibold">System activity stream</h2>
@@ -65,7 +65,7 @@ export default function AdminDashboardPage() {
           </div>
           <div className="divide-y divide-border/60">
             {activities.slice(0, 6).map((activity) => (
-              <div className="grid gap-3 p-5 md:grid-cols-[160px_1fr_auto]" key={activity.id}>
+              <div className="grid gap-3 p-5 transition-colors hover:bg-muted/35 md:grid-cols-[160px_1fr_auto]" key={activity.id}>
                 <span className="text-xs text-muted-foreground">{formatDateTime(activity.createdAt)}</span>
                 <div>
                   <p className="font-medium">{activity.description}</p>
@@ -77,14 +77,14 @@ export default function AdminDashboardPage() {
           </div>
         </article>
 
-        <aside className="celestial-card p-5">
+        <aside className="celestial-card tone-surface tone-violet p-5">
           <div className="admin-icon-badge admin-tone-violet">
             <Database />
           </div>
           <h2 className="mt-5 text-lg font-semibold">Usecase coverage</h2>
           <div className="mt-5 space-y-3 text-sm">
             {['View user list', 'Active/Inactive user account', 'Update user information', 'Edit metadata', 'Monitor system activities'].map((item) => (
-              <div className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-card/60 p-3" key={item}>
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-card/45 p-3 shadow-[inset_3px_0_0_color-mix(in_oklab,var(--accent-violet)_60%,transparent)]" key={item}>
                 <span>{item}</span>
                 <StatusBadge severity="success">ready</StatusBadge>
               </div>

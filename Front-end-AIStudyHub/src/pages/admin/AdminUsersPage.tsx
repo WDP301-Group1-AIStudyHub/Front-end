@@ -80,7 +80,7 @@ export default function AdminUsersPage() {
         title="User Management"
       />
 
-      <section className="celestial-card mt-8 overflow-hidden">
+      <section className="celestial-card celestial-table tone-surface tone-teal mt-8 overflow-hidden">
         <div className="flex flex-col gap-3 border-b border-border/70 p-5 xl:flex-row xl:items-center xl:justify-between">
           <label className="relative max-w-md flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -129,9 +129,11 @@ export default function AdminUsersPage() {
             </div>
           ) : (
             filteredUsers.map((user) => (
-              <article className="grid gap-4 p-5 xl:grid-cols-[1fr_130px_160px_190px_220px]" key={user.id}>
+              <article className="grid gap-4 p-5 transition-colors hover:bg-muted/35 xl:grid-cols-[1fr_130px_160px_190px_220px]" key={user.id}>
                 <div className="flex min-w-0 items-center gap-3">
-                  <img alt="" className="size-10 rounded-xl object-cover" src={user.avatar} />
+                  <span className="grid size-11 shrink-0 place-items-center rounded-xl border border-[var(--accent-teal)]/35 bg-[color-mix(in_oklab,var(--accent-teal)_16%,transparent)] shadow-[0_0_22px_color-mix(in_oklab,var(--accent-teal)_22%,transparent)]">
+                    <img alt="" className="size-9 rounded-lg object-cover" src={user.avatar} />
+                  </span>
                   <div className="min-w-0">
                     <h2 className="truncate font-semibold">{user.fullName}</h2>
                     <p className="truncate text-sm text-muted-foreground">{user.email}</p>

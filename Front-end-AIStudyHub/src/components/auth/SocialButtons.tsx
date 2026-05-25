@@ -5,7 +5,7 @@ export default function SocialButtons() {
         <button
           key={s.label}
           type="button"
-          className="inline-flex min-h-[50px] items-center justify-center gap-[10px] border border-white/10 rounded-xl text-[rgba(229,226,225,0.62)] bg-white/[0.03] uppercase hover:bg-white/[0.05] transition-colors"
+          className="inline-flex min-h-[50px] items-center justify-center gap-[10px] rounded-xl border border-border/70 bg-card/45 text-muted-foreground uppercase transition-colors hover:border-primary/45 hover:bg-muted/45 hover:text-foreground"
         >
           <img src={s.src} alt="" className="w-5 h-5 object-contain" />
           <span className="text-xs font-semibold tracking-[0.12em]">{s.label}</span>

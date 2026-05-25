@@ -9,6 +9,7 @@ import RegisterPage from './pages/auth/RegisterPage'
 import ResetPasswordPage from './pages/auth/ResetPasswordPage'
 import NewAIChatboxPage from './pages/new-AIChatboxPage'
 import NewLibraryPage from './pages/new-LibraryPage'
+import EvaluationPage from './pages/EvaluationPage'
 import AdminActivityPage from './pages/admin/AdminActivityPage'
 import AdminDashboardPage from './pages/admin/AdminDashboardPage'
 import AdminDocumentsPage from './pages/admin/AdminDocumentsPage'
@@ -163,6 +164,10 @@ function App() {
         element={<ProtectedRoute>{() => routeWithShell(<NewAIChatboxPage />)}</ProtectedRoute>}
       />
       <Route path="/new-aichatbox" element={<Navigate to="/aichatbox" replace />} />
+      <Route
+        path="/evaluation"
+        element={<ProtectedRoute>{() => routeWithShell(<EvaluationPage />)}</ProtectedRoute>}
+      />
       <Route
         path="/admin"
         element={<ProtectedRoute adminOnly>{() => routeWithShell(<AdminDashboardPage />)}</ProtectedRoute>}
