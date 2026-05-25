@@ -18,6 +18,7 @@ import {
 } from "@/components/assistant-ui/tool-group";
 import { ToolFallback } from "@/components/assistant-ui/tool-fallback";
 import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
+import { TextShimmerWave } from "@/src/components/shared/TextShimmerWave";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -41,14 +42,18 @@ import {
   ChevronRightIcon,
   CopyIcon,
   DownloadIcon,
+  FileTextIcon,
   MoreHorizontalIcon,
   PencilIcon,
   RefreshCwIcon,
   SquareIcon,
+  XIcon,
 } from "lucide-react";
 import type { FC } from "react";
 
-export const Thread: FC = () => {
+type SelectedDocInfo = { fileName: string; subject?: string };
+
+export const Thread: FC<{ selectedDoc?: SelectedDocInfo }> = ({ selectedDoc }) => {
   return (
     <ThreadPrimitive.Root
       className="aui-root aui-thread-root @container flex h-full flex-col bg-background"
@@ -79,7 +84,23 @@ export const Thread: FC = () => {
 
           <ThreadPrimitive.ViewportFooter className="aui-thread-viewport-footer sticky bottom-0 mt-auto flex flex-col gap-4 overflow-visible rounded-t-(--composer-radius) bg-background pb-4 md:pb-6">
             <ThreadScrollToBottom />
-            <Composer />
+            <AuiIf condition={(s) => s.thread.isRunning}>
+              <div className="flex items-center gap-2 px-2">
+                <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[radial-gradient(circle,color-mix(in_oklab,var(--accent-violet,#a78bfa)_70%,transparent),color-mix(in_oklab,var(--accent-blue,#60a5fa)_50%,transparent))] shadow-[0_0_10px_color-mix(in_oklab,var(--accent-violet,#a78bfa)_50%,transparent)]">
+                  <span className="size-1.5 rounded-full bg-white/80" />
+                </span>
+                <TextShimmerWave
+                  className="text-sm font-medium"
+                  duration={1.2}
+                  spread={1.5}
+                  baseColor="color-mix(in oklab, var(--accent-violet, #a78bfa) 45%, transparent)"
+                  shimmerColor="var(--accent-violet, #c4b5fd)"
+                >
+                  Đang suy nghĩ...
+                </TextShimmerWave>
+              </div>
+            </AuiIf>
+            <Composer selectedDoc={selectedDoc} />
           </ThreadPrimitive.ViewportFooter>
         </div>
       </ThreadPrimitive.Viewport>
@@ -154,7 +175,7 @@ const ThreadSuggestionItem: FC = () => {
   );
 };
 
-const Composer: FC = () => {
+const Composer: FC<{ selectedDoc?: SelectedDocInfo }> = ({ selectedDoc }) => {
   return (
     <ComposerPrimitive.Root className="aui-composer-root relative flex w-full flex-col">
       <ComposerPrimitive.AttachmentDropzone asChild>
@@ -163,6 +184,15 @@ const Composer: FC = () => {
           className="flex w-full flex-col gap-2 rounded-(--composer-radius) border bg-background p-(--composer-padding) transition-shadow focus-within:border-ring/75 focus-within:ring-2 focus-within:ring-ring/20 data-[dragging=true]:border-ring data-[dragging=true]:border-dashed data-[dragging=true]:bg-accent/50"
         >
           <ComposerAttachments />
+          {selectedDoc && (
+            <div className="flex items-center gap-1.5 rounded-lg border border-[color-mix(in_oklab,var(--accent-violet,#a78bfa)_35%,transparent)] bg-[color-mix(in_oklab,var(--accent-violet,#a78bfa)_10%,transparent)] px-2.5 py-1.5">
+              <FileTextIcon className="size-3 shrink-0 text-[var(--accent-violet,#a78bfa)]" />
+              <span className="min-w-0 flex-1 truncate text-xs font-medium text-[var(--accent-violet,#c4b5fd)]">
+                {selectedDoc.subject ? `${selectedDoc.subject} · ` : ""}{selectedDoc.fileName}
+              </span>
+              <XIcon className="size-3 shrink-0 text-muted-foreground opacity-50" />
+            </div>
+          )}
           <ComposerPrimitive.Input
             placeholder="Ask about a topic, request notes, or generate practice questions..."
             className="aui-composer-input max-h-32 min-h-10 w-full resize-none bg-transparent px-1.75 py-1 text-sm outline-none placeholder:text-muted-foreground/80"

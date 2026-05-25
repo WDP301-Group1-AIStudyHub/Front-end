@@ -91,10 +91,12 @@ export default function NewAIChatboxPage() {
   }, [selectedDocId, documents]);
 
   // Keep response callback up-to-date without recreating the adapter
-  onResponseRef.current = (sources, evaluation) => {
-    setLastSources(sources);
-    if (evaluation) setLastEvaluation(evaluation);
-  };
+  useEffect(() => {
+    onResponseRef.current = (sources, evaluation) => {
+      setLastSources(sources);
+      if (evaluation) setLastEvaluation(evaluation);
+    };
+  }, []);
 
   // Load user documents once on mount
   useEffect(() => {
@@ -284,7 +286,7 @@ export default function NewAIChatboxPage() {
       <div className="celestial-panel mt-4 grid min-h-0 flex-1 grid-cols-1 overflow-hidden lg:grid-cols-[minmax(0,1fr)_340px]">
         <section className="min-h-0 bg-transparent">
           <AssistantRuntimeProvider runtime={runtime} aui={suggestionsAui}>
-            <Thread />
+            <Thread selectedDoc={selectedDoc} />
           </AssistantRuntimeProvider>
         </section>
 
