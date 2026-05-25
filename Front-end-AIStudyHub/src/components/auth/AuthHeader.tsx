@@ -1,3 +1,5 @@
+import ThemeToggle from '../shared/ThemeToggle'
+
 const navItems = [
   { href: '/', label: 'Dashboard' },
   { href: '/', label: 'About Us' },
@@ -7,8 +9,8 @@ export default function AuthHeader({ action }: { action: 'Sign Up' | 'Sign In' |
   const href = action === 'Sign In' ? '/login' : '/register'
 
   return (
-    <header className="relative z-20 grid grid-cols-[1fr_auto_1fr] items-center w-full min-h-[72px] px-[clamp(28px,6vw,80px)] py-2 border-b border-white/10 bg-[rgba(19,19,19,0.22)] backdrop-blur-[18px]">
-      <a className="justify-self-start text-white text-[clamp(20px,2vw,32px)] font-light leading-[1.05] tracking-[0.02em]" href="/">
+    <header className="relative z-20 grid w-full grid-cols-[1fr_auto_1fr] items-center border-b border-border/70 bg-card/75 px-[clamp(20px,6vw,80px)] py-3 backdrop-blur-2xl">
+      <a className="justify-self-start text-[clamp(20px,2vw,32px)] font-semibold leading-[1.05] tracking-tight" href="/">
         AI Study Hub
       </a>
       <nav className="flex justify-center gap-10" aria-label="Auth navigation">
@@ -16,18 +18,21 @@ export default function AuthHeader({ action }: { action: 'Sign Up' | 'Sign In' |
           <a
             key={item.label}
             href={item.href}
-            className="text-[#c4c7c8] text-xs font-semibold tracking-[0.15em] uppercase hover:text-white transition-colors"
+            className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground transition-colors hover:text-foreground"
           >
             {item.label}
           </a>
         ))}
       </nav>
-      <a
-        className="justify-self-end inline-flex min-w-[102px] min-h-[34px] items-center justify-center rounded-full bg-white text-[#2f3131] text-xs font-semibold tracking-[0.15em] uppercase hover:opacity-90 transition-opacity"
-        href={href}
-      >
-        {action}
-      </a>
+      <div className="justify-self-end flex items-center gap-2">
+        <ThemeToggle compact />
+        <a
+          className="inline-flex min-h-[36px] min-w-[102px] items-center justify-center rounded-full bg-primary px-5 text-xs font-semibold uppercase tracking-[0.15em] text-primary-foreground transition-transform hover:-translate-y-0.5"
+          href={href}
+        >
+          {action}
+        </a>
+      </div>
     </header>
   )
 }

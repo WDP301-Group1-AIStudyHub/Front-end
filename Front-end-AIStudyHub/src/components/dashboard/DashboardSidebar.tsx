@@ -1,3 +1,6 @@
+import { logout } from '../../services/authApi'
+import { getStoredUser } from '../../services/authStorage'
+
 interface DashboardSidebarProps {
   collapsed: boolean
   onToggle: () => void
@@ -21,6 +24,12 @@ const recentChats = [
 
 export default function DashboardSidebar({ collapsed, onToggle }: DashboardSidebarProps) {
   const activePath = window.location.pathname
+  const user = getStoredUser()
+
+  const handleLogout = async () => {
+    await logout()
+    window.location.href = '/login'
+  }
 
   return (
     <aside
@@ -126,7 +135,7 @@ export default function DashboardSidebar({ collapsed, onToggle }: DashboardSideb
           title="User Profile"
         >
           <img
-            src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=120"
+            src={user?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=120'}
             alt="User Avatar"
             className="block w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500"
           />
@@ -143,7 +152,7 @@ export default function DashboardSidebar({ collapsed, onToggle }: DashboardSideb
         <button
           className="flex bg-transparent border-none cursor-pointer text-[rgba(196,199,200,0.6)] opacity-60 hover:opacity-100 transition-opacity p-0"
           title="Sign Out"
-          onClick={() => { window.location.href = '/login' }}
+          onClick={handleLogout}
         >
           <span
             className="material-symbols-outlined text-[20px]"
