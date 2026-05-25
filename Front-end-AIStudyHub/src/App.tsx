@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
+import { Navigate, Route, Routes, Link, useNavigate } from 'react-router-dom'
 import LandingPage from './landingpage'
 import AppSidebarLayout from './layouts/AppSidebarLayout'
 import DashboardPage from './pages/DashboardPage'
@@ -52,9 +53,12 @@ function AdminAccessDenied() {
             This workspace is limited to administrator accounts. Sign in with an admin profile
             to manage users, metadata, and system activity.
           </p>
-          <a className="mt-6 inline-flex rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground" href="/dashboard">
+          <Link
+            className="mt-6 inline-flex rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground"
+            to="/dashboard"
+          >
             Back to dashboard
-          </a>
+          </Link>
         </section>
       </main>
     </AppSidebarLayout>
@@ -70,10 +74,11 @@ function ProtectedRoute({
 }) {
   const [user, setUser] = useState<AuthUser | null>(() => getStoredUser())
   const [verified, setVerified] = useState(() => Boolean(getStoredUser() && hasAuthSession()))
+  const [redirectToLogin, setRedirectToLogin] = useState(false)
 
   useEffect(() => {
     if (!hasAuthSession()) {
-      window.location.href = '/login'
+      setRedirectToLogin(true)
       return
     }
 
@@ -96,12 +101,13 @@ function ProtectedRoute({
           setVerified(true)
           return
         }
-
-        if (window.location.pathname !== '/login') {
-          window.location.href = '/login'
-        }
+        setRedirectToLogin(true)
       })
   }, [])
+
+  if (redirectToLogin) {
+    return <Navigate to="/login" replace />
+  }
 
   if (!verified || !user) {
     return <AuthLoading />
@@ -115,18 +121,9 @@ function ProtectedRoute({
 }
 
 function PublicAuthRoute({ children }: { children: ReactNode }) {
-  const shouldRedirect = hasAuthSession()
-
-  useEffect(() => {
-    if (shouldRedirect) {
-      window.location.href = '/dashboard'
-    }
-  }, [shouldRedirect])
-
-  if (shouldRedirect) {
-    return <AuthLoading />
+  if (hasAuthSession()) {
+    return <Navigate to="/dashboard" replace />
   }
-
   return children
 }
 
@@ -135,97 +132,56 @@ function routeWithShell(page: ReactNode) {
 }
 
 function DemoAdminBootstrap() {
+  const navigate = useNavigate()
   useEffect(() => {
     storeAuthSession('mock-admin-token', demoAdminUser)
-    window.location.href = '/admin'
-  }, [])
-
+    navigate('/admin', { replace: true })
+  }, [navigate])
   return <AuthLoading />
 }
 
 function App() {
-  const path = window.location.pathname.replace(/\/+$/, '') || '/'
-
-  if (path === '/demo-admin') {
-    return <DemoAdminBootstrap />
-  }
-
-  if (path === '/dashboard') {
-    return (
-      <ProtectedRoute>
-        {() => routeWithShell(<DashboardPage />)}
-      </ProtectedRoute>
-    )
-  }
-
-  if (path === '/library' || path === '/new-library') {
-    return (
-      <ProtectedRoute>
-        {() => routeWithShell(<NewLibraryPage />)}
-      </ProtectedRoute>
-    )
-  }
-
-  if (path === '/aichatbox' || path === '/new-aichatbox') {
-    return (
-      <ProtectedRoute>
-        {() => routeWithShell(<NewAIChatboxPage />)}
-      </ProtectedRoute>
-    )
-  }
-
-  if (path === '/admin') {
-    return (
-      <ProtectedRoute adminOnly>
-        {() => routeWithShell(<AdminDashboardPage />)}
-      </ProtectedRoute>
-    )
-  }
-
-  if (path === '/admin/users') {
-    return (
-      <ProtectedRoute adminOnly>
-        {() => routeWithShell(<AdminUsersPage />)}
-      </ProtectedRoute>
-    )
-  }
-
-  if (path === '/admin/documents') {
-    return (
-      <ProtectedRoute adminOnly>
-        {() => routeWithShell(<AdminDocumentsPage />)}
-      </ProtectedRoute>
-    )
-  }
-
-  if (path === '/admin/activity') {
-    return (
-      <ProtectedRoute adminOnly>
-        {() => routeWithShell(<AdminActivityPage />)}
-      </ProtectedRoute>
-    )
-  }
-
-  if (path === '/login') {
-    return (
-      <PublicAuthRoute>
-        <LoginPage />
-      </PublicAuthRoute>
-    )
-  }
-
-  if (path === '/register') {
-    return (
-      <PublicAuthRoute>
-        <RegisterPage />
-      </PublicAuthRoute>
-    )
-  }
-
-  if (path === '/forgot-password') return <ForgotPasswordPage />
-  if (path === '/reset-password') return <ResetPasswordPage />
-
-  return <LandingPage />
+  return (
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/login" element={<PublicAuthRoute><LoginPage /></PublicAuthRoute>} />
+      <Route path="/register" element={<PublicAuthRoute><RegisterPage /></PublicAuthRoute>} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/demo-admin" element={<DemoAdminBootstrap />} />
+      <Route
+        path="/dashboard"
+        element={<ProtectedRoute>{() => routeWithShell(<DashboardPage />)}</ProtectedRoute>}
+      />
+      <Route
+        path="/library"
+        element={<ProtectedRoute>{() => routeWithShell(<NewLibraryPage />)}</ProtectedRoute>}
+      />
+      <Route path="/new-library" element={<Navigate to="/library" replace />} />
+      <Route
+        path="/aichatbox"
+        element={<ProtectedRoute>{() => routeWithShell(<NewAIChatboxPage />)}</ProtectedRoute>}
+      />
+      <Route path="/new-aichatbox" element={<Navigate to="/aichatbox" replace />} />
+      <Route
+        path="/admin"
+        element={<ProtectedRoute adminOnly>{() => routeWithShell(<AdminDashboardPage />)}</ProtectedRoute>}
+      />
+      <Route
+        path="/admin/users"
+        element={<ProtectedRoute adminOnly>{() => routeWithShell(<AdminUsersPage />)}</ProtectedRoute>}
+      />
+      <Route
+        path="/admin/documents"
+        element={<ProtectedRoute adminOnly>{() => routeWithShell(<AdminDocumentsPage />)}</ProtectedRoute>}
+      />
+      <Route
+        path="/admin/activity"
+        element={<ProtectedRoute adminOnly>{() => routeWithShell(<AdminActivityPage />)}</ProtectedRoute>}
+      />
+      <Route path="*" element={<LandingPage />} />
+    </Routes>
+  )
 }
 
 export default App
