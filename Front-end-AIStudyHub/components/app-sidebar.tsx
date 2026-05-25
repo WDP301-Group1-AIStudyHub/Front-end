@@ -108,10 +108,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </a>
           <ThemeToggle compact />
         </div>
-        <NavMain items={isAdmin ? [...baseNav, ...adminNav] : baseNav} />
+        <NavMain items={isAdmin ? adminNav : baseNav} />
       </SidebarHeader>
       <SidebarContent>
-        <NavChats recentChats={recentChats} />
+        {!isAdmin && <NavChats recentChats={recentChats} />}
       </SidebarContent>
       <SidebarFooter>
         <NavUser onLogout={handleLogout} user={user} />
