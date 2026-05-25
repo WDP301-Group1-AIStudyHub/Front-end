@@ -97,12 +97,12 @@ export default function RegisterPage() {
             required
             value={form.confirmPassword}
           />
-          <div className="flex items-center justify-between gap-[18px] text-[rgba(196,199,200,0.62)] text-[11px] font-semibold tracking-[0.12em] uppercase">
+          <div className="flex items-center justify-between gap-[18px] text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
             <label className="inline-flex items-center gap-2">
-              <input checked readOnly type="checkbox" className="w-4 h-4 accent-white" />
+              <input checked readOnly type="checkbox" className="h-4 w-4 accent-[var(--accent-blue)]" />
               <span>Remember Me</span>
             </label>
-            <a href="/forgot-password" className="text-white">Forgot?</a>
+            <a href="/forgot-password" className="text-foreground hover:text-primary">Forgot?</a>
           </div>
           {error ? (
             <p className="m-0 text-xs leading-relaxed text-red-300">{error}</p>
@@ -110,13 +110,13 @@ export default function RegisterPage() {
           <button
             disabled={loading}
             type="submit"
-            className="w-full min-h-[56px] rounded-lg bg-white text-[#2f3131] text-xs font-semibold tracking-[0.15em] uppercase hover:opacity-90 hover:scale-[1.01] transition-all disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100"
+            className="min-h-[56px] w-full rounded-lg bg-primary text-xs font-semibold uppercase tracking-[0.15em] text-primary-foreground transition-all hover:scale-[1.01] hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100"
           >
             {loading ? 'Creating Account...' : 'Create Account'}
           </button>
         </form>
-        <p className="mt-6 text-[rgba(196,199,200,0.56)] text-xs text-center">
-          Already a researcher? <a href="/login" className="text-white">Sign In</a>
+        <p className="mt-6 text-center text-xs text-muted-foreground">
+          Already a researcher? <a href="/login" className="text-foreground hover:text-primary">Sign In</a>
         </p>
       </AuthCardShell>
     </AuthScaffold>

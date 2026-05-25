@@ -13,6 +13,9 @@ export interface AuthUser {
   email: string
   avatar?: string
   role: 'user' | 'admin'
+  isActive?: boolean
+  lastLoginAt?: string
+  status?: 'active' | 'inactive'
   createdAt: string
   updatedAt: string
 }

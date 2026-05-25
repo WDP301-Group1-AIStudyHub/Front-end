@@ -16,13 +16,6 @@ import {
 
 import { Thread } from "@/components/assistant-ui/thread";
 import { Button } from "@/components/ui/button";
-import {
-  SidebarGroup,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarMenuBadge,
-} from "@/components/ui/sidebar";
 
 const quickPrompts = [
   {
@@ -135,8 +128,8 @@ export default function NewAIChatboxPage() {
   ).length;
 
   return (
-    <main className="flex h-svh min-h-0 flex-col overflow-hidden bg-background text-foreground">
-      <header className="border-b border-border/80 bg-card/95 px-5 py-4 backdrop-blur sm:px-8">
+    <main className="celestial-page flex h-svh min-h-0 flex-col overflow-hidden p-3 text-foreground sm:p-5">
+      <header className="celestial-card border-border/80 px-5 py-4 backdrop-blur sm:px-8">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-3">
             <div>
@@ -171,14 +164,14 @@ export default function NewAIChatboxPage() {
         </div>
       </header>
 
-      <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <section className="min-h-0 bg-background">
+      <div className="mt-4 grid min-h-0 flex-1 grid-cols-1 overflow-hidden rounded-[var(--radius-xl)] border border-border bg-card/70 shadow-[var(--shadow-soft)] backdrop-blur lg:grid-cols-[minmax(0,1fr)_320px]">
+        <section className="min-h-0 bg-transparent">
           <AssistantRuntimeProvider runtime={runtime} aui={suggestionsAui}>
             <Thread />
           </AssistantRuntimeProvider>
         </section>
 
-        <aside className="hidden min-h-0 border-l border-border/80 bg-card p-5 lg:block">
+        <aside className="hidden min-h-0 border-l border-border/80 bg-card/70 p-5 lg:block">
           <div className="flex h-full flex-col gap-5 overflow-y-auto">
             <section>
               <div className="mb-3 flex items-center justify-between">
@@ -191,33 +184,29 @@ export default function NewAIChatboxPage() {
                 />
               </div>
               <div className="space-y-3">
-                <SidebarGroup>
-                  <SidebarMenu>
-                    {sourceContexts.map((source) => (
-                      <SidebarMenuItem key={source.title}>
-                        <SidebarMenuButton asChild>
-                          <div className="flex items-start gap-3">
-                            <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-background/60">
-                              <FileText
-                                className="size-4 text-foreground"
-                                aria-hidden="true"
-                              />
-                            </div>
-                            <div className="min-w-0">
-                              <p className="truncate text-sm font-medium text-card-foreground">
-                                {source.title}
-                              </p>
-                              <p className="mt-1 text-xs text-muted-foreground">
-                                {source.meta}
-                              </p>
-                            </div>
-                          </div>
-                        </SidebarMenuButton>
-                        <SidebarMenuBadge>{source.status}</SidebarMenuBadge>
-                      </SidebarMenuItem>
-                    ))}
-                  </SidebarMenu>
-                </SidebarGroup>
+                {sourceContexts.map((source) => (
+                  <article
+                    className="grid grid-cols-[2.25rem_minmax(0,1fr)] gap-3 rounded-lg border border-border/70 bg-background/35 p-3"
+                    key={source.title}
+                  >
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-card/70 text-primary">
+                      <FileText className="size-4" aria-hidden="true" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex min-w-0 items-start justify-between gap-2">
+                        <p className="min-w-0 truncate text-sm font-medium text-card-foreground">
+                          {source.title}
+                        </p>
+                        <span className="shrink-0 rounded-full border border-border bg-muted/40 px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                          {source.status}
+                        </span>
+                      </div>
+                      <p className="mt-1 truncate text-xs text-muted-foreground">
+                        {source.meta}
+                      </p>
+                    </div>
+                  </article>
+                ))}
               </div>
             </section>
 

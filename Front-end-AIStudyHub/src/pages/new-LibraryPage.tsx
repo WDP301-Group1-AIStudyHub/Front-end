@@ -468,10 +468,10 @@ export default function NewLibraryPage() {
   }
 
   return (
-    <main className="flex h-svh min-h-0 w-full min-w-0 flex-col overflow-y-auto bg-background text-foreground">
-      <div className="flex w-full min-w-0 max-w-[calc(100svw-2.5rem)] flex-1 flex-col gap-8 px-5 py-6 sm:max-w-[calc(100svw-4rem)] sm:px-8 md:max-w-390 lg:px-10">
+    <main className="celestial-page flex min-h-svh w-full min-w-0 flex-col overflow-y-auto text-foreground">
+      <div className="mx-auto flex w-full min-w-0 max-w-7xl flex-1 flex-col gap-8 px-5 py-6 sm:px-8 lg:px-10">
         <header className="flex min-w-0 flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-          <InputGroup className="max-w-md mx-auto">
+          <InputGroup className="mx-auto max-w-md bg-card/70 backdrop-blur">
             <InputGroupAddon align="inline-start">
               <SearchIcon />
             </InputGroupAddon>
@@ -497,7 +497,7 @@ export default function NewLibraryPage() {
           <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
             <div className="flex flex-col gap-5">
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-semibold tracking-normal">
+                <h1 className="lp-stellar-text-glow text-3xl font-semibold tracking-tight md:text-5xl">
                   Study documents
                 </h1>
                 <IconTooltip label="Document settings">
@@ -547,7 +547,7 @@ export default function NewLibraryPage() {
 
           {feedback && (
             <div
-              className="rounded-md border border-border bg-card px-4 py-3 text-sm"
+              className="celestial-card px-4 py-3 text-sm"
               role={feedback.tone === "error" ? "alert" : "status"}
             >
               <span
@@ -563,7 +563,7 @@ export default function NewLibraryPage() {
           )}
 
           {isUploading && (
-            <div className="flex flex-col gap-2 rounded-md border border-border bg-card p-4">
+            <div className="celestial-card flex flex-col gap-2 p-4">
               <div className="flex items-center gap-2 text-sm font-medium">
                 <UploadCloud aria-hidden="true" />
                 Uploading, extracting text, and indexing for RAG
@@ -574,7 +574,7 @@ export default function NewLibraryPage() {
             </div>
           )}
 
-          <div className="pb-10">
+          <div className="celestial-card overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import ThemeToggle from './components/shared/ThemeToggle'
 
 const stats = [
   ['12M+', 'Papers Indexed'],
@@ -43,7 +44,7 @@ export default function LandingPage() {
     const handleScroll = () => {
       if (!navRef.current) return
       navRef.current.style.backgroundColor =
-        window.scrollY > 50 ? 'rgba(0, 0, 0, 0.8)' : 'transparent'
+        window.scrollY > 50 ? 'var(--surface-glass)' : 'transparent'
     }
 
     window.addEventListener('mousemove', handleMouseMove)
@@ -58,7 +59,7 @@ export default function LandingPage() {
   }, [])
 
   return (
-    <div className="relative isolate min-h-svh text-[#e5e2e1] bg-transparent overflow-x-hidden font-[Manrope,system-ui,sans-serif] tracking-[0.01em]">
+    <div className="celestial-page min-h-svh overflow-x-hidden bg-transparent font-[Manrope,system-ui,sans-serif] tracking-[0.01em] text-foreground">
       {/* Galaxy background */}
       <div className="lp-galaxy-bg" aria-hidden="true">
         <div className="lp-spiral-container" />
@@ -68,31 +69,32 @@ export default function LandingPage() {
       {/* ── Nav ────────────────────────────────────────────── */}
       <nav
         ref={navRef}
-        className="fixed top-0 z-50 w-full border-b border-white/10 backdrop-blur-[24px] transition-colors duration-[180ms]"
+        className="fixed top-0 z-50 w-full border-b border-border/70 backdrop-blur-[24px] transition-colors duration-[180ms]"
       >
-        <div className="flex items-center justify-between w-[min(100%,1440px)] h-20 mx-auto px-20">
-          <div className="text-white text-[32px] font-light leading-[1.2] tracking-[-0.02em]">AI Study Hub</div>
-          <div className="flex items-center gap-10">
+        <div className="mx-auto flex h-20 w-[min(100%,1440px)] items-center justify-between gap-4 px-5 lg:px-20">
+          <div className="text-[clamp(22px,3vw,32px)] font-semibold leading-[1.2] tracking-tight">AI Study Hub</div>
+          <div className="hidden items-center gap-10 md:flex">
             {['#dashboard', '#about'].map((href, i) => (
               <a
                 key={href}
                 href={href}
-                className="text-[#c4c7c8] text-xs font-semibold tracking-[0.15em] uppercase hover:text-white transition-colors"
+                className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground transition-colors hover:text-foreground"
               >
                 {['Dashboard', 'About Us'][i]}
               </a>
             ))}
           </div>
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <ThemeToggle compact />
             <a
               href="/login"
-              className="text-[#c4c7c8] text-xs font-semibold tracking-[0.15em] uppercase hover:text-white transition-colors bg-transparent p-0"
+              className="hidden bg-transparent p-0 text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground transition-colors hover:text-foreground sm:inline-flex"
             >
               Login
             </a>
             <a
               href="/register"
-              className="lp-pulsing-btn inline-flex items-center justify-center min-h-[46px] rounded-full px-8 text-[#2f3131] bg-white text-xs font-semibold tracking-[0.15em] uppercase hover:bg-white/90 transition-all"
+              className="lp-pulsing-btn inline-flex min-h-[42px] items-center justify-center rounded-full px-5 text-xs font-semibold uppercase tracking-[0.13em] transition-all sm:min-h-[46px] sm:px-8"
             >
               Sign Up
             </a>
@@ -104,29 +106,29 @@ export default function LandingPage() {
       <main className="relative pt-32 pb-24">
 
         {/* Hero */}
-        <section className="w-[min(100%,1440px)] mx-auto mb-24 px-20 text-center">
-          <div className="inline-block mb-8 px-4 py-1 border border-white/10 rounded-full bg-white/5 backdrop-blur-[8px]">
-            <span className="text-white/60 text-xs font-semibold tracking-[0.15em] uppercase">
+        <section className="mx-auto mb-24 w-[min(100%,1440px)] px-5 text-center lg:px-20">
+          <div className="mb-8 inline-block rounded-full border border-border bg-card/50 px-4 py-1 backdrop-blur-[8px]">
+            <span className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">
               The Future of Intellectual Astronomy
             </span>
           </div>
-          <h1 className="m-0 mb-8 text-white text-[64px] font-[200] leading-[1.1] tracking-[0.05em] lp-stellar-text-glow">
+          <h1 className="lp-stellar-text-glow m-0 mb-8 text-[clamp(3rem,8vw,7rem)] font-[200] leading-[1.04] tracking-[0.03em]">
             Navigate the Cosmos <br /> of Knowledge
           </h1>
-          <p className="w-[min(100%,672px)] mx-auto mb-12 text-[#c4c7c8] text-lg leading-[1.6]">
+          <p className="mx-auto mb-12 w-[min(100%,672px)] text-lg leading-[1.6] text-muted-foreground">
             An ethereal platform where AI acts as your celestial guide, transforming vast
             expanses of information into structured constellations of insight.
           </p>
-          <div className="flex justify-center gap-6">
+          <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
             <a
               href="/register"
-              className="lp-pulsing-btn inline-flex items-center justify-center min-h-[56px] rounded-full px-10 text-[#2f3131] bg-white text-xs font-semibold tracking-[0.15em] uppercase hover:bg-white/90 transition-all"
+              className="lp-pulsing-btn inline-flex min-h-[56px] items-center justify-center rounded-full px-10 text-xs font-semibold uppercase tracking-[0.15em] transition-all"
             >
               Start Exploration
             </a>
             <a
               href="/login"
-              className="inline-flex items-center justify-center min-h-[56px] rounded-full px-10 text-white border border-white/20 bg-transparent text-xs font-semibold tracking-[0.15em] uppercase hover:bg-white/5 transition-all"
+              className="inline-flex min-h-[56px] items-center justify-center rounded-full border border-border bg-card/40 px-10 text-xs font-semibold uppercase tracking-[0.15em] transition-all hover:bg-muted"
             >
               Watch the Orbit
             </a>
@@ -134,18 +136,18 @@ export default function LandingPage() {
         </section>
 
         {/* Bento grid */}
-        <section id="dashboard" className="w-[min(100%,1440px)] mx-auto px-20">
-          <div className="grid grid-cols-12 auto-rows-[280px] gap-6">
+        <section id="dashboard" className="mx-auto w-[min(100%,1440px)] px-5 lg:px-20">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:auto-rows-[280px]">
 
             {/* Research — col-span-8 */}
             <article
-              className="col-span-8 relative flex flex-col justify-between overflow-hidden p-12 rounded-3xl group border border-white/10 bg-white/[0.03] backdrop-blur-[20px] hover:border-white/30 hover:bg-white/[0.08] hover:-translate-y-2 hover:scale-[1.02] transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] lp-parallax-layer"
+              className="lp-parallax-layer celestial-card group relative flex min-h-[320px] flex-col justify-between overflow-hidden rounded-3xl p-8 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-2 hover:scale-[1.02] hover:border-primary/40 lg:col-span-8 lg:p-12"
               data-depth="0.1"
             >
               <div className="relative z-10">
-                <span className="material-symbols-outlined text-white text-4xl mb-6 block">psychology</span>
-                <h2 className="m-0 mb-4 text-white text-[32px] font-light leading-[1.2] tracking-[0.03em]">AI-Powered Research</h2>
-                <p className="max-w-[448px] m-0 text-[#c4c7c8] text-base leading-[1.6]">
+                <span className="material-symbols-outlined mb-6 block text-4xl text-[var(--accent-gold)]">psychology</span>
+                <h2 className="m-0 mb-4 text-[32px] font-light leading-[1.2] tracking-[0.03em]">AI-Powered Research</h2>
+                <p className="m-0 max-w-[410px] text-base leading-[1.6] text-muted-foreground">
                   Our neural engine synthesizes millions of academic papers into coherent
                   summaries, highlighting hidden connections across disciplines.
                 </p>
@@ -161,39 +163,39 @@ export default function LandingPage() {
 
             {/* Cloud — col-span-4 */}
             <article
-              className="col-span-4 flex flex-col justify-end p-10 rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-[20px] hover:border-white/30 hover:bg-white/[0.08] hover:-translate-y-2 hover:scale-[1.02] transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] lp-parallax-layer"
+              className="lp-parallax-layer celestial-card flex min-h-[280px] flex-col justify-end rounded-3xl p-8 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-2 hover:scale-[1.02] hover:border-primary/40 lg:col-span-4 lg:p-10"
               data-depth="0.2"
             >
-              <span className="material-symbols-outlined text-white text-4xl mb-6 block">cloud_sync</span>
-              <h2 className="m-0 mb-4 text-white text-[24px] font-light leading-[1.2]">Cloud Synced Library</h2>
-              <p className="m-0 text-[#c4c7c8] text-sm leading-[1.6]">
+              <span className="material-symbols-outlined mb-6 block text-4xl text-[var(--accent-teal)]">cloud_sync</span>
+              <h2 className="m-0 mb-4 text-[24px] font-light leading-[1.2]">Cloud Synced Library</h2>
+              <p className="m-0 text-sm leading-[1.6] text-muted-foreground">
                 Your entire intellectual universe, synchronized across every device in the void.
               </p>
             </article>
 
             {/* Semantic — col-span-4 */}
             <article
-              className="col-span-4 flex flex-col justify-between p-10 rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-[20px] hover:border-white/30 hover:bg-white/[0.08] hover:-translate-y-2 hover:scale-[1.02] transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] lp-parallax-layer"
+              className="lp-parallax-layer celestial-card flex min-h-[280px] flex-col justify-between rounded-3xl p-8 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-2 hover:scale-[1.02] hover:border-primary/40 lg:col-span-4 lg:p-10"
               data-depth="0.15"
             >
               <div>
-                <span className="material-symbols-outlined text-white text-4xl mb-6 block">hub</span>
-                <h2 className="m-0 mb-4 text-white text-[24px] font-light leading-[1.2]">Semantic Insights</h2>
+                <span className="material-symbols-outlined mb-6 block text-4xl text-[var(--accent-violet)]">hub</span>
+                <h2 className="m-0 mb-4 text-[24px] font-light leading-[1.2]">Semantic Insights</h2>
               </div>
-              <p className="m-0 text-[#c4c7c8] text-sm leading-[1.6]">
+              <p className="m-0 text-sm leading-[1.6] text-muted-foreground">
                 Discover the &quot;why&quot; behind the data through our advanced contextual mapping engine.
               </p>
             </article>
 
             {/* Interface — col-span-8 */}
             <article
-              className="col-span-8 relative overflow-hidden rounded-3xl group border border-white/10 bg-white/[0.03] backdrop-blur-[20px] hover:border-white/30 hover:bg-white/[0.08] transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] lp-parallax-layer"
+              className="lp-image-overlay lp-parallax-layer celestial-card group relative min-h-[320px] overflow-hidden rounded-3xl transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] hover:border-primary/40 lg:col-span-8"
               data-depth="0.05"
             >
               <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/80 to-transparent" />
               <div className="absolute bottom-10 left-10 z-20">
-                <h2 className="m-0 mb-2 text-white text-[24px] font-light leading-[1.2]">The Void Interface</h2>
-                <p className="m-0 text-[#c4c7c8] text-sm">Zero-distraction workspace designed for deep focus sessions.</p>
+                <h2 className="m-0 mb-2 text-[24px] font-light leading-[1.2] text-white">The Void Interface</h2>
+                <p className="m-0 text-sm text-white/75">Zero-distraction workspace designed for deep focus sessions.</p>
               </div>
               <img
                 alt="Futuristic UI"
@@ -208,13 +210,13 @@ export default function LandingPage() {
         {/* Stats */}
         <section
           id="about"
-          className="w-[min(100%,1440px)] mx-auto px-20 mt-32 py-20 border-t border-b border-white/[0.05]"
+          className="mx-auto mt-32 w-[min(100%,1440px)] border-y border-border/60 px-5 py-20 lg:px-20"
         >
-          <div className="grid grid-cols-4 gap-6 text-center">
+          <div className="grid grid-cols-2 gap-6 text-center lg:grid-cols-4">
             {stats.map(([value, label]) => (
               <div key={label}>
-                <div className="mb-2 text-white text-[32px] font-[200] leading-[1.1] tracking-[0.05em]">{value}</div>
-                <span className="text-[#c4c7c8] text-xs font-semibold tracking-[0.15em] uppercase">{label}</span>
+                <div className="mb-2 text-[32px] font-[200] leading-[1.1] tracking-[0.05em]">{value}</div>
+                <span className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">{label}</span>
               </div>
             ))}
           </div>
@@ -222,41 +224,41 @@ export default function LandingPage() {
 
         {/* CTA */}
         <section className="mt-32 px-5 text-center">
-          <div className="relative overflow-hidden w-[min(100%,896px)] mx-auto p-20 rounded-[48px] border border-white/10 bg-white/[0.03] backdrop-blur-[20px]">
+          <div className="celestial-card relative mx-auto w-[min(100%,896px)] overflow-hidden rounded-[32px] p-8 sm:p-14 lg:rounded-[48px] lg:p-20">
             <div className="relative z-10">
-              <h2 className="m-0 mb-6 text-white text-[48px] font-[200] leading-[1.1] tracking-[0.05em]">Ready to transcend?</h2>
-              <p className="max-w-[480px] mx-auto mb-12 text-[#c4c7c8] text-lg leading-[1.6]">
+              <h2 className="m-0 mb-6 text-[clamp(2.3rem,6vw,3rem)] font-[200] leading-[1.1] tracking-[0.05em]">Ready to transcend?</h2>
+              <p className="mx-auto mb-12 max-w-[480px] text-lg leading-[1.6] text-muted-foreground">
                 Join the scholars who have already claimed their place in the intellectual cosmos.
               </p>
               <a
                 href="/register"
-                className="lp-pulsing-btn inline-flex items-center justify-center min-h-[56px] rounded-full px-10 text-[#2f3131] bg-white text-xs font-semibold tracking-[0.15em] uppercase hover:bg-white/90 transition-all"
+                className="lp-pulsing-btn inline-flex min-h-[56px] items-center justify-center rounded-full px-10 text-xs font-semibold uppercase tracking-[0.15em] transition-all"
               >
                 Claim Your Domain
               </a>
             </div>
-            <div className="absolute inset-0 pointer-events-none bg-white/[0.05] lp-soft-pulse" />
+            <div className="lp-soft-pulse pointer-events-none absolute inset-0 bg-primary/5" />
           </div>
         </section>
 
       </main>
 
       {/* Footer */}
-      <footer className="w-full pt-12 pb-12 border-t border-white/[0.05]">
-        <div className="flex items-center justify-between w-[min(100%,1440px)] mx-auto gap-6 px-20">
-          <div className="text-white font-bold text-xs tracking-[0.15em] uppercase">AI Study Hub</div>
-          <div className="flex items-center gap-10">
+      <footer className="w-full border-t border-border/60 pb-12 pt-12">
+        <div className="mx-auto flex w-[min(100%,1440px)] flex-col items-start justify-between gap-6 px-5 md:flex-row md:items-center lg:px-20">
+          <div className="text-xs font-bold uppercase tracking-[0.15em]">AI Study Hub</div>
+          <div className="flex flex-wrap items-center gap-5 md:gap-10">
             {['#privacy', '#terms', '#contact'].map((href, i) => (
               <a
                 key={href}
                 href={href}
-                className="text-[#c4c7c8] text-xs font-semibold tracking-[0.15em] uppercase hover:text-white transition-colors"
+                className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground transition-colors hover:text-foreground"
               >
                 {['Privacy Policy', 'Terms of Service', 'Contact'][i]}
               </a>
             ))}
           </div>
-          <div className="text-[#c4c7c8] text-xs font-semibold tracking-[0.15em] uppercase">
+          <div className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">
             &copy; 2024 AI Study Hub. Intellectual Astronomy.
           </div>
         </div>

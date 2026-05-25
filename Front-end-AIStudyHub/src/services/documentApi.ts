@@ -9,7 +9,7 @@ import { clearAuthSession, getStoredToken } from './authStorage'
 
 const API_ORIGIN =
   import.meta.env.VITE_API_BASE_URL?.replace(/\/+$/, '') ??
-  'http://localhost:5000'
+  ''
 const API_BASE_URL = API_ORIGIN.replace(/\/api$/, '')
 
 export class DocumentApiError extends Error {
