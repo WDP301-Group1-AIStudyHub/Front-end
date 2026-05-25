@@ -51,7 +51,7 @@ export default function CelestialBackdrop({
       <div className="celestial-orbit celestial-orbit-one" />
       <div className="celestial-orbit celestial-orbit-two" />
       <div className="celestial-starfield" />
-      {starPoints.slice(0, starCount).map(([left, top, opacity, delay], index) => (
+      {starPoints.slice(0, starCount).map(([left, top, opacity, delay]) => (
         <span
           className="celestial-star"
           key={`star-${left}-${top}`}
