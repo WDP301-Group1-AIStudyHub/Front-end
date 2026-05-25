@@ -12,6 +12,7 @@ import {
   Users,
 } from "lucide-react"
 
+import { useNavigate, useLocation, Link } from "react-router-dom"
 import { NavMain } from "@/components/nav-main"
 import { NavChats } from "@/components/nav-chats"
 import { NavUser } from "@/components/nav-user"
@@ -34,7 +35,8 @@ const recentChats = [
 ]
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const activePath = window.location.pathname
+  const navigate = useNavigate()
+  const { pathname: activePath } = useLocation()
   const storedUser = getStoredUser()
   const isAdmin = storedUser?.role === "admin"
   const user = {
@@ -93,19 +95,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   const handleLogout = async () => {
     await logout()
-    window.location.href = "/login"
+    navigate('/login', { replace: true })
   }
 
   return (
     <Sidebar className="border-r-0" {...props}>
       <SidebarHeader>
         <div className="flex items-center justify-between gap-2 px-2 py-1.5">
-          <a className="flex min-w-0 items-center gap-2" href="/dashboard">
+          <Link className="flex min-w-0 items-center gap-2" to="/dashboard">
             <span className="grid size-9 shrink-0 place-items-center rounded-xl border border-sidebar-border bg-sidebar-accent text-sidebar-primary">
               <Sparkles className="size-4" aria-hidden="true" />
             </span>
             <span className="truncate font-bold tracking-tight">AI Study Hub</span>
-          </a>
+          </Link>
           <ThemeToggle compact />
         </div>
         <NavMain items={isAdmin ? adminNav : baseNav} />

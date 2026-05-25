@@ -1,3 +1,4 @@
+import { useNavigate, useLocation } from 'react-router-dom'
 import { logout } from '../../services/authApi'
 import { getStoredUser } from '../../services/authStorage'
 
@@ -23,12 +24,13 @@ const recentChats = [
 ]
 
 export default function DashboardSidebar({ collapsed, onToggle }: DashboardSidebarProps) {
-  const activePath = window.location.pathname
+  const navigate = useNavigate()
+  const { pathname: activePath } = useLocation()
   const user = getStoredUser()
 
   const handleLogout = async () => {
     await logout()
-    window.location.href = '/login'
+    navigate('/login', { replace: true })
   }
 
   return (
@@ -71,7 +73,7 @@ export default function DashboardSidebar({ collapsed, onToggle }: DashboardSideb
             <button
               key={item.icon}
               title={item.label}
-              onClick={() => { window.location.href = item.path }}
+              onClick={() => { navigate(item.path) }}
               className={`w-full py-2 flex items-center gap-0 bg-transparent border-none border-r-2 font-medium cursor-pointer transition-all duration-300 whitespace-nowrap overflow-hidden hover:bg-white/5 active:scale-95 ${collapsed ? 'justify-center px-0' : 'justify-start px-5 gap-3'} ${isActive ? 'text-white font-bold border-r-white' : 'text-[rgba(196,199,200,0.6)] border-r-transparent hover:text-[#e5e2e1]'}`}
             >
               <span
@@ -96,7 +98,7 @@ export default function DashboardSidebar({ collapsed, onToggle }: DashboardSideb
           <div className="flex justify-between items-center mb-3 flex-shrink-0">
             <span className="text-[9px] tracking-[0.2em] text-white/30 uppercase font-semibold">Recent Chats</span>
             <button
-              onClick={() => { window.location.href = '/aichatbox' }}
+              onClick={() => { navigate('/aichatbox') }}
               className="w-5 h-5 flex items-center justify-center rounded-md bg-white/5 hover:bg-white/10 transition-colors"
             >
               <span className="material-symbols-outlined text-[14px] text-white/50" style={{ fontVariationSettings: "'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 24" }}>add</span>

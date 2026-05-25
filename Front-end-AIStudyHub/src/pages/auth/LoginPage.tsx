@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { ChangeEvent, FormEvent } from 'react'
+import { useNavigate } from 'react-router-dom'
 import AcademicAside from '../../components/auth/AcademicAside'
 import AuthCardShell from '../../components/auth/AuthCardShell'
 import AuthScaffold from '../../components/auth/AuthScaffold'
@@ -12,6 +13,7 @@ const initialForm = {
 }
 
 export default function LoginPage() {
+  const navigate = useNavigate()
   const [form, setForm] = useState(initialForm)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -33,7 +35,7 @@ export default function LoginPage() {
         email: form.email,
         password: form.password,
       })
-      window.location.href = '/dashboard'
+      navigate('/dashboard', { replace: true })
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : 'Unable to log in')
     } finally {
