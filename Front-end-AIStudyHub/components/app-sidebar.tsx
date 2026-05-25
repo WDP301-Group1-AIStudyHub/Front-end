@@ -3,6 +3,7 @@
 import * as React from "react"
 import {
   Activity,
+  BarChart2,
   FileCog,
   LayoutDashboardIcon,
   LibraryIcon,
@@ -26,13 +27,8 @@ import {
 import ThemeToggle from "@/src/components/shared/ThemeToggle"
 import { logout } from "@/src/services/authApi"
 import { getStoredUser } from "@/src/services/authStorage"
+import { deleteChatHistory, getChatHistory } from "@/src/services/chatApi"
 
-const recentChats = [
-  { name: "Dark Matter & Rotation Curves", url: "/aichatbox", emoji: "*" },
-  { name: "Quantum Entanglement Basics", url: "/aichatbox", emoji: "*" },
-  { name: "Neural Network Architecture", url: "/aichatbox", emoji: "*" },
-  { name: "Exoplanet Atmosphere Analysis", url: "/aichatbox", emoji: "*" },
-]
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const navigate = useNavigate()
@@ -43,6 +39,38 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     avatar: storedUser?.avatar || "https://i.pravatar.cc/150?img=3",
     email: storedUser?.email || "john.doe@example.com",
     name: storedUser?.fullName || "John Doe",
+  }
+
+  // Real chat history
+  const [chatItems, setChatItems] = React.useState<
+    { id: string; name: string; url: string; emoji: string }[]
+  >([])
+
+  React.useEffect(() => {
+    if (isAdmin) return
+    getChatHistory()
+      .then((items) =>
+        setChatItems(
+          items.map((item) => ({
+            id: item.id,
+            name: item.question.slice(0, 60),
+            url: "/aichatbox",
+            emoji: "💬",
+          })),
+        ),
+      )
+      .catch(() => {
+        setChatItems([])
+      })
+  }, [isAdmin])
+
+  const handleDeleteChat = async (id: string) => {
+    try {
+      await deleteChatHistory(id)
+      setChatItems((prev) => prev.filter((c) => c.id !== id))
+    } catch {
+      // silently ignore
+    }
   }
 
   const baseNav = [
@@ -63,6 +91,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: "/aichatbox",
       icon: <MessagesSquareIcon />,
       isActive: activePath === "/aichatbox" || activePath === "/new-aichatbox",
+    },
+    {
+      title: "Evaluation",
+      url: "/evaluation",
+      icon: <BarChart2 />,
+      isActive: activePath === "/evaluation",
     },
   ]
 
@@ -103,17 +137,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <div className="flex items-center justify-between gap-2 px-2 py-1.5">
           <Link className="flex min-w-0 items-center gap-2" to="/dashboard">
-            <span className="grid size-9 shrink-0 place-items-center rounded-xl border border-sidebar-border bg-sidebar-accent text-sidebar-primary">
+            <span className="grid size-9 shrink-0 place-items-center rounded-xl border border-[var(--accent-gold)]/40 bg-[color-mix(in_oklab,var(--accent-gold)_14%,transparent)] text-[var(--accent-gold)] shadow-[0_0_24px_color-mix(in_oklab,var(--accent-gold)_28%,transparent)]">
               <Sparkles className="size-4" aria-hidden="true" />
             </span>
-            <span className="truncate font-bold tracking-tight">AI Study Hub</span>
+            <span className="celestial-title truncate font-bold tracking-tight">AI Study Hub</span>
           </Link>
           <ThemeToggle compact />
         </div>
         <NavMain items={isAdmin ? adminNav : baseNav} />
       </SidebarHeader>
       <SidebarContent>
-        {!isAdmin && <NavChats recentChats={recentChats} />}
+      {!isAdmin && <NavChats onDelete={handleDeleteChat} recentChats={chatItems} />}
       </SidebarContent>
       <SidebarFooter>
         <NavUser onLogout={handleLogout} user={user} />

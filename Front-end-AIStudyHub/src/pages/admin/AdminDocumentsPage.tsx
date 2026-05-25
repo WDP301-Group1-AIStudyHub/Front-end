@@ -74,7 +74,7 @@ export default function AdminDocumentsPage() {
         title="Documents Metadata"
       />
 
-      <section className="celestial-card mt-8 overflow-hidden">
+      <section className="celestial-card celestial-table tone-surface tone-gold mt-8 overflow-hidden">
         <div className="flex flex-col gap-3 border-b border-border/70 p-5 md:flex-row md:items-center md:justify-between">
           <label className="relative max-w-lg flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -100,10 +100,15 @@ export default function AdminDocumentsPage() {
             </div>
           ) : (
             filteredDocuments.map((document) => (
-              <article className="grid gap-4 p-5 xl:grid-cols-[1.4fr_1fr_150px_160px_180px]" key={document.id}>
-                <div className="min-w-0">
-                  <h2 className="truncate font-semibold">{document.title}</h2>
-                  <p className="truncate text-sm text-muted-foreground">{document.fileName}</p>
+              <article className="grid gap-4 p-5 transition-colors hover:bg-muted/35 xl:grid-cols-[1.4fr_1fr_150px_160px_180px]" key={document.id}>
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="admin-icon-badge admin-tone-gold size-10">
+                    <FileCog className="size-4" />
+                  </span>
+                  <div className="min-w-0">
+                    <h2 className="truncate font-semibold">{document.title}</h2>
+                    <p className="truncate text-sm text-muted-foreground">{document.fileName}</p>
+                  </div>
                 </div>
                 <div className="text-sm text-muted-foreground">
                   <span className="block font-medium text-foreground">{document.ownerName}</span>

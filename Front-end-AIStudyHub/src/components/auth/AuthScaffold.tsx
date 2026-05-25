@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import GalaxyBackground from '../shared/GalaxyBackground'
+import CelestialBackdrop from '../shared/CelestialBackdrop'
 import AuthFooter from './AuthFooter'
 import AuthHeader from './AuthHeader'
 
@@ -19,7 +19,7 @@ export default function AuthScaffold({
 }) {
   return (
     <div className="celestial-page flex min-h-svh flex-col overflow-x-hidden">
-      <GalaxyBackground />
+      <CelestialBackdrop intensity="dramatic" />
       <AuthHeader action={action} />
       <main className={`relative z-[1] w-full flex-1 px-[clamp(20px,6vw,80px)] pb-12 pt-20 ${mode === 'centered' ? mainCentered : mainSplit}`}>
         {children}

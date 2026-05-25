@@ -42,7 +42,7 @@ export default function AdminActivityPage() {
         title="System Activity"
       />
 
-      <section className="celestial-card mt-8 overflow-hidden">
+      <section className="celestial-card celestial-table tone-surface tone-coral mt-8 overflow-hidden">
         <div className="flex flex-col gap-3 border-b border-border/70 p-5 xl:flex-row xl:items-center xl:justify-between">
           <label className="relative max-w-lg flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -91,7 +91,7 @@ export default function AdminActivityPage() {
             </div>
           ) : (
             filteredActivities.map((activity) => (
-              <article className="grid gap-4 p-5 lg:grid-cols-[180px_1fr_130px_120px]" key={activity.id}>
+              <article className="grid gap-4 p-5 transition-colors hover:bg-muted/35 lg:grid-cols-[180px_1fr_130px_120px]" key={activity.id}>
                 <div className="text-sm text-muted-foreground">{formatDateTime(activity.createdAt)}</div>
                 <div className="min-w-0">
                   <div className="flex items-start gap-3">

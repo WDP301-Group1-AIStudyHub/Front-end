@@ -25,13 +25,16 @@ import {
 } from "lucide-react";
 
 export function NavChats({
+  onDelete,
   recentChats,
 }: {
+  onDelete?: (id: string) => void
   recentChats: {
-    name: string;
-    url: string;
-    emoji: string;
-  }[];
+    id: string
+    name: string
+    url: string
+    emoji: string
+  }[]
 }) {
   const { isMobile } = useSidebar();
 
@@ -76,7 +79,7 @@ export function NavChats({
                   <span>Open in New Tab</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onDelete?.(item.id)}>
                   <Trash2Icon className="text-muted-foreground" />
                   <span>Delete</span>
                 </DropdownMenuItem>

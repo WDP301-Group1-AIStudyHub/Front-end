@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import CelestialBackdrop from './components/shared/CelestialBackdrop'
 import ThemeToggle from './components/shared/ThemeToggle'
 
 const stats = [
@@ -10,27 +11,9 @@ const stats = [
 
 
 export default function LandingPage() {
-  const starContainerRef = useRef<HTMLDivElement | null>(null)
   const navRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
-    const createShootingStar = () => {
-      const container = starContainerRef.current
-      if (!container) return
-
-      const star = document.createElement('div')
-      star.className = 'lp-shooting-star'
-      star.style.left = `${Math.random() * window.innerWidth + 500}px`
-      star.style.top = `${Math.random() * window.innerHeight - 200}px`
-      star.style.animationDuration = `${Math.random() * 2 + 1}s`
-      star.style.opacity = `${Math.random()}`
-
-      container.appendChild(star)
-      window.setTimeout(() => star.remove(), 3000)
-    }
-
-    const starInterval = window.setInterval(createShootingStar, 1500)
-
     const handleMouseMove = (event: MouseEvent) => {
       const x = (event.clientX - window.innerWidth / 2) / 100
       const y = (event.clientY - window.innerHeight / 2) / 100
@@ -52,7 +35,6 @@ export default function LandingPage() {
     handleScroll()
 
     return () => {
-      window.clearInterval(starInterval)
       window.removeEventListener('mousemove', handleMouseMove)
       window.removeEventListener('scroll', handleScroll)
     }
@@ -60,11 +42,7 @@ export default function LandingPage() {
 
   return (
     <div className="celestial-page min-h-svh overflow-x-hidden bg-transparent font-[Manrope,system-ui,sans-serif] tracking-[0.01em] text-foreground">
-      {/* Galaxy background */}
-      <div className="lp-galaxy-bg" aria-hidden="true">
-        <div className="lp-spiral-container" />
-        <div ref={starContainerRef} id="shooting-stars-container" />
-      </div>
+      <CelestialBackdrop intensity="dramatic" />
 
       {/* ── Nav ────────────────────────────────────────────── */}
       <nav
@@ -103,7 +81,7 @@ export default function LandingPage() {
       </nav>
 
       {/* ── Main ───────────────────────────────────────────── */}
-      <main className="relative pt-32 pb-24">
+      <main className="relative z-[1] pt-32 pb-24">
 
         {/* Hero */}
         <section className="mx-auto mb-24 w-[min(100%,1440px)] px-5 text-center lg:px-20">
@@ -112,7 +90,7 @@ export default function LandingPage() {
               The Future of Intellectual Astronomy
             </span>
           </div>
-          <h1 className="lp-stellar-text-glow m-0 mb-8 text-[clamp(3rem,8vw,7rem)] font-[200] leading-[1.04] tracking-[0.03em]">
+          <h1 className="celestial-title lp-stellar-text-glow m-0 mb-8 text-[clamp(3rem,8vw,7rem)] font-[200] leading-[1.04] tracking-[0.03em]">
             Navigate the Cosmos <br /> of Knowledge
           </h1>
           <p className="mx-auto mb-12 w-[min(100%,672px)] text-lg leading-[1.6] text-muted-foreground">
@@ -141,7 +119,7 @@ export default function LandingPage() {
 
             {/* Research — col-span-8 */}
             <article
-              className="lp-parallax-layer celestial-card group relative flex min-h-[320px] flex-col justify-between overflow-hidden rounded-3xl p-8 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-2 hover:scale-[1.02] hover:border-primary/40 lg:col-span-8 lg:p-12"
+              className="lp-parallax-layer celestial-card tone-surface tone-sapphire group relative flex min-h-[320px] flex-col justify-between overflow-hidden rounded-3xl p-8 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-2 hover:scale-[1.02] hover:border-primary/40 lg:col-span-8 lg:p-12"
               data-depth="0.1"
             >
               <div className="relative z-10">
@@ -163,7 +141,7 @@ export default function LandingPage() {
 
             {/* Cloud — col-span-4 */}
             <article
-              className="lp-parallax-layer celestial-card flex min-h-[280px] flex-col justify-end rounded-3xl p-8 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-2 hover:scale-[1.02] hover:border-primary/40 lg:col-span-4 lg:p-10"
+              className="lp-parallax-layer celestial-card tone-surface tone-teal flex min-h-[280px] flex-col justify-end rounded-3xl p-8 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-2 hover:scale-[1.02] hover:border-primary/40 lg:col-span-4 lg:p-10"
               data-depth="0.2"
             >
               <span className="material-symbols-outlined mb-6 block text-4xl text-[var(--accent-teal)]">cloud_sync</span>
@@ -175,7 +153,7 @@ export default function LandingPage() {
 
             {/* Semantic — col-span-4 */}
             <article
-              className="lp-parallax-layer celestial-card flex min-h-[280px] flex-col justify-between rounded-3xl p-8 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-2 hover:scale-[1.02] hover:border-primary/40 lg:col-span-4 lg:p-10"
+              className="lp-parallax-layer celestial-card tone-surface tone-violet flex min-h-[280px] flex-col justify-between rounded-3xl p-8 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-2 hover:scale-[1.02] hover:border-primary/40 lg:col-span-4 lg:p-10"
               data-depth="0.15"
             >
               <div>
@@ -189,7 +167,7 @@ export default function LandingPage() {
 
             {/* Interface — col-span-8 */}
             <article
-              className="lp-image-overlay lp-parallax-layer celestial-card group relative min-h-[320px] overflow-hidden rounded-3xl transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] hover:border-primary/40 lg:col-span-8"
+              className="lp-image-overlay lp-parallax-layer celestial-card tone-surface tone-coral group relative min-h-[320px] overflow-hidden rounded-3xl transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] hover:border-primary/40 lg:col-span-8"
               data-depth="0.05"
             >
               <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/80 to-transparent" />
@@ -224,9 +202,9 @@ export default function LandingPage() {
 
         {/* CTA */}
         <section className="mt-32 px-5 text-center">
-          <div className="celestial-card relative mx-auto w-[min(100%,896px)] overflow-hidden rounded-[32px] p-8 sm:p-14 lg:rounded-[48px] lg:p-20">
+          <div className="celestial-card tone-surface tone-gold relative mx-auto w-[min(100%,896px)] overflow-hidden rounded-[32px] p-8 sm:p-14 lg:rounded-[48px] lg:p-20">
             <div className="relative z-10">
-              <h2 className="m-0 mb-6 text-[clamp(2.3rem,6vw,3rem)] font-[200] leading-[1.1] tracking-[0.05em]">Ready to transcend?</h2>
+              <h2 className="celestial-title m-0 mb-6 text-[clamp(2.3rem,6vw,3rem)] font-[200] leading-[1.1] tracking-[0.05em]">Ready to transcend?</h2>
               <p className="mx-auto mb-12 max-w-[480px] text-lg leading-[1.6] text-muted-foreground">
                 Join the scholars who have already claimed their place in the intellectual cosmos.
               </p>
