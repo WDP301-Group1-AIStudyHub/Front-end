@@ -73,6 +73,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     }
   }
 
+  const handleSelectChat = (id: string) => {
+    navigate(`/aichatbox?historyId=${id}`)
+  }
+
   const baseNav = [
     {
       title: "Dashboard",
@@ -147,7 +151,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain items={isAdmin ? adminNav : baseNav} />
       </SidebarHeader>
       <SidebarContent>
-      {!isAdmin && <NavChats onDelete={handleDeleteChat} recentChats={chatItems} />}
+      {!isAdmin && <NavChats onDelete={handleDeleteChat} onSelect={handleSelectChat} recentChats={chatItems} />}
       </SidebarContent>
       <SidebarFooter>
         <NavUser onLogout={handleLogout} user={user} />

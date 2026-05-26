@@ -135,7 +135,7 @@ export default function AdminUsersPage() {
                     <img alt="" className="size-9 rounded-lg object-cover" src={user.avatar} />
                   </span>
                   <div className="min-w-0">
-                    <h2 className="truncate font-semibold">{user.fullName}</h2>
+                    <h2 className="truncate font-semibold text-foreground">{user.fullName}</h2>
                     <p className="truncate text-sm text-muted-foreground">{user.email}</p>
                   </div>
                 </div>

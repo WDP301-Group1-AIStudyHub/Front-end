@@ -4,7 +4,7 @@ import {
   useAui,
   useLocalRuntime,
 } from "@assistant-ui/react";
-import type { ChatModelAdapter, ThreadMessage } from "@assistant-ui/react";
+import type { ChatModelAdapter, ThreadMessage, ThreadMessageLike } from "@assistant-ui/react";
 import {
   BookMarked,
   BookOpen,
@@ -19,13 +19,36 @@ import {
   Zap,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
 import { Thread } from "@/components/assistant-ui/thread";
 import { Button } from "@/components/ui/button";
-import { ChatApiError, askChat } from "../services/chatApi";
+import { ChatApiError, askChat, getChatHistoryById } from "../services/chatApi";
 import { listDocuments } from "../services/documentApi";
-import type { ChatEvaluation, ChatSource } from "../types/chat";
+import type { ChatEvaluation, ChatHistoryItem, ChatSource } from "../types/chat";
 import type { DocumentItem } from "../types/document";
+
+// ── Inner component: owns the runtime so key-remount works correctly ──────────
+type ChatThreadProps = {
+  adapter: ChatModelAdapter;
+  initialMessages: readonly ThreadMessageLike[];
+  selectedDoc?: { fileName: string; subject?: string };
+};
+
+function ChatThread({ adapter, initialMessages, selectedDoc }: ChatThreadProps) {
+  const suggestionsAui = useAui(
+    { suggestions: Suggestions(quickPrompts) },
+    { parent: null },
+  );
+  const runtime = useLocalRuntime(adapter, { initialMessages });
+  return (
+    <AssistantRuntimeProvider runtime={runtime} aui={suggestionsAui}>
+      <Thread selectedDoc={selectedDoc} />
+    </AssistantRuntimeProvider>
+  );
+}
+
+// ── Main page ─────────────────────────────────────────────────────────────────
 
 const quickPrompts = [
   {
@@ -59,6 +82,9 @@ function getMessageText(message: ThreadMessage) {
 }
 
 export default function NewAIChatboxPage() {
+  const [searchParams] = useSearchParams();
+  const historyId = searchParams.get("historyId") ?? undefined;
+
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [loadingDocs, setLoadingDocs] = useState(true);
   const [selectedDocId, setSelectedDocId] = useState<string | undefined>(
@@ -71,6 +97,33 @@ export default function NewAIChatboxPage() {
   const [openSemesters, setOpenSemesters] = useState<Set<string>>(new Set());
   const [openSubjects, setOpenSubjects] = useState<Set<string>>(new Set());
   const [ragMode, setRagMode] = useState<"basic" | "corrective">("basic");
+
+  // History loading
+  const [historyMessages, setHistoryMessages] = useState<readonly ThreadMessageLike[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+
+  // Fetch history item when historyId changes
+  useEffect(() => {
+    if (!historyId) {
+      setHistoryMessages([]);
+      return;
+    }
+    setLoadingHistory(true);
+    getChatHistoryById(historyId)
+      .then((item: ChatHistoryItem) => {
+        // Restore document context from the history item
+        if (item.documentId) setSelectedDocId(item.documentId);
+        if (item.mode === "basic" || item.mode === "corrective") setRagMode(item.mode);
+        if (item.sources?.length) setLastSources(item.sources);
+        if (item.evaluation) setLastEvaluation(item.evaluation);
+        setHistoryMessages([
+          { role: "user", content: item.question, id: `${item.id}-user`, createdAt: new Date(item.createdAt) },
+          { role: "assistant", content: item.answer, id: `${item.id}-assistant`, createdAt: new Date(item.updatedAt) },
+        ]);
+      })
+      .catch(() => setHistoryMessages([]))
+      .finally(() => setLoadingHistory(false));
+  }, [historyId]);
 
   // Refs so the stable adapter closure can read latest state
   const selectedDocRef = useRef<string | undefined>(undefined);
@@ -224,12 +277,6 @@ export default function NewAIChatboxPage() {
     [],
   );
 
-  const suggestionsAui = useAui(
-    { suggestions: Suggestions(quickPrompts) },
-    { parent: null },
-  );
-  const runtime = useLocalRuntime(realAdapter);
-
   const selectedDoc = documents.find((d) => d.id === selectedDocId);
 
   return (
@@ -285,9 +332,19 @@ export default function NewAIChatboxPage() {
 
       <div className="celestial-panel mt-4 grid min-h-0 flex-1 grid-cols-1 overflow-hidden lg:grid-cols-[minmax(0,1fr)_340px]">
         <section className="min-h-0 bg-transparent">
-          <AssistantRuntimeProvider runtime={runtime} aui={suggestionsAui}>
-            <Thread selectedDoc={selectedDoc} />
-          </AssistantRuntimeProvider>
+          {loadingHistory ? (
+            <div className="flex h-full items-center justify-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="size-4 animate-spin" />
+              Đang tải lịch sử trò chuyện…
+            </div>
+          ) : (
+            <ChatThread
+              key={historyId ?? "new"}
+              adapter={realAdapter}
+              initialMessages={historyMessages}
+              selectedDoc={selectedDoc}
+            />
+          )}
         </section>
 
         <aside className="hidden min-h-0 border-l border-border/80 bg-card/45 p-5 lg:block">

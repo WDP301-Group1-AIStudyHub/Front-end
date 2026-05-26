@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,13 +23,19 @@ import {
   LinkIcon,
   ArrowUpRightIcon,
   Trash2Icon,
+  ChevronDownIcon,
+  ChevronUpIcon,
 } from "lucide-react";
+
+const INITIAL_LIMIT = 5;
 
 export function NavChats({
   onDelete,
+  onSelect,
   recentChats,
 }: {
   onDelete?: (id: string) => void
+  onSelect?: (id: string) => void
   recentChats: {
     id: string
     name: string
@@ -37,18 +44,27 @@ export function NavChats({
   }[]
 }) {
   const { isMobile } = useSidebar();
+  const [showAll, setShowAll] = React.useState(false);
+
+  const visibleChats = showAll ? recentChats : recentChats.slice(0, INITIAL_LIMIT);
+  const hiddenCount = recentChats.length - INITIAL_LIMIT;
 
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
       <SidebarGroupLabel>Recent Chats</SidebarGroupLabel>
       <SidebarMenu>
-        {recentChats.map((item) => (
-          <SidebarMenuItem key={item.name}>
+        {visibleChats.map((item) => (
+          <SidebarMenuItem key={item.id}>
             <SidebarMenuButton asChild>
-              <a href={item.url} title={item.name}>
+              <button
+                type="button"
+                onClick={() => onSelect?.(item.id)}
+                title={item.name}
+                className="w-full text-left"
+              >
                 <span>{item.emoji}</span>
                 <span>{item.name}</span>
-              </a>
+              </button>
             </SidebarMenuButton>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -87,12 +103,26 @@ export function NavChats({
             </DropdownMenu>
           </SidebarMenuItem>
         ))}
-        <SidebarMenuItem>
-          <SidebarMenuButton className="text-sidebar-foreground/70">
-            <MoreHorizontalIcon />
-            <span>More</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
+        {recentChats.length > INITIAL_LIMIT && (
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              className="text-sidebar-foreground/70"
+              onClick={() => setShowAll((prev) => !prev)}
+            >
+              {showAll ? (
+                <>
+                  <ChevronUpIcon />
+                  <span>Show less</span>
+                </>
+              ) : (
+                <>
+                  <ChevronDownIcon />
+                  <span>Show {hiddenCount} more</span>
+                </>
+              )}
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        )}
       </SidebarMenu>
     </SidebarGroup>
   );

@@ -729,6 +729,7 @@ html[data-theme="dark"] {
     background:
       linear-gradient(145deg, color-mix(in oklab, var(--surface-glass) 84%, transparent), color-mix(in oklab, var(--accent-sapphire) 9%, transparent));
     border-color: color-mix(in oklab, var(--border) 76%, var(--accent-sapphire));
+    color: var(--foreground);
   }
 
   .admin-icon-badge {

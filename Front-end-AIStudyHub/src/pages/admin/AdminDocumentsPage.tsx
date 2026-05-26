@@ -106,7 +106,7 @@ export default function AdminDocumentsPage() {
                     <FileCog className="size-4" />
                   </span>
                   <div className="min-w-0">
-                    <h2 className="truncate font-semibold">{document.title}</h2>
+                    <h2 className="truncate font-semibold text-foreground">{document.title}</h2>
                     <p className="truncate text-sm text-muted-foreground">{document.fileName}</p>
                   </div>
                 </div>

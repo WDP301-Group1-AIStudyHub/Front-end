@@ -10,6 +10,7 @@ import ResetPasswordPage from './pages/auth/ResetPasswordPage'
 import NewAIChatboxPage from './pages/new-AIChatboxPage'
 import NewLibraryPage from './pages/new-LibraryPage'
 import EvaluationPage from './pages/EvaluationPage'
+import UserProfilePage from './pages/UserProfilePage'
 import AdminActivityPage from './pages/admin/AdminActivityPage'
 import AdminDashboardPage from './pages/admin/AdminDashboardPage'
 import AdminDocumentsPage from './pages/admin/AdminDocumentsPage'
@@ -68,9 +69,11 @@ function AdminAccessDenied() {
 
 function ProtectedRoute({
   adminOnly = false,
+  userOnly = false,
   children,
 }: {
   adminOnly?: boolean
+  userOnly?: boolean
   children: (user: AuthUser) => ReactNode
 }) {
   const [user, setUser] = useState<AuthUser | null>(() => getStoredUser())
@@ -118,12 +121,17 @@ function ProtectedRoute({
     return <AdminAccessDenied />
   }
 
+  if (userOnly && user.role === 'admin') {
+    return <Navigate to="/admin" replace />
+  }
+
   return children(user)
 }
 
 function PublicAuthRoute({ children }: { children: ReactNode }) {
   if (hasAuthSession()) {
-    return <Navigate to="/dashboard" replace />
+    const storedUser = getStoredUser()
+    return <Navigate to={storedUser?.role === 'admin' ? '/admin' : '/dashboard'} replace />
   }
   return children
 }
@@ -152,21 +160,25 @@ function App() {
       <Route path="/demo-admin" element={<DemoAdminBootstrap />} />
       <Route
         path="/dashboard"
-        element={<ProtectedRoute>{() => routeWithShell(<DashboardPage />)}</ProtectedRoute>}
+        element={<ProtectedRoute userOnly>{() => routeWithShell(<DashboardPage />)}</ProtectedRoute>}
       />
       <Route
         path="/library"
-        element={<ProtectedRoute>{() => routeWithShell(<NewLibraryPage />)}</ProtectedRoute>}
+        element={<ProtectedRoute userOnly>{() => routeWithShell(<NewLibraryPage />)}</ProtectedRoute>}
       />
       <Route path="/new-library" element={<Navigate to="/library" replace />} />
       <Route
         path="/aichatbox"
-        element={<ProtectedRoute>{() => routeWithShell(<NewAIChatboxPage />)}</ProtectedRoute>}
+        element={<ProtectedRoute userOnly>{() => routeWithShell(<NewAIChatboxPage />)}</ProtectedRoute>}
       />
       <Route path="/new-aichatbox" element={<Navigate to="/aichatbox" replace />} />
       <Route
         path="/evaluation"
-        element={<ProtectedRoute>{() => routeWithShell(<EvaluationPage />)}</ProtectedRoute>}
+        element={<ProtectedRoute userOnly>{() => routeWithShell(<EvaluationPage />)}</ProtectedRoute>}
+      />
+      <Route
+        path="/profile"
+        element={<ProtectedRoute>{() => routeWithShell(<UserProfilePage />)}</ProtectedRoute>}
       />
       <Route
         path="/admin"
