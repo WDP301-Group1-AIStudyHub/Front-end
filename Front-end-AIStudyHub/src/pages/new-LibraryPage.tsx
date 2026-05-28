@@ -8,13 +8,18 @@ import {
   ExternalLink,
   FileIcon,
   FileText,
+  LinkIcon,
+  MessageSquare,
   MoreHorizontal,
   Pencil,
   SearchIcon,
   Settings,
   Trash2,
   UploadCloud,
+  Users,
+  X,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -63,6 +68,8 @@ import {
   uploadDocument,
 } from "../services/documentApi";
 import type { DocumentItem } from "../types/document";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const SEARCH_DEBOUNCE_MS = 350;
@@ -105,7 +112,10 @@ function formatFileSize(bytes: number): string {
   }
 
   const units = ["B", "KB", "MB", "GB"];
-  const index = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+  const index = Math.min(
+    Math.floor(Math.log(bytes) / Math.log(1024)),
+    units.length - 1,
+  );
   const value = bytes / 1024 ** index;
 
   return `${value >= 10 || index === 0 ? value.toFixed(0) : value.toFixed(1)} ${units[index]}`;
@@ -125,6 +135,66 @@ function formatDate(value: string): string {
   }).format(date);
 }
 
+function safeDecode(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
+function getPreviewTitle(previewParam: string): string {
+  const decoded = safeDecode(previewParam).split(/[\\/]/).pop() ?? previewParam;
+  const withoutQuery = decoded.split("?")[0] || decoded;
+
+  return withoutQuery.replace(/\.[^/.]+$/, "") || "Preview";
+}
+
+function getPreviewFileType(previewParam: string): string {
+  const decoded = safeDecode(previewParam).split("?")[0];
+  const extension = decoded.match(/\.([a-z0-9]+)$/i)?.[1];
+
+  return (extension || "txt").toUpperCase();
+}
+
+function normalizePreviewKey(value: string | null | undefined): string {
+  return safeDecode(value ?? "")
+    .replace(/^id:/i, "")
+    .trim()
+    .toLowerCase();
+}
+
+function findPreviewDocument(
+  documents: DocumentItem[],
+  urlParams: URLSearchParams,
+): DocumentItem | null {
+  const previewKey = normalizePreviewKey(urlParams.get("preview"));
+  const quickviewKey = normalizePreviewKey(urlParams.get("quickview"));
+  const idKey = normalizePreviewKey(urlParams.get("id"));
+  const keys = new Set([previewKey, quickviewKey, idKey].filter(Boolean));
+
+  if (!keys.size) {
+    return null;
+  }
+
+  return (
+    documents.find((document) => {
+      const documentKeys = [
+        document.id,
+        document.filePublicId,
+        document.fileName,
+        document.title,
+      ].map(normalizePreviewKey);
+
+      return documentKeys.some(
+        (documentKey) =>
+          keys.has(documentKey) ||
+          [...keys].some((key) => documentKey.includes(key)),
+      );
+    }) ?? null
+  );
+}
+
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error) {
     return error.message;
@@ -133,7 +203,10 @@ function getErrorMessage(error: unknown): string {
   return "Something went wrong";
 }
 
-function validateUploadForm(form: DocumentFormState, file: File | null): string | null {
+function validateUploadForm(
+  form: DocumentFormState,
+  file: File | null,
+): string | null {
   const title = form.title.trim();
   const description = form.description.trim();
   const subject = form.subject.trim();
@@ -214,11 +287,15 @@ function DocumentFields({
           <Input
             accept="application/pdf"
             disabled={disabled}
-            onChange={(event) => onFileChange?.(event.target.files?.[0] ?? null)}
+            onChange={(event) =>
+              onFileChange?.(event.target.files?.[0] ?? null)
+            }
             type="file"
           />
           <span className="text-xs text-muted-foreground">
-            {fileInput ? `${fileInput.name} · ${formatFileSize(fileInput.size)}` : "PDF only, up to 10 MB"}
+            {fileInput
+              ? `${fileInput.name} · ${formatFileSize(fileInput.size)}`
+              : "PDF only, up to 10 MB"}
           </span>
         </label>
       )}
@@ -265,9 +342,191 @@ function DocumentFields({
   );
 }
 
+function DocumentPreviewPage({
+  document,
+  previewParam,
+}: {
+  document: DocumentItem | null;
+  previewParam: string;
+}) {
+  const navigate = useNavigate();
+  const previewTitle = document
+    ? getPreviewTitle(document.fileName || document.title)
+    : getPreviewTitle(previewParam);
+  const fileType = getPreviewFileType(document?.fileName || previewParam);
+  const viewerSrc = document?.fileUrl ?? "";
+
+  function closePreview() {
+    navigate("/library", { replace: true });
+  }
+
+  function downloadPreview() {
+    if (document?.fileUrl) {
+      window.location.href = document.fileUrl;
+    }
+  }
+
+  async function copyPreviewLink() {
+    if (!navigator.clipboard) {
+      return;
+    }
+
+    await navigator.clipboard.writeText(window.location.href).catch(() => {});
+  }
+
+  return (
+    <main className="fixed inset-0 z-50 flex min-w-0 flex-col overflow-hidden bg-background text-foreground">
+      <header className="flex shrink-0 flex-col border-b border-border bg-background">
+        <div className="flex min-h-20 min-w-0 items-center justify-between gap-4 px-4 py-3">
+          <div className="flex min-w-0 items-start gap-4">
+            <IconTooltip label="Close preview">
+              <Button
+                variant="ghost"
+                size="icon-lg"
+                className="mt-1 rounded-full"
+                aria-label="Close preview"
+                onClick={closePreview}
+              >
+                <X aria-hidden="true" />
+              </Button>
+            </IconTooltip>
+
+            <div className="flex min-w-0 flex-col gap-1">
+              <div className="flex min-w-0 items-center gap-2 text-lg text-muted-foreground">
+                <strong className="truncate text-sm font-medium text-foreground">
+                  {previewTitle}
+                </strong>
+                <Badge variant="outline" className="rounded-full px-2 text-xs">
+                  <span className="shrink-0 uppercase">{fileType}</span>
+                </Badge>
+              </div>
+
+              <nav
+                className="flex flex-wrap items-center text-muted-foreground -ml-2"
+                aria-label="Preview menu"
+              >
+                {["File", "Edit", "View", "Help"].map((item) => (
+                  <Button
+                    className="text-muted-foreground hover:text-foreground h-6"
+                    variant="ghost"
+                    size="sm"
+                    key={item}
+                  >
+                    {item}
+                  </Button>
+                ))}
+              </nav>
+            </div>
+          </div>
+
+          <div className="flex shrink-0 items-center gap-2">
+            <div className="flex items-center gap-2">
+              <Avatar size="lg">
+                <AvatarFallback>DA</AvatarFallback>
+                <AvatarImage></AvatarImage>
+              </Avatar>
+              <IconTooltip label="Collaborators">
+                <Button
+                  variant="secondary"
+                  size="icon-lg"
+                  className="rounded-full"
+                  aria-label="Collaborators"
+                >
+                  <Users aria-hidden="true" />
+                </Button>
+              </IconTooltip>
+            </div>
+
+            <IconTooltip label="Comments">
+              <Button variant="ghost" size="icon-lg" aria-label="Comments">
+                <MessageSquare aria-hidden="true" />
+              </Button>
+            </IconTooltip>
+
+            <IconTooltip label="Download">
+              <Button
+                variant="ghost"
+                size="icon-lg"
+                aria-label="Download"
+                onClick={downloadPreview}
+              >
+                <Download aria-hidden="true" />
+              </Button>
+            </IconTooltip>
+
+            <IconTooltip label="Copy link">
+              <Button
+                variant="ghost"
+                size="icon-lg"
+                aria-label="Copy link"
+                onClick={() => void copyPreviewLink()}
+              >
+                <LinkIcon aria-hidden="true" />
+              </Button>
+            </IconTooltip>
+
+            <Button variant="outline" size="lg">
+              Share
+            </Button>
+          </div>
+        </div>
+
+        {/* <div className="flex min-h-14 items-center justify-between gap-4 px-12 pb-4">
+          <Button variant="ghost" className="gap-2 px-0 text-xl font-normal">
+            <Pencil data-icon="inline-start" aria-hidden="true" />
+            Edit content
+          </Button>
+
+          <div className="flex items-center gap-4">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="h-11 rounded-lg px-4 text-xl font-normal"
+                >
+                  UTF-8
+                  <ChevronDownIcon data-icon="inline-end" aria-hidden="true" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem>UTF-8</DropdownMenuItem>
+                <DropdownMenuItem>UTF-16</DropdownMenuItem>
+                <DropdownMenuItem>ASCII</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <IconTooltip label="Fullscreen">
+              <Button variant="ghost" size="icon-lg" aria-label="Fullscreen">
+                <Maximize2 aria-hidden="true" />
+              </Button>
+            </IconTooltip>
+          </div>
+        </div> */}
+      </header>
+
+      <section className="min-h-0 flex-1 overflow-hidden">
+        {viewerSrc ? (
+          <iframe
+            className="h-full w-full border-0"
+            src={viewerSrc}
+            title={previewTitle}
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center px-6 text-sm text-white">
+            Preview unavailable.
+          </div>
+        )}
+      </section>
+    </main>
+  );
+}
+
 export default function NewLibraryPage() {
+  const navigate = useNavigate();
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
-  const [editingDocument, setEditingDocument] = useState<DocumentItem | null>(null);
+  const [editingDocument, setEditingDocument] = useState<DocumentItem | null>(
+    null,
+  );
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -277,13 +536,15 @@ export default function NewLibraryPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [subjectFilter, setSubjectFilter] = useState("");
+  const [subjectFilter] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadForm, setUploadForm] = useState<DocumentFormState>(emptyForm);
   const [editForm, setEditForm] = useState<DocumentFormState>(emptyForm);
   const didLoadRef = useRef(false);
 
   const showSearchMode = searchQuery.trim() || subjectFilter.trim();
+
+  const urlParams = new URLSearchParams(window.location.search);
 
   const sortedDocuments = useMemo(
     () =>
@@ -376,7 +637,8 @@ export default function NewLibraryPage() {
       });
       setFeedback({
         tone: "success",
-        message: "Document uploaded successfully. It is being prepared for AI chat.",
+        message:
+          "Document uploaded successfully. It is being prepared for AI chat.",
       });
       setUploadForm(emptyForm);
       setSelectedFile(null);
@@ -390,7 +652,8 @@ export default function NewLibraryPage() {
           await loadDocuments();
           setFeedback({
             tone: "success",
-            message: "Document uploaded successfully. It is being prepared for AI chat.",
+            message:
+              "Document uploaded successfully. It is being prepared for AI chat.",
           });
           setUploadForm(emptyForm);
           setSelectedFile(null);
@@ -434,7 +697,10 @@ export default function NewLibraryPage() {
           document.id === updatedDocument.id ? updatedDocument : document,
         ),
       );
-      setFeedback({ tone: "success", message: "Document updated successfully" });
+      setFeedback({
+        tone: "success",
+        message: "Document updated successfully",
+      });
       setEditingDocument(null);
       setIsEditOpen(false);
     } catch (error) {
@@ -463,7 +729,10 @@ export default function NewLibraryPage() {
         current.filter((item) => item.id !== document.id),
       );
       setPendingDeleteId(null);
-      setFeedback({ tone: "success", message: "Document deleted successfully" });
+      setFeedback({
+        tone: "success",
+        message: "Document deleted successfully",
+      });
     } catch (error) {
       setFeedback({ tone: "error", message: getErrorMessage(error) });
     } finally {
@@ -482,7 +751,18 @@ export default function NewLibraryPage() {
   }
 
   function openFile(document: DocumentItem) {
-    window.open(document.fileUrl, "_blank", "noopener,noreferrer");
+    navigate(`/library?preview=${encodeURIComponent(document.id)}`);
+  }
+
+  const previewParam = urlParams.get("preview");
+
+  if (previewParam) {
+    return (
+      <DocumentPreviewPage
+        document={findPreviewDocument(documents, urlParams)}
+        previewParam={previewParam}
+      />
+    );
   }
 
   return (
@@ -502,13 +782,13 @@ export default function NewLibraryPage() {
             />
           </InputGroup>
 
-          <Input
+          {/* <Input
             aria-label="Filter by subject"
             className="max-w-56"
             onChange={(event) => setSubjectFilter(event.target.value)}
             placeholder="Subject"
             value={subjectFilter}
-          />
+          /> */}
         </header>
 
         <section className="flex flex-1 flex-col gap-4">
@@ -643,9 +923,6 @@ export default function NewLibraryPage() {
                             </div>
                             <div className="min-w-0">
                               <div className="truncate text-sm font-medium">
-                                {document.title}
-                              </div>
-                              <div className="truncate text-xs text-muted-foreground">
                                 {document.fileName}
                               </div>
                             </div>
@@ -684,7 +961,9 @@ export default function NewLibraryPage() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-44">
-                              <DropdownMenuItem onSelect={() => openFile(document)}>
+                              <DropdownMenuItem
+                                onSelect={() => openFile(document)}
+                              >
                                 <ExternalLink />
                                 Open
                               </DropdownMenuItem>
@@ -696,7 +975,9 @@ export default function NewLibraryPage() {
                                 <Download />
                                 Download
                               </DropdownMenuItem>
-                              <DropdownMenuItem onSelect={() => openEdit(document)}>
+                              <DropdownMenuItem
+                                onSelect={() => openEdit(document)}
+                              >
                                 <Pencil />
                                 Edit details
                               </DropdownMenuItem>
@@ -724,11 +1005,15 @@ export default function NewLibraryPage() {
 
             {!isLoading && sortedDocuments.length === 0 && (
               <div className="flex min-h-72 flex-col items-center justify-center gap-3 rounded-md border border-dashed border-border p-8 text-center">
-                <BookOpenText className="text-muted-foreground" aria-hidden="true" />
+                <BookOpenText
+                  className="text-muted-foreground"
+                  aria-hidden="true"
+                />
                 <div className="flex flex-col gap-1">
                   <h2 className="font-medium">No documents found</h2>
                   <p className="max-w-md text-sm text-muted-foreground">
-                    Upload a PDF to store it in Cloudinary and prepare it for AI chat.
+                    Upload a PDF to store it in Cloudinary and prepare it for AI
+                    chat.
                   </p>
                 </div>
                 <Button onClick={() => setIsUploadOpen(true)}>
@@ -743,7 +1028,10 @@ export default function NewLibraryPage() {
 
       <Sheet open={isUploadOpen} onOpenChange={setIsUploadOpen}>
         <SheetContent>
-          <form className="flex min-h-0 flex-1 flex-col" onSubmit={handleUpload}>
+          <form
+            className="flex min-h-0 flex-1 flex-col"
+            onSubmit={handleUpload}
+          >
             <SheetHeader>
               <SheetTitle>Upload document</SheetTitle>
               <SheetDescription>
