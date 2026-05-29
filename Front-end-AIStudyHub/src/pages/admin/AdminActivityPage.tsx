@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Activity, Filter, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { LoadingState } from '../../components/shared/CelestialLoading'
 import { listSystemActivities } from '../../services/adminApi'
 import type { SystemActivity } from '../../types/admin'
 import { AdminPageHeader, formatDateTime, StatusBadge } from './adminPageUtils'
@@ -81,7 +82,9 @@ export default function AdminActivityPage() {
 
         <div className="divide-y divide-border/60">
           {isLoading ? (
-            <div className="p-6 text-sm text-muted-foreground">Loading activities...</div>
+            <div className="p-5">
+              <LoadingState label="Loading activities..." tone="coral" />
+            </div>
           ) : filteredActivities.length === 0 ? (
             <div className="grid min-h-72 place-items-center p-8 text-center text-muted-foreground">
               <div>

@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { CelestialInlineLoader, CelestialProgress } from '../components/shared/CelestialLoading'
 import { listDocuments } from '../services/documentApi'
 import type { DocumentItem } from '../types/document'
 
@@ -141,11 +142,17 @@ export default function DashboardPage() {
             )}
             <p className="mt-1 text-sm text-muted-foreground">of 10 GB limit used</p>
           </div>
-          <div className="mt-8 h-1 overflow-hidden rounded-full bg-muted">
-            <div
-              className="h-full rounded-full bg-[var(--accent-teal)] transition-all"
-              style={{ width: `${storagePercent.toFixed(1)}%` }}
-            />
+          <div className="mt-8">
+            {loading ? (
+              <CelestialProgress tone="teal" />
+            ) : (
+              <div className="h-1 overflow-hidden rounded-full bg-muted">
+                <div
+                  className="h-full rounded-full bg-[var(--accent-teal)] transition-all"
+                  style={{ width: `${storagePercent.toFixed(1)}%` }}
+                />
+              </div>
+            )}
           </div>
         </article>
 
@@ -166,7 +173,7 @@ export default function DashboardPage() {
                 <a href="/aichatbox">Initiate Dialogue</a>
               </Button>
               <span className="text-sm italic text-muted-foreground">
-                {loading ? 'Loading library...' : `Searching ${docs.length} archived papers...`}
+                {loading ? <CelestialInlineLoader label="Loading library..." /> : `Searching ${docs.length} archived papers...`}
               </span>
             </div>
           </div>

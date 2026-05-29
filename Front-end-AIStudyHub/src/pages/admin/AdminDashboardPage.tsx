@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Activity, Database, FileText, ShieldCheck, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { LoadingState } from '../../components/shared/CelestialLoading'
 import { listAdminDocuments, listAdminUsers, listSystemActivities } from '../../services/adminApi'
 import type { AdminDocument, AdminUser, SystemActivity } from '../../types/admin'
 import { AdminPageHeader, AdminStatCard, formatDateTime, StatusBadge } from './adminPageUtils'
@@ -64,7 +65,11 @@ export default function AdminDashboardPage() {
             <Button variant="outline" asChild><a href="/admin/activity">Open activity</a></Button>
           </div>
           <div className="divide-y divide-border/60">
-            {activities.slice(0, 6).map((activity) => (
+            {isLoading ? (
+              <div className="p-5">
+                <LoadingState label="Loading admin signals..." tone="sapphire" />
+              </div>
+            ) : activities.slice(0, 6).map((activity) => (
               <div className="grid gap-3 p-5 transition-colors hover:bg-muted/35 md:grid-cols-[160px_1fr_auto]" key={activity.id}>
                 <span className="text-xs text-muted-foreground">{formatDateTime(activity.createdAt)}</span>
                 <div>

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
+import { CelestialSkeleton } from '../../components/shared/CelestialLoading'
 import type { SystemActivitySeverity } from '../../types/admin'
 
 export function formatDateTime(value?: string) {
@@ -59,7 +60,11 @@ export function AdminStatCard({
       <p className="mt-5 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
         {label}
       </p>
-      <strong className="mt-2 block text-3xl font-semibold tracking-tight">{value}</strong>
+      {value === '...' ? (
+        <CelestialSkeleton className="mt-3 h-8 w-24" tone={tone === 'blue' ? 'sapphire' : tone} />
+      ) : (
+        <strong className="mt-2 block text-3xl font-semibold tracking-tight">{value}</strong>
+      )}
     </article>
   )
 }

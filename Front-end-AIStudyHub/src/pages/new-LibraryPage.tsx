@@ -50,6 +50,10 @@ import {
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  CelestialInlineLoader,
+  CelestialProgress,
+} from "../components/shared/CelestialLoading";
+import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
@@ -586,14 +590,12 @@ export default function NewLibraryPage() {
                 <UploadCloud aria-hidden="true" />
                 Uploading, extracting text, and indexing for RAG
               </div>
-              <div className="h-2 overflow-hidden rounded-full bg-muted">
-                <div className="h-full w-2/3 animate-pulse rounded-full bg-primary" />
-              </div>
+              <CelestialProgress tone="cyan" />
             </div>
           )}
 
-          <div className="celestial-card celestial-table tone-surface tone-sapphire overflow-hidden">
-            <Table>
+          <div className="celestial-card celestial-table tone-surface tone-sapphire overflow-x-auto overflow-y-hidden">
+            <Table className="min-w-[820px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
@@ -764,7 +766,7 @@ export default function NewLibraryPage() {
             <SheetFooter>
               <Button disabled={isUploading} type="submit">
                 <UploadCloud data-icon="inline-start" aria-hidden="true" />
-                {isUploading ? "Uploading..." : "Upload PDF"}
+                {isUploading ? <CelestialInlineLoader label="Uploading..." /> : "Upload PDF"}
               </Button>
             </SheetFooter>
           </form>
