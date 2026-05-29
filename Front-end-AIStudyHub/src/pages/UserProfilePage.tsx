@@ -3,11 +3,11 @@ import {
   AtSign,
   CalendarDays,
   CheckCircle2,
-  Loader2,
   Pencil,
   ShieldCheck,
   UserRound,
 } from 'lucide-react'
+import { CelestialInlineLoader } from '../components/shared/CelestialLoading'
 import { updateProfile } from '../services/authApi'
 import { getStoredToken, getStoredUser, storeAuthSession } from '../services/authStorage'
 
@@ -283,10 +283,7 @@ export default function UserProfilePage() {
               type="button"
             >
               {saving ? (
-                <>
-                  <Loader2 className="size-4 animate-spin" />
-                  Saving…
-                </>
+                <CelestialInlineLoader label="Saving..." />
               ) : (
                 'Save changes'
               )}

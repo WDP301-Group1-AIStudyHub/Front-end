@@ -3,6 +3,7 @@ import type { ChangeEvent, FormEvent } from 'react'
 import AuthIcon from '../../components/auth/AuthIcon'
 import AuthScaffold from '../../components/auth/AuthScaffold'
 import SplitInfoCard from '../../components/auth/SplitInfoCard'
+import { CelestialInlineLoader } from '../../components/shared/CelestialLoading'
 import { forgotPassword } from '../../services/authApi'
 
 export default function ForgotPasswordPage() {
@@ -39,8 +40,8 @@ export default function ForgotPasswordPage() {
         title={<>Lost in<br />Space?</>}
         variant="lost"
       />
-      <section className="celestial-card relative min-h-[430px] overflow-hidden p-12">
-        <h2 className="m-0 mb-9 text-[32px] font-light leading-[1.2]">Recovery</h2>
+      <section className="celestial-card tone-surface tone-cyan relative min-h-[430px] overflow-hidden p-12">
+        <h2 className="celestial-title m-0 mb-9 text-[32px] font-light leading-[1.2]">Recovery</h2>
         <p className="mb-9 max-w-[330px] text-sm leading-[1.5] text-muted-foreground">Enter your email to receive a celestial link to reset your access.</p>
         <form className="grid gap-5" onSubmit={handleSubmit}>
           <label className="grid gap-2" htmlFor="recovery-email">
@@ -69,7 +70,7 @@ export default function ForgotPasswordPage() {
             type="submit"
             className="min-h-[56px] w-full rounded-lg bg-primary text-xs font-semibold uppercase tracking-[0.15em] text-primary-foreground transition-all hover:scale-[1.01] hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100"
           >
-            {loading ? 'Sending...' : 'Send Recovery Link'}
+            {loading ? <CelestialInlineLoader className="justify-center" label="Sending..." /> : 'Send Recovery Link'}
           </button>
         </form>
         <a

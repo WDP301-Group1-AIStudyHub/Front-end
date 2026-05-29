@@ -10,8 +10,8 @@ export default function ResetPasswordPage() {
         title={<>Found You !</>}
         variant="found"
       />
-      <section className="celestial-card relative min-h-[430px] overflow-hidden p-12">
-        <h2 className="m-0 mb-3 text-[32px] font-light leading-[1.2]">Reset My Orbit</h2>
+      <section className="celestial-card tone-surface tone-emerald relative min-h-[430px] overflow-hidden p-12">
+        <h2 className="celestial-title m-0 mb-3 text-[32px] font-light leading-[1.2]">Reset My Orbit</h2>
         <p className="mb-9 max-w-[360px] text-sm leading-[1.5] text-muted-foreground">
           Password reset links are not active on this backend yet. Request a recovery email or return to sign in.
         </p>

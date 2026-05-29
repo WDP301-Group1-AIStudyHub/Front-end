@@ -1,5 +1,7 @@
 import { useEffect, useRef } from 'react'
-import CelestialBackdrop from './components/shared/CelestialBackdrop'
+import { Brain, ChevronDown, Cloud, GitBranch, Monitor } from 'lucide-react'
+import BrandLogo from './components/shared/BrandLogo'
+import PublicNav from './components/shared/PublicNav'
 import ThemeToggle from './components/shared/ThemeToggle'
 
 const stats = [
@@ -24,41 +26,33 @@ export default function LandingPage() {
       })
     }
 
-    const handleScroll = () => {
-      if (!navRef.current) return
-      navRef.current.style.backgroundColor =
-        window.scrollY > 50 ? 'var(--surface-glass)' : 'transparent'
-    }
-
     window.addEventListener('mousemove', handleMouseMove)
-    window.addEventListener('scroll', handleScroll)
-    handleScroll()
 
     return () => {
       window.removeEventListener('mousemove', handleMouseMove)
-      window.removeEventListener('scroll', handleScroll)
     }
   }, [])
 
   return (
-    <div className="celestial-page min-h-svh overflow-x-hidden bg-transparent font-[Manrope,system-ui,sans-serif] tracking-[0.01em] text-foreground">
-      <CelestialBackdrop intensity="dramatic" />
+    <div className="celestial-page min-h-svh overflow-x-hidden bg-transparent font-sans tracking-[0.01em] text-foreground">
+      <PublicNav />
 
       {/* ── Nav ────────────────────────────────────────────── */}
       <nav
         ref={navRef}
-        className="fixed top-0 z-50 w-full border-b border-border/70 backdrop-blur-[24px] transition-colors duration-[180ms]"
+        className="hidden"
       >
-        <div className="mx-auto flex h-20 w-[min(100%,1440px)] items-center justify-between gap-4 px-5 lg:px-20">
-          <div className="text-[clamp(22px,3vw,32px)] font-semibold leading-[1.2] tracking-tight">AI Study Hub</div>
-          <div className="hidden items-center gap-10 md:flex">
+        <div className="mx-auto flex w-[min(100%,1440px)] items-center justify-between gap-4 px-5 py-5 lg:px-[120px]">
+          <BrandLogo />
+          <div className="hidden items-center gap-[30px] md:flex">
             {['#dashboard', '#about'].map((href, i) => (
               <a
                 key={href}
                 href={href}
-                className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground transition-colors hover:text-foreground"
+                className="inline-flex items-center gap-3.5 text-sm font-medium text-foreground/80 transition-colors hover:text-foreground"
               >
-                {['Dashboard', 'About Us'][i]}
+                <span>{['Dashboard', 'About Us'][i]}</span>
+                <ChevronDown className="size-3.5" aria-hidden="true" />
               </a>
             ))}
           </div>
@@ -72,7 +66,7 @@ export default function LandingPage() {
             </a>
             <a
               href="/register"
-              className="lp-pulsing-btn inline-flex min-h-[42px] items-center justify-center rounded-full px-5 text-xs font-semibold uppercase tracking-[0.13em] transition-all sm:min-h-[46px] sm:px-8"
+              className="lp-pulsing-btn inline-flex min-h-[42px] items-center justify-center rounded-full px-5 text-sm font-medium transition-all sm:px-[29px]"
             >
               Sign Up
             </a>
@@ -81,32 +75,33 @@ export default function LandingPage() {
       </nav>
 
       {/* ── Main ───────────────────────────────────────────── */}
-      <main className="relative z-[1] pt-32 pb-24">
+      <main className="relative z-[1] pb-24 pt-[200px] md:pt-[280px]">
 
         {/* Hero */}
-        <section className="mx-auto mb-24 w-[min(100%,1440px)] px-5 text-center lg:px-20">
-          <div className="mb-8 inline-block rounded-full border border-border bg-card/50 px-4 py-1 backdrop-blur-[8px]">
-            <span className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+        <section className="mx-auto mb-24 w-[min(100%,1440px)] px-5 text-center lg:px-[120px]">
+          <div className="mb-10 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 backdrop-blur-[18px]">
+            <span className="size-1 rounded-full bg-white" aria-hidden="true" />
+            <span className="text-[13px] font-medium text-foreground/70">
               The Future of Intellectual Astronomy
             </span>
           </div>
-          <h1 className="celestial-title lp-stellar-text-glow m-0 mb-8 text-[clamp(3rem,8vw,7rem)] font-[200] leading-[1.04] tracking-[0.03em]">
+          <h1 className="celestial-title lp-stellar-text-glow mx-auto mb-6 max-w-[760px] text-[clamp(2.25rem,5vw,4.7rem)] font-medium leading-[1.18]">
             Navigate the Cosmos <br /> of Knowledge
           </h1>
-          <p className="mx-auto mb-12 w-[min(100%,672px)] text-lg leading-[1.6] text-muted-foreground">
+          <p className="mx-auto mb-10 w-[min(100%,680px)] text-[15px] leading-[1.65] text-muted-foreground">
             An ethereal platform where AI acts as your celestial guide, transforming vast
             expanses of information into structured constellations of insight.
           </p>
           <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
             <a
               href="/register"
-              className="lp-pulsing-btn inline-flex min-h-[56px] items-center justify-center rounded-full px-10 text-xs font-semibold uppercase tracking-[0.15em] transition-all"
+              className="lp-pulsing-btn inline-flex min-h-[46px] items-center justify-center rounded-full px-[29px] text-sm font-medium transition-all"
             >
               Start Exploration
             </a>
             <a
               href="/login"
-              className="inline-flex min-h-[56px] items-center justify-center rounded-full border border-border bg-card/40 px-10 text-xs font-semibold uppercase tracking-[0.15em] transition-all hover:bg-muted"
+              className="video-pill-ghost inline-flex min-h-[46px] items-center justify-center rounded-full px-[29px] text-sm font-medium transition-all"
             >
               Watch the Orbit
             </a>
@@ -114,51 +109,67 @@ export default function LandingPage() {
         </section>
 
         {/* Bento grid */}
-        <section id="dashboard" className="mx-auto w-[min(100%,1440px)] px-5 lg:px-20">
+        <section id="dashboard" className="mx-auto w-[min(100%,1440px)] px-5 lg:px-[120px]">
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:auto-rows-[280px]">
 
             {/* Research — col-span-8 */}
             <article
-              className="lp-parallax-layer celestial-card tone-surface tone-sapphire group relative flex min-h-[320px] flex-col justify-between overflow-hidden rounded-3xl p-8 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-2 hover:scale-[1.02] hover:border-primary/40 lg:col-span-8 lg:p-12"
+              className="lp-parallax-layer celestial-card tone-surface tone-sapphire lp-premium-card group relative flex min-h-[320px] flex-col justify-between overflow-hidden rounded-[28px] p-8 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-2 lg:col-span-8 lg:p-12"
               data-depth="0.1"
             >
               <div className="relative z-10">
-                <span className="material-symbols-outlined mb-6 block text-4xl text-[var(--accent-gold)]">psychology</span>
+                <span className="lp-soft-icon mb-8">
+                  <Brain aria-hidden="true" />
+                </span>
                 <h2 className="m-0 mb-4 text-[32px] font-light leading-[1.2] tracking-[0.03em]">AI-Powered Research</h2>
                 <p className="m-0 max-w-[410px] text-base leading-[1.6] text-muted-foreground">
                   Our neural engine synthesizes millions of academic papers into coherent
                   summaries, highlighting hidden connections across disciplines.
                 </p>
               </div>
-              <div className="absolute top-[-10%] right-[-10%] opacity-20 group-hover:opacity-40 transition-opacity duration-700">
-                <img
-                  alt="Neural network art"
-                  src="/landing-assets/stitch-bento-1.jpg"
-                  className="w-[500px] h-[500px] rounded-full object-cover"
-                />
+              <div className="lp-constellation-visual" aria-hidden="true">
+                {Array.from({ length: 12 }).map((_, index) => (
+                  <span key={index} />
+                ))}
               </div>
             </article>
 
             {/* Cloud — col-span-4 */}
             <article
-              className="lp-parallax-layer celestial-card tone-surface tone-teal flex min-h-[280px] flex-col justify-end rounded-3xl p-8 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-2 hover:scale-[1.02] hover:border-primary/40 lg:col-span-4 lg:p-10"
+              className="lp-parallax-layer celestial-card tone-surface tone-gold lp-premium-card flex min-h-[280px] flex-col justify-between rounded-[28px] p-8 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-2 lg:col-span-4 lg:p-10"
               data-depth="0.2"
             >
-              <span className="material-symbols-outlined mb-6 block text-4xl text-[var(--accent-teal)]">cloud_sync</span>
-              <h2 className="m-0 mb-4 text-[24px] font-light leading-[1.2]">Cloud Synced Library</h2>
-              <p className="m-0 text-sm leading-[1.6] text-muted-foreground">
-                Your entire intellectual universe, synchronized across every device in the void.
-              </p>
+              <span className="lp-soft-icon">
+                <Cloud aria-hidden="true" />
+              </span>
+              <div className="lp-sync-visual" aria-hidden="true">
+                <span />
+                <span />
+                <span />
+              </div>
+              <div>
+                <h2 className="m-0 mb-4 text-[24px] font-light leading-[1.2]">Cloud Synced Library</h2>
+                <p className="m-0 text-sm leading-[1.6] text-muted-foreground">
+                  Your entire intellectual universe, synchronized across every device in the void.
+                </p>
+              </div>
             </article>
 
             {/* Semantic — col-span-4 */}
             <article
-              className="lp-parallax-layer celestial-card tone-surface tone-violet flex min-h-[280px] flex-col justify-between rounded-3xl p-8 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-2 hover:scale-[1.02] hover:border-primary/40 lg:col-span-4 lg:p-10"
+              className="lp-parallax-layer celestial-card tone-surface tone-violet lp-premium-card flex min-h-[280px] flex-col justify-between rounded-[28px] p-8 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-2 lg:col-span-4 lg:p-10"
               data-depth="0.15"
             >
               <div>
-                <span className="material-symbols-outlined mb-6 block text-4xl text-[var(--accent-violet)]">hub</span>
+                <span className="lp-soft-icon mb-8">
+                  <GitBranch aria-hidden="true" />
+                </span>
                 <h2 className="m-0 mb-4 text-[24px] font-light leading-[1.2]">Semantic Insights</h2>
+              </div>
+              <div className="lp-node-visual" aria-hidden="true">
+                <span />
+                <span />
+                <span />
               </div>
               <p className="m-0 text-sm leading-[1.6] text-muted-foreground">
                 Discover the &quot;why&quot; behind the data through our advanced contextual mapping engine.
@@ -167,19 +178,33 @@ export default function LandingPage() {
 
             {/* Interface — col-span-8 */}
             <article
-              className="lp-image-overlay lp-parallax-layer celestial-card tone-surface tone-coral group relative min-h-[320px] overflow-hidden rounded-3xl transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] hover:border-primary/40 lg:col-span-8"
+              className="lp-parallax-layer celestial-card tone-surface tone-sapphire lp-premium-card group relative flex min-h-[320px] flex-col justify-between overflow-hidden rounded-[28px] p-8 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-2 lg:col-span-8 lg:p-10"
               data-depth="0.05"
             >
-              <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/80 to-transparent" />
-              <div className="absolute bottom-10 left-10 z-20">
-                <h2 className="m-0 mb-2 text-[24px] font-light leading-[1.2] text-white">The Void Interface</h2>
-                <p className="m-0 text-sm text-white/75">Zero-distraction workspace designed for deep focus sessions.</p>
+              <div className="relative z-10">
+                <span className="lp-soft-icon mb-8">
+                  <Monitor aria-hidden="true" />
+                </span>
+                <h2 className="m-0 mb-2 text-[24px] font-light leading-[1.2]">The Void Interface</h2>
+                <p className="m-0 text-sm text-muted-foreground">Zero-distraction workspace designed for deep focus sessions.</p>
               </div>
-              <img
-                alt="Futuristic UI"
-                src="/landing-assets/stitch-bento-2.jpg"
-                className="w-full h-full object-cover scale-110 group-hover:scale-100 transition-transform duration-[2s]"
-              />
+              <div className="lp-interface-visual" aria-hidden="true">
+                <div>
+                  <span />
+                  <span />
+                  <span />
+                </div>
+                <div>
+                  {Array.from({ length: 18 }).map((_, index) => (
+                    <span key={index} />
+                  ))}
+                </div>
+                <div>
+                  <span />
+                  <span />
+                  <span />
+                </div>
+              </div>
             </article>
 
           </div>
@@ -188,7 +213,7 @@ export default function LandingPage() {
         {/* Stats */}
         <section
           id="about"
-          className="mx-auto mt-32 w-[min(100%,1440px)] border-y border-border/60 px-5 py-20 lg:px-20"
+          className="mx-auto mt-32 w-[min(100%,1440px)] border-y border-border/60 px-5 py-20 lg:px-[120px]"
         >
           <div className="grid grid-cols-2 gap-6 text-center lg:grid-cols-4">
             {stats.map(([value, label]) => (
@@ -223,7 +248,7 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="w-full border-t border-border/60 pb-12 pt-12">
-        <div className="mx-auto flex w-[min(100%,1440px)] flex-col items-start justify-between gap-6 px-5 md:flex-row md:items-center lg:px-20">
+        <div className="mx-auto flex w-[min(100%,1440px)] flex-col items-start justify-between gap-6 px-5 md:flex-row md:items-center lg:px-[120px]">
           <div className="text-xs font-bold uppercase tracking-[0.15em]">AI Study Hub</div>
           <div className="flex flex-wrap items-center gap-5 md:gap-10">
             {['#privacy', '#terms', '#contact'].map((href, i) => (

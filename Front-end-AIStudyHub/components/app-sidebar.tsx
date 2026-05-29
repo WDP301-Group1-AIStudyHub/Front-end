@@ -9,14 +9,15 @@ import {
   LibraryIcon,
   MessagesSquareIcon,
   ShieldCheck,
-  Sparkles,
   Users,
 } from "lucide-react"
 
 import { useNavigate, useLocation, Link } from "react-router-dom"
 import { NavMain } from "@/components/nav-main"
 import { NavChats } from "@/components/nav-chats"
+import type { ChatSessionItem } from "@/components/nav-chats"
 import { NavUser } from "@/components/nav-user"
+import { groupBySession } from "@/src/lib/groupChatHistory"
 import {
   Sidebar,
   SidebarContent,
@@ -25,6 +26,7 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 import ThemeToggle from "@/src/components/shared/ThemeToggle"
+import BrandLogo from "@/src/components/shared/BrandLogo"
 import { logout } from "@/src/services/authApi"
 import { getStoredUser } from "@/src/services/authStorage"
 import { deleteChatHistory, getChatHistory } from "@/src/services/chatApi"
@@ -41,40 +43,38 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     name: storedUser?.fullName || "John Doe",
   }
 
-  // Real chat history
-  const [chatItems, setChatItems] = React.useState<
-    { id: string; name: string; url: string; emoji: string }[]
-  >([])
+  // Real chat history — grouped into sessions
+  const [chatSessions, setChatSessions] = React.useState<ChatSessionItem[]>([])
 
   React.useEffect(() => {
     if (isAdmin) return
     getChatHistory()
       .then((items) =>
-        setChatItems(
-          items.map((item) => ({
-            id: item.id,
-            name: item.question.slice(0, 60),
+        setChatSessions(
+          groupBySession(items).map((g) => ({
+            id: g.id,
+            name: g.name,
             url: "/aichatbox",
             emoji: "💬",
+            dateLabel: g.dateLabel,
+            itemIds: g.itemIds,
           })),
         ),
       )
-      .catch(() => {
-        setChatItems([])
-      })
+      .catch(() => setChatSessions([]))
   }, [isAdmin])
 
-  const handleDeleteChat = async (id: string) => {
+  const handleDeleteChat = async (itemIds: string[]) => {
     try {
-      await deleteChatHistory(id)
-      setChatItems((prev) => prev.filter((c) => c.id !== id))
+      await Promise.all(itemIds.map((id) => deleteChatHistory(id)))
+      setChatSessions((prev) => prev.filter((s) => s.id !== itemIds[0]))
     } catch {
       // silently ignore
     }
   }
 
-  const handleSelectChat = (id: string) => {
-    navigate(`/aichatbox?historyId=${id}`)
+  const handleSelectChat = (itemIds: string[]) => {
+    navigate(`/aichatbox?sessionIds=${itemIds.join(",")}`)
   }
 
   const baseNav = [
@@ -140,18 +140,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     <Sidebar className="border-r-0" {...props}>
       <SidebarHeader>
         <div className="flex items-center justify-between gap-2 px-2 py-1.5">
-          <Link className="flex min-w-0 items-center gap-2" to="/dashboard">
-            <span className="grid size-9 shrink-0 place-items-center rounded-xl border border-[var(--accent-gold)]/40 bg-[color-mix(in_oklab,var(--accent-gold)_14%,transparent)] text-[var(--accent-gold)] shadow-[0_0_24px_color-mix(in_oklab,var(--accent-gold)_28%,transparent)]">
-              <Sparkles className="size-4" aria-hidden="true" />
-            </span>
-            <span className="celestial-title truncate font-bold tracking-tight">AI Study Hub</span>
+          <Link className="min-w-0" to="/dashboard">
+            <BrandLogo />
           </Link>
           <ThemeToggle compact />
         </div>
         <NavMain items={isAdmin ? adminNav : baseNav} />
       </SidebarHeader>
       <SidebarContent>
-      {!isAdmin && <NavChats onDelete={handleDeleteChat} onSelect={handleSelectChat} recentChats={chatItems} />}
+      {!isAdmin && <NavChats onDelete={handleDeleteChat} onSelect={handleSelectChat} recentChats={chatSessions} />}
       </SidebarContent>
       <SidebarFooter>
         <NavUser onLogout={handleLogout} user={user} />

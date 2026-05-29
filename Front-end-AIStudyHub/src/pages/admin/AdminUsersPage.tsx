@@ -10,6 +10,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
+import { LoadingState } from '../../components/shared/CelestialLoading'
 import { listAdminUsers, toggleUserActive, updateAdminUser } from '../../services/adminApi'
 import type { AdminUser } from '../../types/admin'
 import { AdminPageHeader, formatDateTime, StatusBadge } from './adminPageUtils'
@@ -119,7 +120,9 @@ export default function AdminUsersPage() {
 
         <div className="divide-y divide-border/60">
           {isLoading ? (
-            <div className="p-6 text-sm text-muted-foreground">Loading users...</div>
+            <div className="p-5">
+              <LoadingState label="Loading users..." tone="teal" />
+            </div>
           ) : filteredUsers.length === 0 ? (
             <div className="grid min-h-72 place-items-center p-8 text-center text-muted-foreground">
               <div>

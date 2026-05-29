@@ -21,7 +21,7 @@ export default function AuthScaffold({
     <div className="celestial-page flex min-h-svh flex-col overflow-x-hidden">
       <CelestialBackdrop intensity="dramatic" />
       <AuthHeader action={action} />
-      <main className={`relative z-[1] w-full flex-1 px-[clamp(20px,6vw,80px)] pb-12 pt-20 ${mode === 'centered' ? mainCentered : mainSplit}`}>
+      <main className={`relative z-[1] w-full flex-1 px-[clamp(20px,6vw,80px)] pb-12 pt-32 ${mode === 'centered' ? mainCentered : mainSplit}`}>
         {children}
       </main>
       {showFooter || mode === 'split' ? <AuthFooter compact={mode === 'split'} /> : null}

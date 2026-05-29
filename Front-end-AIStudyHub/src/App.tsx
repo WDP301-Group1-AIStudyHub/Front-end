@@ -9,12 +9,15 @@ import RegisterPage from './pages/auth/RegisterPage'
 import ResetPasswordPage from './pages/auth/ResetPasswordPage'
 import NewAIChatboxPage from './pages/new-AIChatboxPage'
 import NewLibraryPage from './pages/new-LibraryPage'
+import AboutPage from './pages/AboutPage'
 import EvaluationPage from './pages/EvaluationPage'
 import UserProfilePage from './pages/UserProfilePage'
 import AdminActivityPage from './pages/admin/AdminActivityPage'
 import AdminDashboardPage from './pages/admin/AdminDashboardPage'
 import AdminDocumentsPage from './pages/admin/AdminDocumentsPage'
 import AdminUsersPage from './pages/admin/AdminUsersPage'
+import { LoadingState } from './components/shared/CelestialLoading'
+import AppVideoBackground from './components/shared/AppVideoBackground'
 import { getCurrentUser } from './services/authApi'
 import { getStoredUser, hasAuthSession, storeAuthSession } from './services/authStorage'
 import type { AuthUser } from './types/auth'
@@ -35,9 +38,7 @@ const demoAdminUser: AuthUser = {
 function AuthLoading() {
   return (
     <div className="celestial-page grid min-h-svh place-items-center">
-      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-        Verifying session...
-      </p>
+      <LoadingState className="min-h-48 w-[min(100%,420px)]" label="Verifying session..." tone="gold" />
     </div>
   )
 }
@@ -151,53 +152,57 @@ function DemoAdminBootstrap() {
 
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/login" element={<PublicAuthRoute><LoginPage /></PublicAuthRoute>} />
-      <Route path="/register" element={<PublicAuthRoute><RegisterPage /></PublicAuthRoute>} />
-      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-      <Route path="/reset-password" element={<ResetPasswordPage />} />
-      <Route path="/demo-admin" element={<DemoAdminBootstrap />} />
-      <Route
-        path="/dashboard"
-        element={<ProtectedRoute userOnly>{() => routeWithShell(<DashboardPage />)}</ProtectedRoute>}
-      />
-      <Route
-        path="/library"
-        element={<ProtectedRoute userOnly>{() => routeWithShell(<NewLibraryPage />)}</ProtectedRoute>}
-      />
-      <Route path="/new-library" element={<Navigate to="/library" replace />} />
-      <Route
-        path="/aichatbox"
-        element={<ProtectedRoute userOnly>{() => routeWithShell(<NewAIChatboxPage />)}</ProtectedRoute>}
-      />
-      <Route path="/new-aichatbox" element={<Navigate to="/aichatbox" replace />} />
-      <Route
-        path="/evaluation"
-        element={<ProtectedRoute userOnly>{() => routeWithShell(<EvaluationPage />)}</ProtectedRoute>}
-      />
-      <Route
-        path="/profile"
-        element={<ProtectedRoute>{() => routeWithShell(<UserProfilePage />)}</ProtectedRoute>}
-      />
-      <Route
-        path="/admin"
-        element={<ProtectedRoute adminOnly>{() => routeWithShell(<AdminDashboardPage />)}</ProtectedRoute>}
-      />
-      <Route
-        path="/admin/users"
-        element={<ProtectedRoute adminOnly>{() => routeWithShell(<AdminUsersPage />)}</ProtectedRoute>}
-      />
-      <Route
-        path="/admin/documents"
-        element={<ProtectedRoute adminOnly>{() => routeWithShell(<AdminDocumentsPage />)}</ProtectedRoute>}
-      />
-      <Route
-        path="/admin/activity"
-        element={<ProtectedRoute adminOnly>{() => routeWithShell(<AdminActivityPage />)}</ProtectedRoute>}
-      />
-      <Route path="*" element={<LandingPage />} />
-    </Routes>
+    <>
+      <AppVideoBackground />
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/login" element={<PublicAuthRoute><LoginPage /></PublicAuthRoute>} />
+        <Route path="/register" element={<PublicAuthRoute><RegisterPage /></PublicAuthRoute>} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/demo-admin" element={<DemoAdminBootstrap />} />
+        <Route
+          path="/dashboard"
+          element={<ProtectedRoute userOnly>{() => routeWithShell(<DashboardPage />)}</ProtectedRoute>}
+        />
+        <Route
+          path="/library"
+          element={<ProtectedRoute userOnly>{() => routeWithShell(<NewLibraryPage />)}</ProtectedRoute>}
+        />
+        <Route path="/new-library" element={<Navigate to="/library" replace />} />
+        <Route
+          path="/aichatbox"
+          element={<ProtectedRoute userOnly>{() => routeWithShell(<NewAIChatboxPage />)}</ProtectedRoute>}
+        />
+        <Route path="/new-aichatbox" element={<Navigate to="/aichatbox" replace />} />
+        <Route
+          path="/evaluation"
+          element={<ProtectedRoute userOnly>{() => routeWithShell(<EvaluationPage />)}</ProtectedRoute>}
+        />
+        <Route
+          path="/profile"
+          element={<ProtectedRoute>{() => routeWithShell(<UserProfilePage />)}</ProtectedRoute>}
+        />
+        <Route
+          path="/admin"
+          element={<ProtectedRoute adminOnly>{() => routeWithShell(<AdminDashboardPage />)}</ProtectedRoute>}
+        />
+        <Route
+          path="/admin/users"
+          element={<ProtectedRoute adminOnly>{() => routeWithShell(<AdminUsersPage />)}</ProtectedRoute>}
+        />
+        <Route
+          path="/admin/documents"
+          element={<ProtectedRoute adminOnly>{() => routeWithShell(<AdminDocumentsPage />)}</ProtectedRoute>}
+        />
+        <Route
+          path="/admin/activity"
+          element={<ProtectedRoute adminOnly>{() => routeWithShell(<AdminActivityPage />)}</ProtectedRoute>}
+        />
+        <Route path="*" element={<LandingPage />} />
+      </Routes>
+    </>
   )
 }
 

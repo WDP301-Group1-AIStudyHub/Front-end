@@ -6,6 +6,7 @@ import AuthCardShell from '../../components/auth/AuthCardShell'
 import AuthScaffold from '../../components/auth/AuthScaffold'
 import FloatingField from '../../components/auth/FloatingField'
 import PasswordField from '../../components/auth/PasswordField'
+import { CelestialInlineLoader } from '../../components/shared/CelestialLoading'
 import { register } from '../../services/authApi'
 
 const initialForm = {
@@ -114,7 +115,7 @@ export default function RegisterPage() {
             type="submit"
             className="min-h-[56px] w-full rounded-lg bg-primary text-xs font-semibold uppercase tracking-[0.15em] text-primary-foreground transition-all hover:scale-[1.01] hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100"
           >
-            {loading ? 'Creating Account...' : 'Create Account'}
+            {loading ? <CelestialInlineLoader className="justify-center" label="Creating Account..." /> : 'Create Account'}
           </button>
         </form>
         <p className="mt-6 text-center text-xs text-muted-foreground">

@@ -11,6 +11,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import { Textarea } from '@/components/ui/textarea'
+import { LoadingState } from '../../components/shared/CelestialLoading'
 import { listAdminDocuments, updateDocumentMetadata } from '../../services/adminApi'
 import type { AdminDocument } from '../../types/admin'
 import { AdminPageHeader, formatDateTime, StatusBadge } from './adminPageUtils'
@@ -90,7 +91,9 @@ export default function AdminDocumentsPage() {
 
         <div className="divide-y divide-border/60">
           {isLoading ? (
-            <div className="p-6 text-sm text-muted-foreground">Loading documents...</div>
+            <div className="p-5">
+              <LoadingState label="Loading documents..." tone="gold" />
+            </div>
           ) : filteredDocuments.length === 0 ? (
             <div className="grid min-h-72 place-items-center p-8 text-center text-muted-foreground">
               <div>

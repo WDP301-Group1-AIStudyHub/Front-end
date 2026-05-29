@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { BarChart2, Clock, Loader2, Target, Zap } from 'lucide-react'
+import { BarChart2, Clock, Target, Zap } from 'lucide-react'
+import { LoadingState } from '../components/shared/CelestialLoading'
 import { getEvaluationLogs, getEvaluationSummary } from '../services/chatApi'
 import type { EvaluationLog, EvaluationSummary } from '../types/chat'
 
@@ -64,9 +65,7 @@ export default function EvaluationPage() {
       </header>
 
       {loading && (
-        <div className="mt-12 flex items-center justify-center">
-          <Loader2 className="size-6 animate-spin text-muted-foreground" />
-        </div>
+        <LoadingState className="mt-8" label="Loading evaluation data..." tone="violet" />
       )}
 
       {error && (
