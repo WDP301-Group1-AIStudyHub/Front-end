@@ -9,7 +9,10 @@ import RegisterPage from "./pages/auth/RegisterPage";
 import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 import NewAIChatboxPage from "./pages/new-AIChatboxPage";
 import NewLibraryPage from "./pages/new-LibraryPage";
-import EvaluationPage from "./pages/EvaluationPage";
+import EvaluationPage from "./pages/evaluation/EvaluationPage";
+import NewQuestion from "./pages/evaluation/NewQuestion";
+import RunBenchmark from "./pages/evaluation/RunBenchmark";
+import Summary from "./pages/evaluation/Summary";
 import AdminActivityPage from "./pages/admin/AdminActivityPage";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import AdminDocumentsPage from "./pages/admin/AdminDocumentsPage";
@@ -208,6 +211,30 @@ function App() {
         element={
           <ProtectedRoute>
             {() => routeWithShell(<EvaluationPage />)}
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/evaluation/new"
+        element={
+          <ProtectedRoute>
+            {() => routeWithShell(<NewQuestion />)}
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/evaluation/run/:questionId"
+        element={
+          <ProtectedRoute>
+            {() => routeWithShell(<RunBenchmark />)}
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/evaluation/summary"
+        element={
+          <ProtectedRoute>
+            {() => routeWithShell(<Summary />)}
           </ProtectedRoute>
         }
       />
