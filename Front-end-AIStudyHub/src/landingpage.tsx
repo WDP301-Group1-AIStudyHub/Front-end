@@ -106,6 +106,15 @@ export default function LandingPage() {
               Watch the Orbit
             </a>
           </div>
+
+          {/* Neo-brutalist real image asset */}
+          <div className="mx-auto mt-16 max-w-[760px] border-4 border-black bg-white p-3 shadow-[8px_8px_0px_0px_rgba(17,17,17,1)] rounded-2xl hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[10px_10px_0px_0px_rgba(17,17,17,1)] transition-all duration-200">
+            <img 
+              src="/landing-assets/hero-illustration.png" 
+              alt="Neo-brutalist AI Study Hub Hero Illustration" 
+              className="w-full h-auto rounded-lg border-2 border-black" 
+            />
+          </div>
         </section>
 
         {/* Bento grid */}
