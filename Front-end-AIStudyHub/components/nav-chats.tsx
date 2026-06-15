@@ -23,6 +23,7 @@ import {
   ArrowUpRightIcon,
   Trash2Icon,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export function NavChats({
   onDelete,
@@ -45,10 +46,10 @@ export function NavChats({
         {recentChats.map((item) => (
           <SidebarMenuItem key={item.name}>
             <SidebarMenuButton asChild>
-              <a href={item.url} title={item.name}>
+              <Link to={item.url} title={item.name}>
                 <span>{item.emoji}</span>
                 <span>{item.name}</span>
-              </a>
+              </Link>
             </SidebarMenuButton>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
