@@ -5,11 +5,29 @@ import AcademicAside from '../../components/auth/AcademicAside'
 import AuthCardShell from '../../components/auth/AuthCardShell'
 import AuthScaffold from '../../components/auth/AuthScaffold'
 import FloatingField from '../../components/auth/FloatingField'
-import { login } from '../../services/authApi'
+import { storeAuthSession } from '../../services/authStorage'
+import type { AuthUser } from '../../types/auth'
 
 const initialForm = {
   email: '',
   password: '',
+}
+
+function createLocalUser(email: string): AuthUser {
+  const now = new Date().toISOString()
+
+  return {
+    id: 'local-user',
+    avatar: 'https://i.pravatar.cc/150?img=32',
+    createdAt: now,
+    email: email || 'student@aistudy.local',
+    fullName: 'AI Study User',
+    isActive: true,
+    lastLoginAt: now,
+    role: 'user',
+    status: 'active',
+    updatedAt: now,
+  }
 }
 
 export default function LoginPage() {
@@ -31,10 +49,7 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      await login({
-        email: form.email,
-        password: form.password,
-      })
+      storeAuthSession('local-dev-token', createLocalUser(form.email))
       navigate('/dashboard', { replace: true })
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : 'Unable to log in')
@@ -48,6 +63,7 @@ export default function LoginPage() {
       <AcademicAside />
       <AuthCardShell subtitle="Authentication Required" title="Welcome Back">
         <form className="grid gap-[22px] mt-10" onSubmit={handleSubmit}>
+          {/* Login constraints disabled for now. */}
           <FloatingField
             autoComplete="email"
             disabled={loading}
@@ -55,8 +71,7 @@ export default function LoginPage() {
             label="Email Address"
             name="email"
             onChange={handleChange}
-            required
-            type="email"
+            type="text"
             value={form.email}
           />
           <FloatingField
@@ -66,7 +81,6 @@ export default function LoginPage() {
             label="Password"
             name="password"
             onChange={handleChange}
-            required
             type="password"
             value={form.password}
           />

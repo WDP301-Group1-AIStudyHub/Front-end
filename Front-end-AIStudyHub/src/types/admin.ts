@@ -1,6 +1,4 @@
 import type { AuthUser } from './auth'
-import type { DocumentItem } from './document'
-
 export type AdminUserStatus = 'active' | 'inactive'
 export type SystemActivitySeverity = 'info' | 'success' | 'warning' | 'critical'
 
@@ -18,10 +16,23 @@ export interface AdminUserUpdatePayload {
   role?: AuthUser['role']
 }
 
-export interface AdminDocument extends DocumentItem {
+export interface AdminDocument {
+  id: string
+  createdAt: string
+  description?: string
+  extractedText?: string
+  fileName: string
+  filePublicId: string
+  fileSize: number
+  fileType: string
+  fileUrl: string
   indexedStatus: 'indexed' | 'processing' | 'failed'
   ownerEmail: string
   ownerName: string
+  subject?: string
+  title: string
+  updatedAt?: string
+  uploadedBy: string
 }
 
 export interface AdminDocumentMetadataPayload {

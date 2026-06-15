@@ -4,6 +4,7 @@ import * as React from "react"
 import {
   Activity,
   BarChart2,
+  BookMarked,
   FileCog,
   LayoutDashboardIcon,
   LibraryIcon,
@@ -84,7 +85,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: "Library",
       url: "/library",
       icon: <LibraryIcon />,
-      isActive: activePath === "/library" || activePath === "/new-library",
+      isActive: activePath === "/library" || activePath === "/new-library" || activePath.startsWith("/documents/"),
+    },
+    {
+      title: "Subjects",
+      url: "/subjects",
+      icon: <BookMarked />,
+      isActive: activePath === "/subjects",
     },
     {
       title: "AI Chatbox",

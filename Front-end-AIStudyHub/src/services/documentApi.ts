@@ -1,131 +1,76 @@
-import type { ApiResponse } from '../types/auth'
+import { apiClient, ApiClientError, unwrapApiData } from './apiClient'
 import type {
+  DocumentDetail,
   DocumentItem,
   DocumentsResponse,
   UpdateDocumentPayload,
   UploadDocumentPayload,
+  UploadDocumentResult,
+  UploadSession,
 } from '../types/document'
-import { clearAuthSession, getStoredToken } from './authStorage'
 
-const API_ORIGIN =
-  import.meta.env.VITE_API_BASE_URL?.replace(/\/+$/, '') ??
-  ''
-const API_BASE_URL = API_ORIGIN.replace(/\/api$/, '')
-
-export class DocumentApiError extends Error {
-  status: number
-
+export class DocumentApiError extends ApiClientError {
   constructor(message: string, status: number) {
-    super(message)
+    super(message, status)
     this.name = 'DocumentApiError'
-    this.status = status
   }
 }
 
-type RequestOptions = {
-  body?: BodyInit | unknown
-  method?: 'GET' | 'POST' | 'PUT' | 'DELETE'
+function normalizeDocument(document: DocumentItem): DocumentItem {
+  const documentId = document._id || document.id || ''
+
+  return {
+    ...document,
+    _id: documentId,
+    id: documentId,
+    subjectId: document.subjectId || '',
+    status: document.status || 'PENDING',
+    totalViews: document.totalViews ?? 0,
+    totalDownloads: document.totalDownloads ?? 0,
+    fileName: document.fileName || document.title || 'Untitled document',
+    filePublicId: document.filePublicId || '',
+    fileUrl: document.fileUrl || '',
+    uploadedBy: document.uploadedBy || '',
+  }
 }
 
-function authHeaders(body?: BodyInit | unknown): Headers {
-  const headers = new Headers()
-  const token = getStoredToken()
-
-  if (token) {
-    headers.set('Authorization', `Bearer ${token}`)
-  }
-
-  if (body !== undefined && !(body instanceof FormData)) {
-    headers.set('Content-Type', 'application/json')
-  }
-
-  return headers
-}
-
-async function request<T>(
-  path: string,
-  { body, method = 'GET' }: RequestOptions = {},
-): Promise<ApiResponse<T>> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    body:
-      body === undefined || body instanceof FormData
-        ? body
-        : JSON.stringify(body),
-    headers: authHeaders(body),
-    method,
-  })
-
-  const payload = (await response.json().catch(() => ({
-    success: false,
-    message: 'Unexpected server response',
-  }))) as ApiResponse<T>
-
-  if (!response.ok) {
-    if (response.status === 401) {
-      clearAuthSession()
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login'
-      }
-    }
-
-    throw new DocumentApiError(payload.message || 'Request failed', response.status)
-  }
-
-  return payload
-}
-
-function unwrapData<T>(payload: ApiResponse<T>, fallbackMessage: string): T {
-  if (payload.data === undefined) {
-    throw new DocumentApiError(fallbackMessage, 500)
-  }
-
-  return payload.data
-}
-
-function unwrapDocumentList(
-  payload: ApiResponse<unknown>,
-  fallbackMessage: string,
-): DocumentsResponse {
-  const data = unwrapData(payload, fallbackMessage)
+function unwrapDocumentList(payload: unknown): DocumentsResponse {
+  const data = unwrapApiData<unknown>(payload, 'Document list response was empty')
 
   if (Array.isArray(data)) {
-    return data as DocumentsResponse
+    return (data as DocumentItem[]).map(normalizeDocument)
   }
 
   if (data && typeof data === 'object') {
-    const candidate = data as {
-      documents?: unknown
-      items?: unknown
-      results?: unknown
-    }
+    const candidate = data as { documents?: unknown; items?: unknown; results?: unknown }
 
     if (Array.isArray(candidate.documents)) {
-      return candidate.documents as DocumentsResponse
+      return (candidate.documents as DocumentItem[]).map(normalizeDocument)
     }
 
     if (Array.isArray(candidate.items)) {
-      return candidate.items as DocumentsResponse
+      return (candidate.items as DocumentItem[]).map(normalizeDocument)
     }
 
     if (Array.isArray(candidate.results)) {
-      return candidate.results as DocumentsResponse
+      return (candidate.results as DocumentItem[]).map(normalizeDocument)
     }
   }
 
-  throw new DocumentApiError('Document list response was not an array', 500)
+  return []
 }
 
 export async function listDocuments(): Promise<DocumentsResponse> {
-  const response = await request<unknown>('/api/documents')
-  return unwrapDocumentList(response, 'Document list response was empty')
+  const response = await apiClient.get('/api/documents')
+  return unwrapDocumentList(response.data)
 }
 
 export async function searchDocuments({
   keyword,
-  subject,
+  subjectId,
 }: {
   keyword?: string
-  subject?: string
+  subjectId?: string
 }): Promise<DocumentsResponse> {
   const params = new URLSearchParams()
 
@@ -133,63 +78,82 @@ export async function searchDocuments({
     params.set('keyword', keyword.trim())
   }
 
-  if (subject?.trim()) {
-    params.set('subject', subject.trim())
+  if (subjectId?.trim()) {
+    params.set('subjectId', subjectId.trim())
   }
 
   const query = params.toString()
-  const response = await request<unknown>(
-    query ? `/api/documents/search?${query}` : '/api/documents',
-  )
-
-  return unwrapDocumentList(response, 'Document search response was empty')
+  const response = await apiClient.get(query ? `/api/documents/search?${query}` : '/api/documents')
+  return unwrapDocumentList(response.data)
 }
 
-export async function getDocument(documentId: string): Promise<DocumentItem> {
-  const response = await request<DocumentItem>(`/api/documents/${documentId}`)
-  return unwrapData(response, 'Document response was empty')
+export async function getDocument(documentId: string): Promise<DocumentDetail> {
+  const response = await apiClient.get(`/api/documents/${documentId}`)
+  return normalizeDocument(
+    unwrapApiData<DocumentDetail>(response.data, 'Document response was empty'),
+  ) as DocumentDetail
 }
 
 export async function uploadDocument({
   description,
   file,
-  subject,
+  subjectId,
   title,
-}: UploadDocumentPayload): Promise<DocumentItem> {
+}: UploadDocumentPayload): Promise<UploadDocumentResult> {
   const formData = new FormData()
   formData.set('file', file)
   formData.set('title', title.trim())
+  formData.set('subjectId', subjectId)
 
   if (description?.trim()) {
     formData.set('description', description.trim())
   }
 
-  if (subject?.trim()) {
-    formData.set('subject', subject.trim())
+  const response = await apiClient.post('/api/documents/upload', formData)
+  const data = unwrapApiData<unknown>(response.data, 'Uploaded document response was empty')
+
+  if (data && typeof data === 'object') {
+    const candidate = data as {
+      document?: DocumentItem
+      uploadSession?: UploadSession
+      session?: UploadSession
+      uploadSessionId?: string
+    }
+
+    return {
+      document: candidate.document ? normalizeDocument(candidate.document) : undefined,
+      uploadSession:
+        candidate.uploadSession ||
+        candidate.session ||
+        (candidate.uploadSessionId
+          ? {
+              _id: candidate.uploadSessionId,
+              status: 'PENDING',
+              stage: 'UPLOADED',
+              progress: 0,
+            }
+          : undefined),
+    }
   }
 
-  const response = await request<DocumentItem>('/api/documents/upload', {
-    body: formData,
-    method: 'POST',
-  })
-
-  return unwrapData(response, 'Uploaded document response was empty')
+  return {}
 }
 
 export async function updateDocument(
   documentId: string,
   payload: UpdateDocumentPayload,
 ): Promise<DocumentItem> {
-  const response = await request<DocumentItem>(`/api/documents/${documentId}`, {
-    body: payload,
-    method: 'PUT',
-  })
-
-  return unwrapData(response, 'Updated document response was empty')
+  const response = await apiClient.put(`/api/documents/${documentId}`, payload)
+  return normalizeDocument(
+    unwrapApiData<DocumentItem>(response.data, 'Updated document response was empty'),
+  )
 }
 
 export async function deleteDocument(documentId: string): Promise<void> {
-  await request<void>(`/api/documents/${documentId}`, {
-    method: 'DELETE',
-  })
+  await apiClient.delete(`/api/documents/${documentId}`)
+}
+
+export async function getUploadSession(sessionId: string): Promise<UploadSession> {
+  const response = await apiClient.get(`/api/upload-sessions/${sessionId}`)
+  return unwrapApiData<UploadSession>(response.data, 'Upload session response was empty')
 }

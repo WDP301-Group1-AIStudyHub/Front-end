@@ -9,6 +9,8 @@ import RegisterPage from './pages/auth/RegisterPage'
 import ResetPasswordPage from './pages/auth/ResetPasswordPage'
 import NewAIChatboxPage from './pages/new-AIChatboxPage'
 import NewLibraryPage from './pages/new-LibraryPage'
+import SubjectsPage from './pages/SubjectsPage'
+import DocumentDetailPage from './pages/DocumentDetailPage'
 import EvaluationPage from './pages/EvaluationPage'
 import AdminActivityPage from './pages/admin/AdminActivityPage'
 import AdminDashboardPage from './pages/admin/AdminDashboardPage'
@@ -16,6 +18,7 @@ import AdminDocumentsPage from './pages/admin/AdminDocumentsPage'
 import AdminUsersPage from './pages/admin/AdminUsersPage'
 import { getCurrentUser } from './services/authApi'
 import { getStoredUser, hasAuthSession, storeAuthSession } from './services/authStorage'
+import { ToastProvider } from './hooks/useToast'
 import type { AuthUser } from './types/auth'
 
 const demoAdminUser: AuthUser = {
@@ -143,49 +146,59 @@ function DemoAdminBootstrap() {
 
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/login" element={<PublicAuthRoute><LoginPage /></PublicAuthRoute>} />
-      <Route path="/register" element={<PublicAuthRoute><RegisterPage /></PublicAuthRoute>} />
-      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-      <Route path="/reset-password" element={<ResetPasswordPage />} />
-      <Route path="/demo-admin" element={<DemoAdminBootstrap />} />
-      <Route
-        path="/dashboard"
-        element={<ProtectedRoute>{() => routeWithShell(<DashboardPage />)}</ProtectedRoute>}
-      />
-      <Route
-        path="/library"
-        element={<ProtectedRoute>{() => routeWithShell(<NewLibraryPage />)}</ProtectedRoute>}
-      />
-      <Route path="/new-library" element={<Navigate to="/library" replace />} />
-      <Route
-        path="/aichatbox"
-        element={<ProtectedRoute>{() => routeWithShell(<NewAIChatboxPage />)}</ProtectedRoute>}
-      />
-      <Route path="/new-aichatbox" element={<Navigate to="/aichatbox" replace />} />
-      <Route
-        path="/evaluation"
-        element={<ProtectedRoute>{() => routeWithShell(<EvaluationPage />)}</ProtectedRoute>}
-      />
-      <Route
-        path="/admin"
-        element={<ProtectedRoute adminOnly>{() => routeWithShell(<AdminDashboardPage />)}</ProtectedRoute>}
-      />
-      <Route
-        path="/admin/users"
-        element={<ProtectedRoute adminOnly>{() => routeWithShell(<AdminUsersPage />)}</ProtectedRoute>}
-      />
-      <Route
-        path="/admin/documents"
-        element={<ProtectedRoute adminOnly>{() => routeWithShell(<AdminDocumentsPage />)}</ProtectedRoute>}
-      />
-      <Route
-        path="/admin/activity"
-        element={<ProtectedRoute adminOnly>{() => routeWithShell(<AdminActivityPage />)}</ProtectedRoute>}
-      />
-      <Route path="*" element={<LandingPage />} />
-    </Routes>
+    <ToastProvider>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<PublicAuthRoute><LoginPage /></PublicAuthRoute>} />
+        <Route path="/register" element={<PublicAuthRoute><RegisterPage /></PublicAuthRoute>} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/demo-admin" element={<DemoAdminBootstrap />} />
+        <Route
+          path="/dashboard"
+          element={<ProtectedRoute>{() => routeWithShell(<DashboardPage />)}</ProtectedRoute>}
+        />
+        <Route
+          path="/subjects"
+          element={<ProtectedRoute>{() => routeWithShell(<SubjectsPage />)}</ProtectedRoute>}
+        />
+        <Route
+          path="/library"
+          element={<ProtectedRoute>{() => routeWithShell(<NewLibraryPage />)}</ProtectedRoute>}
+        />
+        <Route
+          path="/documents/:id"
+          element={<ProtectedRoute>{() => routeWithShell(<DocumentDetailPage />)}</ProtectedRoute>}
+        />
+        <Route path="/new-library" element={<Navigate to="/library" replace />} />
+        <Route
+          path="/aichatbox"
+          element={<ProtectedRoute>{() => routeWithShell(<NewAIChatboxPage />)}</ProtectedRoute>}
+        />
+        <Route path="/new-aichatbox" element={<Navigate to="/aichatbox" replace />} />
+        <Route
+          path="/evaluation"
+          element={<ProtectedRoute>{() => routeWithShell(<EvaluationPage />)}</ProtectedRoute>}
+        />
+        <Route
+          path="/admin"
+          element={<ProtectedRoute adminOnly>{() => routeWithShell(<AdminDashboardPage />)}</ProtectedRoute>}
+        />
+        <Route
+          path="/admin/users"
+          element={<ProtectedRoute adminOnly>{() => routeWithShell(<AdminUsersPage />)}</ProtectedRoute>}
+        />
+        <Route
+          path="/admin/documents"
+          element={<ProtectedRoute adminOnly>{() => routeWithShell(<AdminDocumentsPage />)}</ProtectedRoute>}
+        />
+        <Route
+          path="/admin/activity"
+          element={<ProtectedRoute adminOnly>{() => routeWithShell(<AdminActivityPage />)}</ProtectedRoute>}
+        />
+        <Route path="*" element={<LandingPage />} />
+      </Routes>
+    </ToastProvider>
   )
 }
 
