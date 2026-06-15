@@ -85,8 +85,7 @@ export const useUploadStore = create<UploadState>((set, get) => ({
     })
 
     if (action === 'REPLACE') {
-      const docId = existingDocumentMeta.id || (existingDocumentMeta as any)._id
-      get().uploadFile(payload, onSuccess, docId)
+      get().uploadFile(payload, onSuccess, existingDocumentMeta.id)
     } else if (action === 'KEEP_BOTH') {
       const file = payload.file
       const dotIndex = file.name.lastIndexOf(".")
@@ -191,11 +190,15 @@ export const useUploadStore = create<UploadState>((set, get) => ({
       } else {
         throw new Error(response.data?.message || 'Server upload failed')
       }
-    } catch (err: any) {
-      if (axios.isCancel(err) || err?.name === 'CanceledError') {
+    } catch (err: unknown) {
+      if (axios.isCancel(err) || (err instanceof Error && err.name === 'CanceledError')) {
         return
       }
-      const errorMessage = err.response?.data?.message || err.message || 'Upload failed'
+      const errorMessage = axios.isAxiosError<{ message?: string }>(err)
+        ? err.response?.data?.message || err.message
+        : err instanceof Error
+          ? err.message
+          : 'Upload failed'
       set((state) => ({
         uploads: state.uploads.map((item) =>
           item.id === id ? { ...item, status: 'failed', error: errorMessage } : item

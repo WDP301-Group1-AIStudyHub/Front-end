@@ -1,6 +1,9 @@
 import type { ApiResponse } from '../types/auth'
 import type {
+  DocumentDetail,
   DocumentItem,
+  DocumentSubject,
+  DocumentVersion,
   DocumentsResponse,
   UpdateDocumentPayload,
   UploadDocumentPayload,
@@ -115,17 +118,62 @@ function unwrapDocumentList(
   throw new DocumentApiError('Document list response was not an array', 500)
 }
 
+function normalizeSubject(value: unknown): DocumentSubject | null {
+  if (!value || typeof value !== 'object' || !('_id' in value) || !('name' in value)) {
+    return null
+  }
+
+  const subject = value as DocumentSubject
+  return {
+    _id: String(subject._id),
+    name: String(subject.name),
+    code: subject.code,
+    color: subject.color,
+    description: subject.description,
+  }
+}
+
+function normalizeDocument(value: DocumentItem): DocumentItem {
+  const populatedSubject =
+    normalizeSubject(value.subject) || normalizeSubject(value.subjectId)
+  const id = value.id || value._id || ''
+
+  return {
+    ...value,
+    _id: value._id || id,
+    id,
+    subject: populatedSubject || (typeof value.subject === 'string' ? value.subject : null),
+    subjectId:
+      populatedSubject?._id ||
+      (typeof value.subjectId === 'string' ? value.subjectId : undefined),
+    fileName: value.fileName || value.title || 'Untitled document',
+    filePublicId: value.filePublicId || '',
+    fileUrl: value.fileUrl || '',
+    fileType: value.fileType || '',
+    fileSize: value.fileSize || 0,
+    uploadedBy: value.uploadedBy || '',
+    createdAt: value.createdAt || '',
+    updatedAt: value.updatedAt || value.createdAt || '',
+  }
+}
+
+function normalizeDocuments(documents: DocumentsResponse): DocumentsResponse {
+  return documents.map(normalizeDocument)
+}
+
 export async function listDocuments(): Promise<DocumentsResponse> {
-  const response = await request<unknown>('/api/documents')
-  return unwrapDocumentList(response, 'Document list response was empty')
+  const response = await request<unknown>('/api/documents?limit=100')
+  return normalizeDocuments(unwrapDocumentList(response, 'Document list response was empty'))
 }
 
 export async function searchDocuments({
   keyword,
   subject,
+  subjectId,
 }: {
   keyword?: string
   subject?: string
+  subjectId?: string
 }): Promise<DocumentsResponse> {
   const params = new URLSearchParams()
 
@@ -137,17 +185,33 @@ export async function searchDocuments({
     params.set('subject', subject.trim())
   }
 
+  if (subjectId?.trim()) {
+    params.set('subjectId', subjectId.trim())
+  }
+
   const query = params.toString()
   const response = await request<unknown>(
     query ? `/api/documents/search?${query}` : '/api/documents',
   )
 
-  return unwrapDocumentList(response, 'Document search response was empty')
+  return normalizeDocuments(unwrapDocumentList(response, 'Document search response was empty'))
 }
 
-export async function getDocument(documentId: string): Promise<DocumentItem> {
-  const response = await request<DocumentItem>(`/api/documents/${documentId}`)
-  return unwrapData(response, 'Document response was empty')
+export async function getDocument(documentId: string): Promise<DocumentDetail> {
+  const response = await request<DocumentDetail>(`/api/documents/${documentId}`)
+  return normalizeDocument(
+    unwrapData(response, 'Document response was empty'),
+  ) as DocumentDetail
+}
+
+export async function listDocumentVersions(
+  documentId: string,
+): Promise<DocumentVersion[]> {
+  const response = await request<DocumentVersion[]>(
+    `/api/documents/${documentId}/versions?limit=100`,
+  )
+
+  return unwrapData(response, 'Document versions response was empty')
 }
 
 export async function uploadDocument({
@@ -173,7 +237,7 @@ export async function uploadDocument({
     method: 'POST',
   })
 
-  return unwrapData(response, 'Uploaded document response was empty')
+  return normalizeDocument(unwrapData(response, 'Uploaded document response was empty'))
 }
 
 export async function updateDocument(
@@ -185,7 +249,7 @@ export async function updateDocument(
     method: 'PUT',
   })
 
-  return unwrapData(response, 'Updated document response was empty')
+  return normalizeDocument(unwrapData(response, 'Updated document response was empty'))
 }
 
 export async function deleteDocument(documentId: string): Promise<void> {

@@ -9,6 +9,8 @@ import RegisterPage from './pages/auth/RegisterPage'
 import ResetPasswordPage from './pages/auth/ResetPasswordPage'
 import NewAIChatboxPage from './pages/new-AIChatboxPage'
 import NewLibraryPage from './pages/new-LibraryPage'
+import DocumentDetailPage from './pages/DocumentDetailPage'
+import SubjectsPage from './pages/SubjectsPage'
 import AboutPage from './pages/AboutPage'
 import EvaluationPage from './pages/evaluation/EvaluationPage'
 import NewQuestion from './pages/evaluation/NewQuestion'
@@ -180,6 +182,14 @@ function App() {
         <Route
           path="/library"
           element={<ProtectedRoute userOnly>{() => routeWithShell(<NewLibraryPage />)}</ProtectedRoute>}
+        />
+        <Route
+          path="/documents/:id"
+          element={<ProtectedRoute userOnly>{() => routeWithShell(<DocumentDetailPage />)}</ProtectedRoute>}
+        />
+        <Route
+          path="/subjects"
+          element={<ProtectedRoute userOnly>{() => routeWithShell(<SubjectsPage />)}</ProtectedRoute>}
         />
         <Route path="/new-library" element={<Navigate to="/library" replace />} />
         <Route

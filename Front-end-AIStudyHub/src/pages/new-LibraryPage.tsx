@@ -77,6 +77,11 @@ import {
   searchDocuments,
   updateDocument,
 } from "../services/documentApi";
+import {
+  findOrCreateSubjectByName,
+  listSubjects,
+} from "../services/subjectApi";
+import type { SubjectItem } from "../services/subjectApi";
 import { useUploadStore } from "../store/useUploadStore";
 import type { DocumentItem } from "../types/document";
 import { Badge } from "@/components/ui/badge";
@@ -307,6 +312,7 @@ function DocumentFields({
   errors = {},
   touched = {},
   onBlur,
+  subjects,
 }: {
   disabled: boolean;
   fileInput?: File | null;
@@ -317,6 +323,7 @@ function DocumentFields({
   errors?: Record<string, string | null>;
   touched?: Record<string, boolean>;
   onBlur?: (field: string) => void;
+  subjects: SubjectItem[];
 }) {
   return (
     <div className="flex flex-col gap-4">
@@ -364,16 +371,22 @@ function DocumentFields({
 
       <label className="flex flex-col gap-2 text-sm font-medium">
         Subject
-        <Input
+        <select
+          className="h-9 w-full min-w-0 rounded-md border-2 border-foreground bg-background px-3 text-sm font-semibold shadow-[3px_3px_0_var(--foreground)] outline-none focus:translate-x-[1px] focus:translate-y-[1px] focus:shadow-[2px_2px_0_var(--foreground)] disabled:opacity-50"
           disabled={disabled}
-          maxLength={80}
           onChange={(event) =>
             onFormChange({ ...form, subject: event.target.value })
           }
           onBlur={() => onBlur?.("subject")}
-          placeholder="Math"
           value={form.subject}
-        />
+        >
+          <option value="">Select subject</option>
+          {subjects.map((subject) => (
+            <option key={subject._id} value={subject.name}>
+              {[subject.code, subject.name].filter(Boolean).join(" ")}
+            </option>
+          ))}
+        </select>
         {touched.subject && errors.subject && (
           <span className="text-xs text-rose-500 font-semibold">{errors.subject}</span>
         )}
@@ -592,7 +605,8 @@ export default function NewLibraryPage() {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [subjectFilter] = useState("");
+  const [subjectFilter, setSubjectFilter] = useState("");
+  const [subjects, setSubjects] = useState<SubjectItem[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadForm, setUploadForm] = useState<DocumentFormState>(emptyForm);
   const [editForm, setEditForm] = useState<DocumentFormState>(emptyForm);
@@ -660,6 +674,11 @@ export default function NewLibraryPage() {
     didLoadRef.current = true;
     const timeoutId = window.setTimeout(() => {
       void loadDocuments();
+      void listSubjects()
+        .then(setSubjects)
+        .catch((error) =>
+          setFeedback({ tone: "error", message: getErrorMessage(error) }),
+        );
     }, 0);
 
     return () => window.clearTimeout(timeoutId);
@@ -682,7 +701,7 @@ export default function NewLibraryPage() {
       try {
         const results = await searchDocuments({
           keyword: searchQuery,
-          subject: subjectFilter,
+          subjectId: subjectFilter,
         });
         setDocuments(results);
       } catch (error) {
@@ -762,9 +781,6 @@ export default function NewLibraryPage() {
     try {
       let subjectId = undefined;
       if (editForm.subject.trim()) {
-        const { findOrCreateSubjectByName } = await import(
-          "../services/subjectApi"
-        );
         subjectId = await findOrCreateSubjectByName(editForm.subject.trim());
       }
 
@@ -835,6 +851,10 @@ export default function NewLibraryPage() {
     navigate(`/library?preview=${encodeURIComponent(document.id)}`);
   }
 
+  function openDetails(document: DocumentItem) {
+    navigate(`/documents/${document.id}`);
+  }
+
   const previewParam = urlParams.get("preview");
 
   if (previewParam) {
@@ -863,13 +883,19 @@ export default function NewLibraryPage() {
             />
           </InputGroup>
 
-          {/* <Input
+          <select
             aria-label="Filter by subject"
-            className="max-w-56"
+            className="h-9 w-full max-w-56 rounded-md border-2 border-foreground bg-background px-3 text-sm font-semibold shadow-[3px_3px_0_var(--foreground)]"
             onChange={(event) => setSubjectFilter(event.target.value)}
-            placeholder="Subject"
             value={subjectFilter}
-          /> */}
+          >
+            <option value="">All subjects</option>
+            {subjects.map((subject) => (
+              <option key={subject._id} value={subject._id}>
+                {[subject.code, subject.name].filter(Boolean).join(" ")}
+              </option>
+            ))}
+          </select>
         </header>
 
         <section className="flex flex-1 flex-col gap-4">
@@ -1041,10 +1067,16 @@ export default function NewLibraryPage() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-44">
                               <DropdownMenuItem
+                                onSelect={() => openDetails(document)}
+                              >
+                                <FileText />
+                                View details
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
                                 onSelect={() => openFile(document)}
                               >
                                 <ExternalLink />
-                                Open
+                                Preview
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onSelect={() => {
@@ -1129,6 +1161,7 @@ export default function NewLibraryPage() {
                 errors={uploadErrors}
                 touched={uploadTouched}
                 onBlur={(field) => setUploadTouched((prev) => ({ ...prev, [field]: true }))}
+                subjects={subjects}
               />
             </div>
             <DialogFooter className="mt-6">
@@ -1168,6 +1201,7 @@ export default function NewLibraryPage() {
                 errors={editErrors}
                 touched={editTouched}
                 onBlur={(field) => setEditTouched((prev) => ({ ...prev, [field]: true }))}
+                subjects={subjects}
               />
             </div>
             <SheetFooter>
