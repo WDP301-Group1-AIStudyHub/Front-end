@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import {
   AlertCircle,
-  ArrowUpRight,
   BarChart3,
   CheckCircle2,
   FileText,
@@ -25,7 +24,6 @@ import type {
   BenchmarkDifficulty,
   BenchmarkQuestion,
   BenchmarkSummary,
-  BenchmarkWinner,
 } from "../../types/chat";
 
 type TabKey = "all" | "mine" | "recent" | "review";
@@ -46,12 +44,6 @@ const difficultyStyles: Record<BenchmarkDifficulty, string> = {
   medium: "border-amber-500/30 bg-amber-500/10 text-amber-500",
 };
 
-const winnerLabels: Record<BenchmarkWinner, string> = {
-  basic: "Basic",
-  corrective: "Corrective",
-  not_run: "not run",
-  tie: "Tie",
-};
 
 function asRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === "object"
@@ -87,33 +79,13 @@ function signedPercent(value: unknown): string {
   return `${sign}${Math.round(normalized * 100)}%`;
 }
 
-function compactDate(value?: string): string {
-  if (!value) return "not run";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "not run";
-  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-}
 
 function shortenText(value: string, maxLength = 120): string {
   if (value.length <= maxLength) return value;
   return `${value.slice(0, maxLength - 1).trim()}...`;
 }
 
-function normalizeWinner(value: unknown): BenchmarkWinner {
-  if (value === "basic" || value === "corrective" || value === "tie")
-    return value;
-  return "not_run";
-}
 
-function getRunCount(question: BenchmarkQuestion): number {
-  const record = asRecord(question);
-  return numberFrom(record.runCount ?? record.runs ?? record.totalRuns, 0);
-}
-
-function getLastWinner(question: BenchmarkQuestion): BenchmarkWinner {
-  const record = asRecord(question);
-  return normalizeWinner(record.lastWinner ?? record.winner);
-}
 
 function getLastRunAt(question: BenchmarkQuestion): string | undefined {
   const record = asRecord(question);
@@ -149,26 +121,6 @@ function StatCard({
   );
 }
 
-function WinnerBadge({ winner }: { winner: BenchmarkWinner }) {
-  const isCorrective = winner === "corrective";
-  const isBasic = winner === "basic";
-  const classes = isCorrective
-    ? "bg-teal-500/12 text-teal-500"
-    : isBasic
-      ? "bg-blue-500/12 text-blue-500"
-      : winner === "tie"
-        ? "bg-amber-500/12 text-amber-500"
-        : "bg-muted text-muted-foreground";
-
-  return (
-    <span
-      className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold ${classes}`}
-    >
-      {(isCorrective || isBasic) && <ArrowUpRight className="size-3" />}
-      {winnerLabels[winner]}
-    </span>
-  );
-}
 
 export default function EvaluationPage() {
   const [questions, setQuestions] = useState<BenchmarkQuestion[]>([]);
@@ -513,8 +465,6 @@ export default function EvaluationPage() {
           ) : (
             <div className="grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-3">
               {filteredQuestions.map((question) => {
-                const winner = getLastWinner(question);
-                const runCount = getRunCount(question);
 
                 return (
                   <article

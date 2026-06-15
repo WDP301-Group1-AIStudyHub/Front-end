@@ -421,7 +421,7 @@ export default function NewQuestion() {
                 )}
                 {selectedDocument && (
                   <p className="text-xs text-muted-foreground">
-                    {selectedDocument.subject || selectedDocument.fileName}
+                    {(typeof selectedDocument.subject === 'object' ? selectedDocument.subject?.name : selectedDocument.subject) || selectedDocument.fileName}
                   </p>
                 )}
               </FieldShell>

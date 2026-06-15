@@ -17,6 +17,8 @@ import AdminActivityPage from "./pages/admin/AdminActivityPage";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import AdminDocumentsPage from "./pages/admin/AdminDocumentsPage";
 import AdminUsersPage from "./pages/admin/AdminUsersPage";
+import BackgroundUploadWidget from "./components/upload/BackgroundUploadWidget";
+import ConflictModal from "./components/upload/ConflictModal";
 import { getCurrentUser } from "./services/authApi";
 import {
   getStoredUser,
@@ -156,7 +158,8 @@ function DemoAdminBootstrap() {
 
 function App() {
   return (
-    <Routes>
+    <>
+      <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route
         path="/login"
@@ -272,6 +275,9 @@ function App() {
       />
       <Route path="*" element={<LandingPage />} />
     </Routes>
+      <BackgroundUploadWidget />
+      <ConflictModal />
+    </>
   );
 }
 

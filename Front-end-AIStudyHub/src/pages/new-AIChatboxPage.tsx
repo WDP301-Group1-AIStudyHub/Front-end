@@ -87,7 +87,7 @@ export default function NewAIChatboxPage() {
   useEffect(() => {
     selectedDocRef.current = selectedDocId;
     const doc = documents.find((d) => d.id === selectedDocId);
-    selectedDocSubjectRef.current = doc?.subject;
+    selectedDocSubjectRef.current = (typeof doc?.subject === "object" ? doc?.subject?.name : doc?.subject) ?? undefined;
   }, [selectedDocId, documents]);
 
   // Keep response callback up-to-date without recreating the adapter
@@ -109,7 +109,7 @@ export default function NewAIChatboxPage() {
         const subjs = new Set<string>();
         for (const doc of docs) {
           const sem = (doc.title || "Chưa phân loại").trim().toUpperCase();
-          const subj = doc.subject || "Không có môn";
+          const subj = (typeof doc.subject === "object" ? doc.subject?.name : doc.subject) || "Không có môn";
           subjs.add(`${sem}::${subj}`);
         }
         setOpenSubjects(subjs);
@@ -124,7 +124,7 @@ export default function NewAIChatboxPage() {
     const map: Record<string, Record<string, DocumentItem[]>> = {};
     for (const doc of documents) {
       const sem = (doc.title || "Chưa phân loại").trim().toUpperCase();
-      const subj = doc.subject || "Không có môn";
+      const subj = (typeof doc.subject === "object" ? doc.subject?.name : doc.subject) || "Không có môn";
       if (!map[sem]) map[sem] = {};
       if (!map[sem][subj]) map[sem][subj] = [];
       map[sem][subj].push(doc);
@@ -256,7 +256,7 @@ export default function NewAIChatboxPage() {
               className="inline-flex items-center gap-2 px-3 py-2"
             >
               <Library className="size-4 text-foreground" aria-hidden="true" />
-              {selectedDoc ? selectedDoc.subject ?? selectedDoc.title : "Tất cả tài liệu"}
+              {selectedDoc ? (typeof selectedDoc.subject === "object" ? selectedDoc.subject?.name : selectedDoc.subject) ?? selectedDoc.title : "Tất cả tài liệu"}
             </Button>
             <Button
               variant={ragMode === "corrective" ? "default" : "outline"}

@@ -37,6 +37,14 @@ import {
 } from "@/components/ui/input-group";
 import { Separator } from "@/components/ui/separator";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Sheet,
   SheetContent,
   SheetDescription,
@@ -60,13 +68,12 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
-  DocumentApiError,
   deleteDocument,
   listDocuments,
   searchDocuments,
   updateDocument,
-  uploadDocument,
 } from "../services/documentApi";
+import { useUploadStore } from "../store/useUploadStore";
 import type { DocumentItem } from "../types/document";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -203,66 +210,88 @@ function getErrorMessage(error: unknown): string {
   return "Something went wrong";
 }
 
-function validateUploadForm(
+function getUploadErrors(
   form: DocumentFormState,
   file: File | null,
-): string | null {
+): Record<string, string | null> {
+  const errors: Record<string, string | null> = {};
   const title = form.title.trim();
   const description = form.description.trim();
   const subject = form.subject.trim();
 
+  // File validation
   if (!file) {
-    return "PDF file is required";
+    errors.file = "PDF file is required";
+  } else if (file.type !== "application/pdf") {
+    errors.file = "Only PDF files are allowed";
+  } else if (file.size > MAX_FILE_SIZE) {
+    errors.file = "PDF must be 10 MB or smaller";
+  } else {
+    errors.file = null;
   }
 
-  if (file.type !== "application/pdf") {
-    return "Only PDF files are allowed";
-  }
-
-  if (file.size > MAX_FILE_SIZE) {
-    return "PDF must be 10 MB or smaller";
-  }
-
+  // Title validation
   if (!title) {
-    return "Title is required";
+    errors.title = "Title is required";
+  } else if (title.length > 160) {
+    errors.title = "Title must be 160 characters or fewer";
+  } else {
+    errors.title = null;
   }
 
-  if (title.length > 160) {
-    return "Title must be 160 characters or fewer";
+  // Subject validation
+  if (!subject) {
+    errors.subject = "Subject is required";
+  } else if (subject.length > 80) {
+    errors.subject = "Subject must be 80 characters or fewer";
+  } else {
+    errors.subject = null;
   }
 
+  // Description validation
   if (description.length > 1000) {
-    return "Description must be 1000 characters or fewer";
+    errors.description = "Description must be 1000 characters or fewer";
+  } else {
+    errors.description = null;
   }
 
-  if (subject.length > 80) {
-    return "Subject must be 80 characters or fewer";
-  }
-
-  return null;
+  return errors;
 }
 
-function validateEditForm(form: DocumentFormState): string | null {
+function getEditErrors(form: DocumentFormState): Record<string, string | null> {
+  const errors: Record<string, string | null> = {};
   const title = form.title.trim();
+  const description = form.description.trim();
+  const subject = form.subject.trim();
 
+  // Title validation
   if (!title) {
-    return "Title is required";
+    errors.title = "Title is required";
+  } else if (title.length > 160) {
+    errors.title = "Title must be 160 characters or fewer";
+  } else {
+    errors.title = null;
   }
 
-  if (title.length > 160) {
-    return "Title must be 160 characters or fewer";
+  // Subject validation
+  if (!subject) {
+    errors.subject = "Subject is required";
+  } else if (subject.length > 80) {
+    errors.subject = "Subject must be 80 characters or fewer";
+  } else {
+    errors.subject = null;
   }
 
-  if (form.description.trim().length > 1000) {
-    return "Description must be 1000 characters or fewer";
+  // Description validation
+  if (description.length > 1000) {
+    errors.description = "Description must be 1000 characters or fewer";
+  } else {
+    errors.description = null;
   }
 
-  if (form.subject.trim().length > 80) {
-    return "Subject must be 80 characters or fewer";
-  }
-
-  return null;
+  return errors;
 }
+
 
 function DocumentFields({
   disabled,
@@ -271,6 +300,9 @@ function DocumentFields({
   mode,
   onFileChange,
   onFormChange,
+  errors = {},
+  touched = {},
+  onBlur,
 }: {
   disabled: boolean;
   fileInput?: File | null;
@@ -278,6 +310,9 @@ function DocumentFields({
   mode: "upload" | "edit";
   onFileChange?: (file: File | null) => void;
   onFormChange: (form: DocumentFormState) => void;
+  errors?: Record<string, string | null>;
+  touched?: Record<string, boolean>;
+  onBlur?: (field: string) => void;
 }) {
   return (
     <div className="flex flex-col gap-4">
@@ -287,16 +322,22 @@ function DocumentFields({
           <Input
             accept="application/pdf"
             disabled={disabled}
-            onChange={(event) =>
-              onFileChange?.(event.target.files?.[0] ?? null)
-            }
+            onChange={(event) => {
+              onFileChange?.(event.target.files?.[0] ?? null);
+              onBlur?.("file");
+            }}
+            onBlur={() => onBlur?.("file")}
             type="file"
           />
-          <span className="text-xs text-muted-foreground">
-            {fileInput
-              ? `${fileInput.name} · ${formatFileSize(fileInput.size)}`
-              : "PDF only, up to 10 MB"}
-          </span>
+          {touched.file && errors.file ? (
+            <span className="text-xs text-rose-500 font-semibold">{errors.file}</span>
+          ) : (
+            <span className="text-xs text-muted-foreground">
+              {fileInput
+                ? `${fileInput.name} · ${formatFileSize(fileInput.size)}`
+                : "PDF only, up to 10 MB"}
+            </span>
+          )}
         </label>
       )}
 
@@ -308,9 +349,13 @@ function DocumentFields({
           onChange={(event) =>
             onFormChange({ ...form, title: event.target.value })
           }
+          onBlur={() => onBlur?.("title")}
           placeholder="Lesson 1"
           value={form.title}
         />
+        {touched.title && errors.title && (
+          <span className="text-xs text-rose-500 font-semibold">{errors.title}</span>
+        )}
       </label>
 
       <label className="flex flex-col gap-2 text-sm font-medium">
@@ -321,9 +366,13 @@ function DocumentFields({
           onChange={(event) =>
             onFormChange({ ...form, subject: event.target.value })
           }
+          onBlur={() => onBlur?.("subject")}
           placeholder="Math"
           value={form.subject}
         />
+        {touched.subject && errors.subject && (
+          <span className="text-xs text-rose-500 font-semibold">{errors.subject}</span>
+        )}
       </label>
 
       <label className="flex flex-col gap-2 text-sm font-medium">
@@ -334,9 +383,13 @@ function DocumentFields({
           onChange={(event) =>
             onFormChange({ ...form, description: event.target.value })
           }
+          onBlur={() => onBlur?.("description")}
           placeholder="Algebra notes"
           value={form.description}
         />
+        {touched.description && errors.description && (
+          <span className="text-xs text-rose-500 font-semibold">{errors.description}</span>
+        )}
       </label>
     </div>
   );
@@ -533,7 +586,6 @@ export default function NewLibraryPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [subjectFilter] = useState("");
@@ -541,6 +593,37 @@ export default function NewLibraryPage() {
   const [uploadForm, setUploadForm] = useState<DocumentFormState>(emptyForm);
   const [editForm, setEditForm] = useState<DocumentFormState>(emptyForm);
   const didLoadRef = useRef(false);
+
+  const [uploadTouched, setUploadTouched] = useState<Record<string, boolean>>({});
+  const [editTouched, setEditTouched] = useState<Record<string, boolean>>({});
+
+  const uploadErrors = useMemo(() => getUploadErrors(uploadForm, selectedFile), [uploadForm, selectedFile]);
+  const editErrors = useMemo(() => getEditErrors(editForm), [editForm]);
+
+  useEffect(() => {
+    if (!isUploadOpen) {
+      setUploadTouched({});
+    }
+  }, [isUploadOpen]);
+
+  useEffect(() => {
+    if (!isEditOpen) {
+      setEditTouched({});
+    }
+  }, [isEditOpen]);
+
+  // Auto-refresh library when a background upload succeeds
+  const uploads = useUploadStore((state) => state.uploads);
+  const isUploading = uploads.some((u) => u.status === "uploading" || u.status === "processing");
+  const prevSuccessCountRef = useRef(0);
+
+  useEffect(() => {
+    const successCount = uploads.filter((u) => u.status === "success").length;
+    if (successCount > prevSuccessCountRef.current) {
+      void loadDocuments();
+    }
+    prevSuccessCountRef.current = successCount;
+  }, [uploads]);
 
   const showSearchMode = searchQuery.trim() || subjectFilter.trim();
 
@@ -611,10 +694,15 @@ export default function NewLibraryPage() {
   async function handleUpload(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const validationError = validateUploadForm(uploadForm, selectedFile);
+    setUploadTouched({
+      file: true,
+      title: true,
+      subject: true,
+      description: true,
+    });
 
-    if (validationError) {
-      setFeedback({ tone: "error", message: validationError });
+    const isUploadValid = !Object.values(uploadErrors).some(Boolean);
+    if (!isUploadValid) {
       return;
     }
 
@@ -622,51 +710,28 @@ export default function NewLibraryPage() {
       return;
     }
 
-    setIsUploading(true);
-    setFeedback({
-      tone: "info",
-      message: "Uploading and preparing this document for AI chat...",
-    });
-
-    try {
-      await uploadDocument({
+    // Delegate to Zustand background store with conflict check interception
+    useUploadStore.getState().processIncomingUpload(
+      {
         description: uploadForm.description,
         file: selectedFile,
         subject: uploadForm.subject,
         title: uploadForm.title,
-      });
-      setFeedback({
-        tone: "success",
-        message:
-          "Document uploaded successfully. It is being prepared for AI chat.",
-      });
-      setUploadForm(emptyForm);
-      setSelectedFile(null);
-      setIsUploadOpen(false);
-      await loadDocuments();
-    } catch (error) {
-      // Server đôi khi trả 500 dù upload thực sự thành công (lỗi serialize response).
-      // Thử reload lại list; nếu OK thì coi như upload thành công.
-      if (error instanceof DocumentApiError && error.status === 500) {
-        try {
-          await loadDocuments();
-          setFeedback({
-            tone: "success",
-            message:
-              "Document uploaded successfully. It is being prepared for AI chat.",
-          });
-          setUploadForm(emptyForm);
-          setSelectedFile(null);
-          setIsUploadOpen(false);
-          return;
-        } catch {
-          // loadDocuments cũng lỗi → báo lỗi bình thường
-        }
-      }
-      setFeedback({ tone: "error", message: getErrorMessage(error) });
-    } finally {
-      setIsUploading(false);
-    }
+      },
+      documents
+    );
+
+    // Close the dialog and clear form inputs immediately
+    setUploadForm(emptyForm);
+    setSelectedFile(null);
+    setIsUploadOpen(false);
+
+    // Provide user feedback that it's running in the background
+    setFeedback({
+      tone: "success",
+      message:
+        "Document added to background upload queue. Track progress at the bottom right.",
+    });
   }
 
   async function handleEdit(event: React.FormEvent<HTMLFormElement>) {
@@ -676,10 +741,14 @@ export default function NewLibraryPage() {
       return;
     }
 
-    const validationError = validateEditForm(editForm);
+    setEditTouched({
+      title: true,
+      subject: true,
+      description: true,
+    });
 
-    if (validationError) {
-      setFeedback({ tone: "error", message: validationError });
+    const isEditValid = !Object.values(editErrors).some(Boolean);
+    if (!isEditValid) {
       return;
     }
 
@@ -687,9 +756,17 @@ export default function NewLibraryPage() {
     setFeedback(null);
 
     try {
+      let subjectId = undefined;
+      if (editForm.subject.trim()) {
+        const { findOrCreateSubjectByName } = await import(
+          "../services/subjectApi"
+        );
+        subjectId = await findOrCreateSubjectByName(editForm.subject.trim());
+      }
+
       const updatedDocument = await updateDocument(editingDocument.id, {
         description: editForm.description.trim(),
-        subject: editForm.subject.trim(),
+        subjectId,
         title: editForm.title.trim(),
       });
       setDocuments((current) =>
@@ -744,7 +821,7 @@ export default function NewLibraryPage() {
     setEditingDocument(document);
     setEditForm({
       description: document.description ?? "",
-      subject: document.subject ?? "",
+      subject: (typeof document.subject === "object" ? document.subject?.name : document.subject) ?? "",
       title: document.title,
     });
     setIsEditOpen(true);
@@ -930,7 +1007,7 @@ export default function NewLibraryPage() {
                         </TableCell>
                         <TableCell>
                           <span className="status-badge status-info normal-case">
-                            {document.subject || "Unsorted"}
+                            {(typeof document.subject === "object" ? document.subject?.name : document.subject) || "Unsorted"}
                           </span>
                         </TableCell>
                         <TableCell>
@@ -1026,20 +1103,20 @@ export default function NewLibraryPage() {
         </section>
       </div>
 
-      <Sheet open={isUploadOpen} onOpenChange={setIsUploadOpen}>
-        <SheetContent>
+      <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
+        <DialogContent className="sm:max-w-[500px]">
           <form
             className="flex min-h-0 flex-1 flex-col"
             onSubmit={handleUpload}
           >
-            <SheetHeader>
-              <SheetTitle>Upload document</SheetTitle>
-              <SheetDescription>
+            <DialogHeader>
+              <DialogTitle>Upload document</DialogTitle>
+              <DialogDescription>
                 PDFs are stored in Cloudinary, parsed, and indexed for AI chat.
-              </SheetDescription>
-            </SheetHeader>
-            <Separator />
-            <div className="flex-1 overflow-y-auto p-4">
+              </DialogDescription>
+            </DialogHeader>
+            <Separator className="my-4" />
+            <div className="flex-grow py-2">
               <DocumentFields
                 disabled={isUploading}
                 fileInput={selectedFile}
@@ -1047,17 +1124,20 @@ export default function NewLibraryPage() {
                 mode="upload"
                 onFileChange={setSelectedFile}
                 onFormChange={setUploadForm}
+                errors={uploadErrors}
+                touched={uploadTouched}
+                onBlur={(field) => setUploadTouched((prev) => ({ ...prev, [field]: true }))}
               />
             </div>
-            <SheetFooter>
-              <Button disabled={isUploading} type="submit">
+            <DialogFooter className="mt-6">
+              <Button disabled={isUploading} type="submit" className="w-full sm:w-auto">
                 <UploadCloud data-icon="inline-start" aria-hidden="true" />
                 {isUploading ? "Uploading..." : "Upload PDF"}
               </Button>
-            </SheetFooter>
+            </DialogFooter>
           </form>
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
 
       <Sheet
         open={isEditOpen}
@@ -1083,6 +1163,9 @@ export default function NewLibraryPage() {
                 form={editForm}
                 mode="edit"
                 onFormChange={setEditForm}
+                errors={editErrors}
+                touched={editTouched}
+                onBlur={(field) => setEditTouched((prev) => ({ ...prev, [field]: true }))}
               />
             </div>
             <SheetFooter>
