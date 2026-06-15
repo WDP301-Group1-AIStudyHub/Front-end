@@ -355,7 +355,17 @@ export default function NewAIChatboxPage() {
               key={sessionIdsParam ?? historyId ?? "new"}
               adapter={realAdapter}
               initialMessages={historyMessages}
-              selectedDoc={selectedDoc}
+              selectedDoc={
+                selectedDoc
+                  ? {
+                      fileName: selectedDoc.fileName,
+                      subject:
+                        typeof selectedDoc.subject === "object"
+                          ? selectedDoc.subject?.name
+                          : selectedDoc.subject,
+                    }
+                  : undefined
+              }
             />
           )}
         </section>
