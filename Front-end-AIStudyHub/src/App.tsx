@@ -10,7 +10,10 @@ import ResetPasswordPage from './pages/auth/ResetPasswordPage'
 import NewAIChatboxPage from './pages/new-AIChatboxPage'
 import NewLibraryPage from './pages/new-LibraryPage'
 import AboutPage from './pages/AboutPage'
-import EvaluationPage from './pages/EvaluationPage'
+import EvaluationPage from './pages/evaluation/EvaluationPage'
+import NewQuestion from './pages/evaluation/NewQuestion'
+import RunBenchmark from './pages/evaluation/RunBenchmark'
+import Summary from './pages/evaluation/Summary'
 import UserProfilePage from './pages/UserProfilePage'
 import AdminActivityPage from './pages/admin/AdminActivityPage'
 import AdminDashboardPage from './pages/admin/AdminDashboardPage'
@@ -18,29 +21,31 @@ import AdminDocumentsPage from './pages/admin/AdminDocumentsPage'
 import AdminUsersPage from './pages/admin/AdminUsersPage'
 import { LoadingState } from './components/shared/CelestialLoading'
 import AppVideoBackground from './components/shared/AppVideoBackground'
+import BackgroundUploadWidget from './components/upload/BackgroundUploadWidget'
+import ConflictModal from './components/upload/ConflictModal'
 import { getCurrentUser } from './services/authApi'
 import { getStoredUser, hasAuthSession, storeAuthSession } from './services/authStorage'
 import type { AuthUser } from './types/auth'
 
 const demoAdminUser: AuthUser = {
-  id: 'admin-001',
-  avatar: 'https://i.pravatar.cc/150?img=11',
-  createdAt: '2025-08-12T09:00:00.000Z',
-  email: 'arjun.admin@aistudy.edu',
-  fullName: 'Arjun Sharma',
+  id: "admin-001",
+  avatar: "https://i.pravatar.cc/150?img=11",
+  createdAt: "2025-08-12T09:00:00.000Z",
+  email: "arjun.admin@aistudy.edu",
+  fullName: "Arjun Sharma",
   isActive: true,
   lastLoginAt: new Date().toISOString(),
-  role: 'admin',
-  status: 'active',
+  role: "admin",
+  status: "active",
   updatedAt: new Date().toISOString(),
-}
+};
 
 function AuthLoading() {
   return (
     <div className="celestial-page grid min-h-svh place-items-center">
       <LoadingState className="min-h-48 w-[min(100%,420px)]" label="Verifying session..." tone="gold" />
     </div>
-  )
+  );
 }
 
 function AdminAccessDenied() {
@@ -51,10 +56,12 @@ function AdminAccessDenied() {
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-amber-500">
             Admin only
           </p>
-          <h1 className="text-3xl font-semibold tracking-tight">Access denied</h1>
+          <h1 className="text-3xl font-semibold tracking-tight">
+            Access denied
+          </h1>
           <p className="mt-3 text-sm leading-6 text-muted-foreground">
-            This workspace is limited to administrator accounts. Sign in with an admin profile
-            to manage users, metadata, and system activity.
+            This workspace is limited to administrator accounts. Sign in with an
+            admin profile to manage users, metadata, and system activity.
           </p>
           <Link
             className="mt-6 inline-flex rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground"
@@ -65,7 +72,7 @@ function AdminAccessDenied() {
         </section>
       </main>
     </AppSidebarLayout>
-  )
+  );
 }
 
 function ProtectedRoute({
@@ -77,49 +84,53 @@ function ProtectedRoute({
   userOnly?: boolean
   children: (user: AuthUser) => ReactNode
 }) {
-  const [user, setUser] = useState<AuthUser | null>(() => getStoredUser())
-  const [verified, setVerified] = useState(() => Boolean(getStoredUser() && hasAuthSession()))
-  const [redirectToLogin, setRedirectToLogin] = useState(false)
+  const [user, setUser] = useState<AuthUser | null>(() => getStoredUser());
+  const [verified, setVerified] = useState(() =>
+    Boolean(getStoredUser() && hasAuthSession())
+  );
+  const [redirectToLogin, setRedirectToLogin] = useState(false);
 
   useEffect(() => {
     if (!hasAuthSession()) {
-      setRedirectToLogin(true)
-      return
+      setRedirectToLogin(true);
+      return;
     }
 
-    const storedUser = getStoredUser()
+    const storedUser = getStoredUser();
     if (storedUser) {
-      setUser(storedUser)
-      setVerified(true)
+      setUser(storedUser);
+      setVerified(true);
     }
 
     getCurrentUser()
       .then((currentUser) => {
-        const token = localStorage.getItem('ai-study-hub:access-token') || 'mock-admin-token'
-        storeAuthSession(token, currentUser)
-        setUser(currentUser)
-        setVerified(true)
+        const token =
+          localStorage.getItem("ai-study-hub:access-token") ||
+          "mock-admin-token";
+        storeAuthSession(token, currentUser);
+        setUser(currentUser);
+        setVerified(true);
       })
       .catch(() => {
         if (storedUser) {
-          setUser(storedUser)
-          setVerified(true)
-          return
+          setUser(storedUser);
+          setVerified(true);
+          return;
         }
-        setRedirectToLogin(true)
-      })
-  }, [])
+        setRedirectToLogin(true);
+      });
+  }, []);
 
   if (redirectToLogin) {
-    return <Navigate to="/login" replace />
+    return <Navigate to="/login" replace />;
   }
 
   if (!verified || !user) {
-    return <AuthLoading />
+    return <AuthLoading />;
   }
 
-  if (adminOnly && user.role !== 'admin') {
-    return <AdminAccessDenied />
+  if (adminOnly && user.role !== "admin") {
+    return <AdminAccessDenied />;
   }
 
   if (userOnly && user.role === 'admin') {
@@ -134,20 +145,20 @@ function PublicAuthRoute({ children }: { children: ReactNode }) {
     const storedUser = getStoredUser()
     return <Navigate to={storedUser?.role === 'admin' ? '/admin' : '/dashboard'} replace />
   }
-  return children
+  return children;
 }
 
 function routeWithShell(page: ReactNode) {
-  return <AppSidebarLayout>{page}</AppSidebarLayout>
+  return <AppSidebarLayout>{page}</AppSidebarLayout>;
 }
 
 function DemoAdminBootstrap() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   useEffect(() => {
-    storeAuthSession('mock-admin-token', demoAdminUser)
-    navigate('/admin', { replace: true })
-  }, [navigate])
-  return <AuthLoading />
+    storeAuthSession("mock-admin-token", demoAdminUser);
+    navigate("/admin", { replace: true });
+  }, [navigate]);
+  return <AuthLoading />;
 }
 
 function App() {
@@ -181,6 +192,18 @@ function App() {
           element={<ProtectedRoute userOnly>{() => routeWithShell(<EvaluationPage />)}</ProtectedRoute>}
         />
         <Route
+          path="/evaluation/new"
+          element={<ProtectedRoute userOnly>{() => routeWithShell(<NewQuestion />)}</ProtectedRoute>}
+        />
+        <Route
+          path="/evaluation/run/:questionId"
+          element={<ProtectedRoute userOnly>{() => routeWithShell(<RunBenchmark />)}</ProtectedRoute>}
+        />
+        <Route
+          path="/evaluation/summary"
+          element={<ProtectedRoute userOnly>{() => routeWithShell(<Summary />)}</ProtectedRoute>}
+        />
+        <Route
           path="/profile"
           element={<ProtectedRoute>{() => routeWithShell(<UserProfilePage />)}</ProtectedRoute>}
         />
@@ -202,8 +225,10 @@ function App() {
         />
         <Route path="*" element={<LandingPage />} />
       </Routes>
+      <BackgroundUploadWidget />
+      <ConflictModal />
     </>
   )
 }
 
-export default App
+export default App;

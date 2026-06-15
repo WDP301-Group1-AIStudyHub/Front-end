@@ -51,7 +51,10 @@ import {
 } from "lucide-react";
 import type { FC } from "react";
 
-type SelectedDocInfo = { fileName: string; subject?: string };
+type SelectedDocInfo = {
+  fileName: string;
+  subject?: string | { _id: string; name: string; description?: string; color?: string; code?: string };
+};
 
 export const Thread: FC<{ selectedDoc?: SelectedDocInfo }> = ({ selectedDoc }) => {
   return (
@@ -188,7 +191,10 @@ const Composer: FC<{ selectedDoc?: SelectedDocInfo }> = ({ selectedDoc }) => {
             <div className="flex items-center gap-1.5 rounded-lg border border-[color-mix(in_oklab,var(--accent-violet,#a78bfa)_35%,transparent)] bg-[color-mix(in_oklab,var(--accent-violet,#a78bfa)_10%,transparent)] px-2.5 py-1.5">
               <FileTextIcon className="size-3 shrink-0 text-[var(--accent-violet,#a78bfa)]" />
               <span className="min-w-0 flex-1 truncate text-xs font-medium text-[var(--accent-violet,#c4b5fd)]">
-                {selectedDoc.subject ? `${selectedDoc.subject} · ` : ""}{selectedDoc.fileName}
+                {(() => {
+                  const subjectName = typeof selectedDoc.subject === "object" ? selectedDoc.subject?.name : selectedDoc.subject;
+                  return subjectName ? `${subjectName} · ` : "";
+                })()}{selectedDoc.fileName}
               </span>
               <XIcon className="size-3 shrink-0 text-muted-foreground opacity-50" />
             </div>

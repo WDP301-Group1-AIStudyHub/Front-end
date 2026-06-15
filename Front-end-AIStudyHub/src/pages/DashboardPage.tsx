@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
   Archive,
   Bell,
@@ -65,7 +66,8 @@ export default function DashboardPage() {
   const subjectClusters = useMemo(() => {
     const map = new Map<string, number>()
     for (const doc of docs) {
-      const key = doc.subject?.trim() || 'Uncategorized'
+      const subjectName = (typeof doc.subject === 'object' ? doc.subject?.name : doc.subject) || ''
+      const key = subjectName.trim() || 'Uncategorized'
       map.set(key, (map.get(key) ?? 0) + 1)
     }
     return [...map.entries()]
@@ -170,7 +172,7 @@ export default function DashboardPage() {
             </h2>
             <div className="flex flex-wrap items-center gap-4">
               <Button asChild className="rounded-full">
-                <a href="/aichatbox">Initiate Dialogue</a>
+                <Link to="/aichatbox">Initiate Dialogue</Link>
               </Button>
               <span className="text-sm italic text-muted-foreground">
                 {loading ? <CelestialInlineLoader label="Loading library..." /> : `Searching ${docs.length} archived papers...`}
@@ -188,7 +190,7 @@ export default function DashboardPage() {
               <h2 className="font-semibold">Recent Archives</h2>
             </div>
             <Button asChild size="sm" variant="outline">
-              <a href="/library">View all</a>
+              <Link to="/library">View all</Link>
             </Button>
           </div>
           <div className="divide-y divide-border/60">
@@ -209,9 +211,9 @@ export default function DashboardPage() {
               <p className="p-5 text-sm text-muted-foreground">No documents yet. Upload one to get started.</p>
             ) : (
               recentDocs.map((doc) => (
-                <a
+                <Link
                   className="grid gap-3 p-5 transition-colors hover:bg-muted/45 md:grid-cols-[1fr_180px_auto]"
-                  href="/library"
+                  to="/library"
                   key={doc.id}
                 >
                   <div className="flex min-w-0 items-center gap-3">
@@ -226,17 +228,17 @@ export default function DashboardPage() {
                     </div>
                   </div>
                   <span className="self-center text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                    {doc.subject || '—'}
+                    {(typeof doc.subject === 'object' ? doc.subject?.name : doc.subject) || '—'}
                   </span>
                   <span className="self-center text-muted-foreground">...</span>
-                </a>
+                </Link>
               ))
             )}
           </div>
         </article>
 
         <aside className="flex flex-col gap-5">
-          <a className="celestial-card tone-surface tone-cyan flex items-center justify-between gap-5 p-5" href="/library">
+          <Link className="celestial-card tone-surface tone-cyan flex items-center justify-between gap-5 p-5" to="/library">
             <div>
               <h2 className="font-semibold">Sync Documents</h2>
               <p className="mt-1 text-sm text-muted-foreground">Upload to library</p>
@@ -244,7 +246,7 @@ export default function DashboardPage() {
             <span className="admin-icon-badge admin-tone-teal">
               <UploadCloud />
             </span>
-          </a>
+          </Link>
 
           <article className="celestial-card tone-surface tone-violet p-5">
             <span className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
@@ -262,15 +264,15 @@ export default function DashboardPage() {
                 <p className="text-sm text-muted-foreground">No subjects yet.</p>
               ) : (
                 subjectClusters.map((subject) => (
-                  <a className="flex items-center justify-between gap-4 rounded-lg p-1 transition-colors hover:bg-muted/45" href="/library" key={subject.name}>
+                  <Link className="flex items-center justify-between gap-4 rounded-lg p-1 transition-colors hover:bg-muted/45" to="/library" key={subject.name}>
                     <span>{subject.name}</span>
                     <span className="text-xs font-semibold text-muted-foreground">{subject.count}</span>
-                  </a>
+                  </Link>
                 ))
               )}
             </div>
             <Button asChild className="mt-5 w-full" variant="outline">
-              <a href="/library">Explore All Clusters</a>
+              <Link to="/library">Explore All Clusters</Link>
             </Button>
           </article>
         </aside>

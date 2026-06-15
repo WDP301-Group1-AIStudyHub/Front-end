@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import AuthScaffold from '../../components/auth/AuthScaffold'
 import SplitInfoCard from '../../components/auth/SplitInfoCard'
 
@@ -29,9 +30,9 @@ export default function ResetPasswordPage() {
             Back to Sign In
           </a>
         </div>
-        <a href="/" className="mt-[26px] inline-flex w-full items-center justify-center text-xs font-semibold text-muted-foreground hover:text-foreground">
+        <Link to="/" className="mt-[26px] inline-flex w-full items-center justify-center text-xs font-semibold text-muted-foreground hover:text-foreground">
           Return Home
-        </a>
+        </Link>
       </section>
     </AuthScaffold>
   )

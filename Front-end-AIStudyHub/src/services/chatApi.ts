@@ -2,8 +2,13 @@ import type { ApiResponse } from '../types/auth'
 import type {
   AskChatPayload,
   AskChatResponse,
+  BenchmarkQuestion,
+  BenchmarkQuestionsResponse,
+  BenchmarkRunResult,
+  BenchmarkSummary,
   ChatHistoryItem,
   ChatHistoryListResponse,
+  CreateBenchmarkQuestionPayload,
   EvaluationLogsResponse,
   EvaluationSummary,
 } from '../types/chat'
@@ -20,6 +25,40 @@ export class ChatApiError extends Error {
     super(message)
     this.name = 'ChatApiError'
     this.status = status
+  }
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' ? (value as Record<string, unknown>) : {}
+}
+
+function numberFrom(value: unknown, fallback = 0): number {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (typeof value === 'string') {
+    const parsed = Number(value)
+    if (Number.isFinite(parsed)) return parsed
+  }
+  return fallback
+}
+
+function normalizeBenchmarkSummary(summary: BenchmarkSummary): BenchmarkSummary {
+  const record = asRecord(summary)
+
+  return {
+    ...summary,
+    averageBasicScore: numberFrom(summary.averageBasicScore ?? summary.basicAverageScore ?? record.basicAvgScore),
+    averageCorrectiveScore: numberFrom(
+      summary.averageCorrectiveScore ?? summary.correctiveAverageScore ?? record.correctiveAvgScore,
+    ),
+    basicWinRate: numberFrom(summary.basicWinRate),
+    correctnessImprovement: numberFrom(
+      summary.correctnessImprovement ?? summary.averageCorrectnessImprovement,
+    ),
+    correctiveWinRate: numberFrom(summary.correctiveWinRate),
+    faithfulnessImprovement: numberFrom(
+      summary.faithfulnessImprovement ?? summary.averageFaithfulnessImprovement,
+    ),
+    totalRuns: numberFrom(summary.totalRuns ?? summary.totalBenchmarks),
   }
 }
 
@@ -111,4 +150,56 @@ export async function getEvaluationSummary(): Promise<EvaluationSummary> {
   const res = await request<EvaluationSummary>('/api/evaluation/summary')
   if (!res.data) throw new ChatApiError('Empty evaluation summary', 500)
   return res.data
+}
+
+// ─── Benchmark ──────────────────────────────────────────────────────────────
+
+export async function getBenchmarkQuestions(): Promise<BenchmarkQuestionsResponse> {
+  const res = await request<BenchmarkQuestionsResponse | { questions: BenchmarkQuestionsResponse }>('/api/benchmark/questions')
+  if (!res.data) return []
+  if (Array.isArray(res.data)) return res.data
+  if ('questions' in (res.data as object) && Array.isArray((res.data as { questions: unknown }).questions)) {
+    return (res.data as { questions: BenchmarkQuestionsResponse }).questions
+  }
+  return []
+}
+
+export async function createBenchmarkQuestion(
+  payload: CreateBenchmarkQuestionPayload,
+): Promise<BenchmarkQuestion | null> {
+  const res = await request<
+    BenchmarkQuestion | { question?: BenchmarkQuestion }
+  >('/api/benchmark/questions', {
+    method: 'POST',
+    body: payload,
+  })
+
+  if (!res.data) return null
+  if ('question' in (res.data as object)) {
+    return (res.data as { question?: BenchmarkQuestion }).question ?? null
+  }
+  return res.data as BenchmarkQuestion
+}
+
+export async function deleteBenchmarkQuestion(questionId: string): Promise<void> {
+  await request(`/api/benchmark/questions/${questionId}`, {
+    method: 'DELETE',
+  })
+}
+
+export async function runBenchmarkQuestion(
+  questionId: string,
+): Promise<BenchmarkRunResult> {
+  const res = await request<BenchmarkRunResult>(`/api/benchmark/run/${questionId}`, {
+    method: 'POST',
+  })
+  if (!res.data) throw new ChatApiError('Empty benchmark result', 500)
+  return res.data
+}
+
+export async function getBenchmarkSummary(period?: '7d' | '30d' | 'all'): Promise<BenchmarkSummary> {
+  const query = period && period !== 'all' ? `?period=${encodeURIComponent(period)}` : ''
+  const res = await request<BenchmarkSummary>(`/api/benchmark/summary${query}`)
+  if (!res.data) throw new ChatApiError('Empty benchmark summary', 500)
+  return normalizeBenchmarkSummary(res.data)
 }

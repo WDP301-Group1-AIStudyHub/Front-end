@@ -2,7 +2,7 @@ export interface DocumentItem {
   id: string
   title: string
   description?: string
-  subject?: string
+  subject?: string | { _id: string; name: string; description?: string; color?: string; code?: string }
   fileUrl: string
   filePublicId: string
   fileName: string
@@ -25,6 +25,7 @@ export interface UpdateDocumentPayload {
   title?: string
   description?: string
   subject?: string
+  subjectId?: string
 }
 
 export type DocumentsResponse = DocumentItem[]

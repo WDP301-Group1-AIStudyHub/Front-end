@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { ChangeEvent, FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import AcademicAside from '../../components/auth/AcademicAside'
 import AuthCardShell from '../../components/auth/AuthCardShell'
 import AuthScaffold from '../../components/auth/AuthScaffold'
@@ -76,7 +76,7 @@ export default function LoginPage() {
               <input checked readOnly type="checkbox" className="h-4 w-4 accent-[var(--accent-blue)]" />
               <span>Remember Me</span>
             </label>
-            <a href="/forgot-password" className="text-foreground hover:text-primary">Forgot?</a>
+            <Link to="/forgot-password" className="text-foreground hover:text-primary">Forgot?</Link>
           </div>
           {error ? (
             <p className="m-0 text-xs leading-relaxed text-red-300">{error}</p>

@@ -5,6 +5,7 @@ import { LoadingState } from '../../components/shared/CelestialLoading'
 import { listAdminDocuments, listAdminUsers, listSystemActivities } from '../../services/adminApi'
 import type { AdminDocument, AdminUser, SystemActivity } from '../../types/admin'
 import { AdminPageHeader, AdminStatCard, formatDateTime, StatusBadge } from './adminPageUtils'
+import { Link } from 'react-router-dom'
 
 export default function AdminDashboardPage() {
   const [activities, setActivities] = useState<SystemActivity[]>([])
@@ -42,7 +43,7 @@ export default function AdminDashboardPage() {
   return (
     <main className="celestial-page min-h-svh overflow-y-auto p-5 md:p-8">
       <AdminPageHeader
-        actions={<Button asChild><a href="/admin/users">Review users</a></Button>}
+        actions={<Button asChild><Link to="/admin/users">Review users</Link></Button>}
         description="Control accounts, review document metadata, and monitor the system health signals described by the admin usecase."
         eyebrow="Admin constellation"
         title="Admin Dashboard"
@@ -62,7 +63,7 @@ export default function AdminDashboardPage() {
               <h2 className="text-lg font-semibold">System activity stream</h2>
               <p className="text-sm text-muted-foreground">Recent admin and platform events.</p>
             </div>
-            <Button variant="outline" asChild><a href="/admin/activity">Open activity</a></Button>
+            <Button variant="outline" asChild><Link to="/admin/activity">Open activity</Link></Button>
           </div>
           <div className="divide-y divide-border/60">
             {isLoading ? (
