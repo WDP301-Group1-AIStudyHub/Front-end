@@ -8,13 +8,18 @@ import {
   ExternalLink,
   FileIcon,
   FileText,
+  LinkIcon,
+  MessageSquare,
   MoreHorizontal,
   Pencil,
   SearchIcon,
   Settings,
   Trash2,
   UploadCloud,
+  Users,
+  X,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -31,6 +36,14 @@ import {
   InputGroupInput,
 } from "@/components/ui/input-group";
 import { Separator } from "@/components/ui/separator";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Sheet,
   SheetContent,
@@ -50,19 +63,29 @@ import {
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  CelestialInlineLoader,
+  CelestialProgress,
+} from "../components/shared/CelestialLoading";
+import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
-  DocumentApiError,
   deleteDocument,
   listDocuments,
   searchDocuments,
   updateDocument,
-  uploadDocument,
 } from "../services/documentApi";
+import {
+  findOrCreateSubjectByName,
+  listSubjects,
+} from "../services/subjectApi";
+import type { SubjectItem } from "../services/subjectApi";
+import { useUploadStore } from "../store/useUploadStore";
 import type { DocumentItem } from "../types/document";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const SEARCH_DEBOUNCE_MS = 350;
@@ -105,7 +128,10 @@ function formatFileSize(bytes: number): string {
   }
 
   const units = ["B", "KB", "MB", "GB"];
-  const index = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+  const index = Math.min(
+    Math.floor(Math.log(bytes) / Math.log(1024)),
+    units.length - 1,
+  );
   const value = bytes / 1024 ** index;
 
   return `${value >= 10 || index === 0 ? value.toFixed(0) : value.toFixed(1)} ${units[index]}`;
@@ -125,6 +151,66 @@ function formatDate(value: string): string {
   }).format(date);
 }
 
+function safeDecode(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
+function getPreviewTitle(previewParam: string): string {
+  const decoded = safeDecode(previewParam).split(/[\\/]/).pop() ?? previewParam;
+  const withoutQuery = decoded.split("?")[0] || decoded;
+
+  return withoutQuery.replace(/\.[^/.]+$/, "") || "Preview";
+}
+
+function getPreviewFileType(previewParam: string): string {
+  const decoded = safeDecode(previewParam).split("?")[0];
+  const extension = decoded.match(/\.([a-z0-9]+)$/i)?.[1];
+
+  return (extension || "txt").toUpperCase();
+}
+
+function normalizePreviewKey(value: string | null | undefined): string {
+  return safeDecode(value ?? "")
+    .replace(/^id:/i, "")
+    .trim()
+    .toLowerCase();
+}
+
+function findPreviewDocument(
+  documents: DocumentItem[],
+  urlParams: URLSearchParams,
+): DocumentItem | null {
+  const previewKey = normalizePreviewKey(urlParams.get("preview"));
+  const quickviewKey = normalizePreviewKey(urlParams.get("quickview"));
+  const idKey = normalizePreviewKey(urlParams.get("id"));
+  const keys = new Set([previewKey, quickviewKey, idKey].filter(Boolean));
+
+  if (!keys.size) {
+    return null;
+  }
+
+  return (
+    documents.find((document) => {
+      const documentKeys = [
+        document.id,
+        document.filePublicId,
+        document.fileName,
+        document.title,
+      ].map(normalizePreviewKey);
+
+      return documentKeys.some(
+        (documentKey) =>
+          keys.has(documentKey) ||
+          [...keys].some((key) => documentKey.includes(key)),
+      );
+    }) ?? null
+  );
+}
+
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error) {
     return error.message;
@@ -133,63 +219,88 @@ function getErrorMessage(error: unknown): string {
   return "Something went wrong";
 }
 
-function validateUploadForm(form: DocumentFormState, file: File | null): string | null {
+function getUploadErrors(
+  form: DocumentFormState,
+  file: File | null,
+): Record<string, string | null> {
+  const errors: Record<string, string | null> = {};
   const title = form.title.trim();
   const description = form.description.trim();
   const subject = form.subject.trim();
 
+  // File validation
   if (!file) {
-    return "PDF file is required";
+    errors.file = "PDF file is required";
+  } else if (file.type !== "application/pdf") {
+    errors.file = "Only PDF files are allowed";
+  } else if (file.size > MAX_FILE_SIZE) {
+    errors.file = "PDF must be 10 MB or smaller";
+  } else {
+    errors.file = null;
   }
 
-  if (file.type !== "application/pdf") {
-    return "Only PDF files are allowed";
-  }
-
-  if (file.size > MAX_FILE_SIZE) {
-    return "PDF must be 10 MB or smaller";
-  }
-
+  // Title validation
   if (!title) {
-    return "Title is required";
+    errors.title = "Title is required";
+  } else if (title.length > 160) {
+    errors.title = "Title must be 160 characters or fewer";
+  } else {
+    errors.title = null;
   }
 
-  if (title.length > 160) {
-    return "Title must be 160 characters or fewer";
+  // Subject validation
+  if (!subject) {
+    errors.subject = "Subject is required";
+  } else if (subject.length > 80) {
+    errors.subject = "Subject must be 80 characters or fewer";
+  } else {
+    errors.subject = null;
   }
 
+  // Description validation
   if (description.length > 1000) {
-    return "Description must be 1000 characters or fewer";
+    errors.description = "Description must be 1000 characters or fewer";
+  } else {
+    errors.description = null;
   }
 
-  if (subject.length > 80) {
-    return "Subject must be 80 characters or fewer";
-  }
-
-  return null;
+  return errors;
 }
 
-function validateEditForm(form: DocumentFormState): string | null {
+function getEditErrors(form: DocumentFormState): Record<string, string | null> {
+  const errors: Record<string, string | null> = {};
   const title = form.title.trim();
+  const description = form.description.trim();
+  const subject = form.subject.trim();
 
+  // Title validation
   if (!title) {
-    return "Title is required";
+    errors.title = "Title is required";
+  } else if (title.length > 160) {
+    errors.title = "Title must be 160 characters or fewer";
+  } else {
+    errors.title = null;
   }
 
-  if (title.length > 160) {
-    return "Title must be 160 characters or fewer";
+  // Subject validation
+  if (!subject) {
+    errors.subject = "Subject is required";
+  } else if (subject.length > 80) {
+    errors.subject = "Subject must be 80 characters or fewer";
+  } else {
+    errors.subject = null;
   }
 
-  if (form.description.trim().length > 1000) {
-    return "Description must be 1000 characters or fewer";
+  // Description validation
+  if (description.length > 1000) {
+    errors.description = "Description must be 1000 characters or fewer";
+  } else {
+    errors.description = null;
   }
 
-  if (form.subject.trim().length > 80) {
-    return "Subject must be 80 characters or fewer";
-  }
-
-  return null;
+  return errors;
 }
+
 
 function DocumentFields({
   disabled,
@@ -198,6 +309,10 @@ function DocumentFields({
   mode,
   onFileChange,
   onFormChange,
+  errors = {},
+  touched = {},
+  onBlur,
+  subjects,
 }: {
   disabled: boolean;
   fileInput?: File | null;
@@ -205,6 +320,10 @@ function DocumentFields({
   mode: "upload" | "edit";
   onFileChange?: (file: File | null) => void;
   onFormChange: (form: DocumentFormState) => void;
+  errors?: Record<string, string | null>;
+  touched?: Record<string, boolean>;
+  onBlur?: (field: string) => void;
+  subjects: SubjectItem[];
 }) {
   return (
     <div className="flex flex-col gap-4">
@@ -214,12 +333,22 @@ function DocumentFields({
           <Input
             accept="application/pdf"
             disabled={disabled}
-            onChange={(event) => onFileChange?.(event.target.files?.[0] ?? null)}
+            onChange={(event) => {
+              onFileChange?.(event.target.files?.[0] ?? null);
+              onBlur?.("file");
+            }}
+            onBlur={() => onBlur?.("file")}
             type="file"
           />
-          <span className="text-xs text-muted-foreground">
-            {fileInput ? `${fileInput.name} · ${formatFileSize(fileInput.size)}` : "PDF only, up to 10 MB"}
-          </span>
+          {touched.file && errors.file ? (
+            <span className="text-xs text-rose-500 font-semibold">{errors.file}</span>
+          ) : (
+            <span className="text-xs text-muted-foreground">
+              {fileInput
+                ? `${fileInput.name} · ${formatFileSize(fileInput.size)}`
+                : "PDF only, up to 10 MB"}
+            </span>
+          )}
         </label>
       )}
 
@@ -231,22 +360,36 @@ function DocumentFields({
           onChange={(event) =>
             onFormChange({ ...form, title: event.target.value })
           }
+          onBlur={() => onBlur?.("title")}
           placeholder="Lesson 1"
           value={form.title}
         />
+        {touched.title && errors.title && (
+          <span className="text-xs text-rose-500 font-semibold">{errors.title}</span>
+        )}
       </label>
 
       <label className="flex flex-col gap-2 text-sm font-medium">
         Subject
-        <Input
+        <select
+          className="h-9 w-full min-w-0 rounded-md border-2 border-foreground bg-background px-3 text-sm font-semibold  outline-none focus:translate-x-[1px] focus:translate-y-[1px] focus: disabled:opacity-50"
           disabled={disabled}
-          maxLength={80}
           onChange={(event) =>
             onFormChange({ ...form, subject: event.target.value })
           }
-          placeholder="Math"
+          onBlur={() => onBlur?.("subject")}
           value={form.subject}
-        />
+        >
+          <option value="">Select subject</option>
+          {subjects.map((subject) => (
+            <option key={subject._id} value={subject.name}>
+              {[subject.code, subject.name].filter(Boolean).join(" ")}
+            </option>
+          ))}
+        </select>
+        {touched.subject && errors.subject && (
+          <span className="text-xs text-rose-500 font-semibold">{errors.subject}</span>
+        )}
       </label>
 
       <label className="flex flex-col gap-2 text-sm font-medium">
@@ -257,33 +400,252 @@ function DocumentFields({
           onChange={(event) =>
             onFormChange({ ...form, description: event.target.value })
           }
+          onBlur={() => onBlur?.("description")}
           placeholder="Algebra notes"
           value={form.description}
         />
+        {touched.description && errors.description && (
+          <span className="text-xs text-rose-500 font-semibold">{errors.description}</span>
+        )}
       </label>
     </div>
   );
 }
 
+function DocumentPreviewPage({
+  document,
+  previewParam,
+}: {
+  document: DocumentItem | null;
+  previewParam: string;
+}) {
+  const navigate = useNavigate();
+  const previewTitle = document
+    ? getPreviewTitle(document.fileName || document.title)
+    : getPreviewTitle(previewParam);
+  const fileType = getPreviewFileType(document?.fileName || previewParam);
+  const viewerSrc = document?.fileUrl ?? "";
+
+  function closePreview() {
+    navigate("/library", { replace: true });
+  }
+
+  function downloadPreview() {
+    if (document?.fileUrl) {
+      window.location.href = document.fileUrl;
+    }
+  }
+
+  async function copyPreviewLink() {
+    if (!navigator.clipboard) {
+      return;
+    }
+
+    await navigator.clipboard.writeText(window.location.href).catch(() => {});
+  }
+
+  return (
+    <main className="fixed inset-0 z-50 flex min-w-0 flex-col overflow-hidden bg-background text-foreground">
+      <header className="flex shrink-0 flex-col border-b border-border bg-background">
+        <div className="flex min-h-20 min-w-0 items-center justify-between gap-4 px-4 py-3">
+          <div className="flex min-w-0 items-start gap-4">
+            <IconTooltip label="Close preview">
+              <Button
+                variant="ghost"
+                size="icon-lg"
+                className="mt-1 rounded-full"
+                aria-label="Close preview"
+                onClick={closePreview}
+              >
+                <X aria-hidden="true" />
+              </Button>
+            </IconTooltip>
+
+            <div className="flex min-w-0 flex-col gap-1">
+              <div className="flex min-w-0 items-center gap-2 text-lg text-muted-foreground">
+                <strong className="truncate text-sm font-medium text-foreground">
+                  {previewTitle}
+                </strong>
+                <Badge variant="outline" className="rounded-full px-2 text-xs">
+                  <span className="shrink-0 uppercase">{fileType}</span>
+                </Badge>
+              </div>
+
+              <nav
+                className="flex flex-wrap items-center text-muted-foreground -ml-2"
+                aria-label="Preview menu"
+              >
+                {["File", "Edit", "View", "Help"].map((item) => (
+                  <Button
+                    className="text-muted-foreground hover:text-foreground h-6"
+                    variant="ghost"
+                    size="sm"
+                    key={item}
+                  >
+                    {item}
+                  </Button>
+                ))}
+              </nav>
+            </div>
+          </div>
+
+          <div className="flex shrink-0 items-center gap-2">
+            <div className="flex items-center gap-2">
+              <Avatar size="lg">
+                <AvatarFallback>DA</AvatarFallback>
+                <AvatarImage></AvatarImage>
+              </Avatar>
+              <IconTooltip label="Collaborators">
+                <Button
+                  variant="secondary"
+                  size="icon-lg"
+                  className="rounded-full"
+                  aria-label="Collaborators"
+                >
+                  <Users aria-hidden="true" />
+                </Button>
+              </IconTooltip>
+            </div>
+
+            <IconTooltip label="Comments">
+              <Button variant="ghost" size="icon-lg" aria-label="Comments">
+                <MessageSquare aria-hidden="true" />
+              </Button>
+            </IconTooltip>
+
+            <IconTooltip label="Download">
+              <Button
+                variant="ghost"
+                size="icon-lg"
+                aria-label="Download"
+                onClick={downloadPreview}
+              >
+                <Download aria-hidden="true" />
+              </Button>
+            </IconTooltip>
+
+            <IconTooltip label="Copy link">
+              <Button
+                variant="ghost"
+                size="icon-lg"
+                aria-label="Copy link"
+                onClick={() => void copyPreviewLink()}
+              >
+                <LinkIcon aria-hidden="true" />
+              </Button>
+            </IconTooltip>
+
+            <Button variant="outline" size="lg">
+              Share
+            </Button>
+          </div>
+        </div>
+
+        {/* <div className="flex min-h-14 items-center justify-between gap-4 px-12 pb-4">
+          <Button variant="ghost" className="gap-2 px-0 text-xl font-normal">
+            <Pencil data-icon="inline-start" aria-hidden="true" />
+            Edit content
+          </Button>
+
+          <div className="flex items-center gap-4">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="h-11 rounded-lg px-4 text-xl font-normal"
+                >
+                  UTF-8
+                  <ChevronDownIcon data-icon="inline-end" aria-hidden="true" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem>UTF-8</DropdownMenuItem>
+                <DropdownMenuItem>UTF-16</DropdownMenuItem>
+                <DropdownMenuItem>ASCII</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <IconTooltip label="Fullscreen">
+              <Button variant="ghost" size="icon-lg" aria-label="Fullscreen">
+                <Maximize2 aria-hidden="true" />
+              </Button>
+            </IconTooltip>
+          </div>
+        </div> */}
+      </header>
+
+      <section className="min-h-0 flex-1 overflow-hidden">
+        {viewerSrc ? (
+          <iframe
+            className="h-full w-full border-0"
+            src={viewerSrc}
+            title={previewTitle}
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center px-6 text-sm text-white">
+            Preview unavailable.
+          </div>
+        )}
+      </section>
+    </main>
+  );
+}
+
 export default function NewLibraryPage() {
+  const navigate = useNavigate();
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
-  const [editingDocument, setEditingDocument] = useState<DocumentItem | null>(null);
+  const [editingDocument, setEditingDocument] = useState<DocumentItem | null>(
+    null,
+  );
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [subjectFilter, setSubjectFilter] = useState("");
+  const [subjects, setSubjects] = useState<SubjectItem[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadForm, setUploadForm] = useState<DocumentFormState>(emptyForm);
   const [editForm, setEditForm] = useState<DocumentFormState>(emptyForm);
   const didLoadRef = useRef(false);
 
+  const [uploadTouched, setUploadTouched] = useState<Record<string, boolean>>({});
+  const [editTouched, setEditTouched] = useState<Record<string, boolean>>({});
+
+  const uploadErrors = useMemo(() => getUploadErrors(uploadForm, selectedFile), [uploadForm, selectedFile]);
+  const editErrors = useMemo(() => getEditErrors(editForm), [editForm]);
+
+  useEffect(() => {
+    if (!isUploadOpen) {
+      setUploadTouched({});
+    }
+  }, [isUploadOpen]);
+
+  useEffect(() => {
+    if (!isEditOpen) {
+      setEditTouched({});
+    }
+  }, [isEditOpen]);
+
+  // Auto-refresh library when a background upload succeeds
+  const uploads = useUploadStore((state) => state.uploads);
+  const isUploading = uploads.some((u) => u.status === "uploading" || u.status === "processing");
+  const prevSuccessCountRef = useRef(0);
+
+  useEffect(() => {
+    const successCount = uploads.filter((u) => u.status === "success").length;
+    if (successCount > prevSuccessCountRef.current) {
+      void loadDocuments();
+    }
+    prevSuccessCountRef.current = successCount;
+  }, [uploads]);
+
   const showSearchMode = searchQuery.trim() || subjectFilter.trim();
+
+  const urlParams = new URLSearchParams(window.location.search);
 
   const sortedDocuments = useMemo(
     () =>
@@ -312,6 +674,11 @@ export default function NewLibraryPage() {
     didLoadRef.current = true;
     const timeoutId = window.setTimeout(() => {
       void loadDocuments();
+      void listSubjects()
+        .then(setSubjects)
+        .catch((error) =>
+          setFeedback({ tone: "error", message: getErrorMessage(error) }),
+        );
     }, 0);
 
     return () => window.clearTimeout(timeoutId);
@@ -334,7 +701,7 @@ export default function NewLibraryPage() {
       try {
         const results = await searchDocuments({
           keyword: searchQuery,
-          subject: subjectFilter,
+          subjectId: subjectFilter,
         });
         setDocuments(results);
       } catch (error) {
@@ -350,10 +717,15 @@ export default function NewLibraryPage() {
   async function handleUpload(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const validationError = validateUploadForm(uploadForm, selectedFile);
+    setUploadTouched({
+      file: true,
+      title: true,
+      subject: true,
+      description: true,
+    });
 
-    if (validationError) {
-      setFeedback({ tone: "error", message: validationError });
+    const isUploadValid = !Object.values(uploadErrors).some(Boolean);
+    if (!isUploadValid) {
       return;
     }
 
@@ -361,49 +733,28 @@ export default function NewLibraryPage() {
       return;
     }
 
-    setIsUploading(true);
-    setFeedback({
-      tone: "info",
-      message: "Uploading and preparing this document for AI chat...",
-    });
-
-    try {
-      await uploadDocument({
+    // Delegate to Zustand background store with conflict check interception
+    useUploadStore.getState().processIncomingUpload(
+      {
         description: uploadForm.description,
         file: selectedFile,
         subject: uploadForm.subject,
         title: uploadForm.title,
-      });
-      setFeedback({
-        tone: "success",
-        message: "Document uploaded successfully. It is being prepared for AI chat.",
-      });
-      setUploadForm(emptyForm);
-      setSelectedFile(null);
-      setIsUploadOpen(false);
-      await loadDocuments();
-    } catch (error) {
-      // Server đôi khi trả 500 dù upload thực sự thành công (lỗi serialize response).
-      // Thử reload lại list; nếu OK thì coi như upload thành công.
-      if (error instanceof DocumentApiError && error.status === 500) {
-        try {
-          await loadDocuments();
-          setFeedback({
-            tone: "success",
-            message: "Document uploaded successfully. It is being prepared for AI chat.",
-          });
-          setUploadForm(emptyForm);
-          setSelectedFile(null);
-          setIsUploadOpen(false);
-          return;
-        } catch {
-          // loadDocuments cũng lỗi → báo lỗi bình thường
-        }
-      }
-      setFeedback({ tone: "error", message: getErrorMessage(error) });
-    } finally {
-      setIsUploading(false);
-    }
+      },
+      documents
+    );
+
+    // Close the dialog and clear form inputs immediately
+    setUploadForm(emptyForm);
+    setSelectedFile(null);
+    setIsUploadOpen(false);
+
+    // Provide user feedback that it's running in the background
+    setFeedback({
+      tone: "success",
+      message:
+        "Document added to background upload queue. Track progress at the bottom right.",
+    });
   }
 
   async function handleEdit(event: React.FormEvent<HTMLFormElement>) {
@@ -413,10 +764,14 @@ export default function NewLibraryPage() {
       return;
     }
 
-    const validationError = validateEditForm(editForm);
+    setEditTouched({
+      title: true,
+      subject: true,
+      description: true,
+    });
 
-    if (validationError) {
-      setFeedback({ tone: "error", message: validationError });
+    const isEditValid = !Object.values(editErrors).some(Boolean);
+    if (!isEditValid) {
       return;
     }
 
@@ -424,9 +779,14 @@ export default function NewLibraryPage() {
     setFeedback(null);
 
     try {
+      let subjectId = undefined;
+      if (editForm.subject.trim()) {
+        subjectId = await findOrCreateSubjectByName(editForm.subject.trim());
+      }
+
       const updatedDocument = await updateDocument(editingDocument.id, {
         description: editForm.description.trim(),
-        subject: editForm.subject.trim(),
+        subjectId,
         title: editForm.title.trim(),
       });
       setDocuments((current) =>
@@ -434,7 +794,10 @@ export default function NewLibraryPage() {
           document.id === updatedDocument.id ? updatedDocument : document,
         ),
       );
-      setFeedback({ tone: "success", message: "Document updated successfully" });
+      setFeedback({
+        tone: "success",
+        message: "Document updated successfully",
+      });
       setEditingDocument(null);
       setIsEditOpen(false);
     } catch (error) {
@@ -463,7 +826,10 @@ export default function NewLibraryPage() {
         current.filter((item) => item.id !== document.id),
       );
       setPendingDeleteId(null);
-      setFeedback({ tone: "success", message: "Document deleted successfully" });
+      setFeedback({
+        tone: "success",
+        message: "Document deleted successfully",
+      });
     } catch (error) {
       setFeedback({ tone: "error", message: getErrorMessage(error) });
     } finally {
@@ -475,14 +841,29 @@ export default function NewLibraryPage() {
     setEditingDocument(document);
     setEditForm({
       description: document.description ?? "",
-      subject: document.subject ?? "",
+      subject: (typeof document.subject === "object" ? document.subject?.name : document.subject) ?? "",
       title: document.title,
     });
     setIsEditOpen(true);
   }
 
   function openFile(document: DocumentItem) {
-    window.open(document.fileUrl, "_blank", "noopener,noreferrer");
+    navigate(`/library?preview=${encodeURIComponent(document.id)}`);
+  }
+
+  function openDetails(document: DocumentItem) {
+    navigate(`/documents/${document.id}`);
+  }
+
+  const previewParam = urlParams.get("preview");
+
+  if (previewParam) {
+    return (
+      <DocumentPreviewPage
+        document={findPreviewDocument(documents, urlParams)}
+        previewParam={previewParam}
+      />
+    );
   }
 
   return (
@@ -502,13 +883,19 @@ export default function NewLibraryPage() {
             />
           </InputGroup>
 
-          <Input
+          <select
             aria-label="Filter by subject"
-            className="max-w-56"
+            className="h-9 w-full max-w-56 rounded-md border-2 border-foreground bg-background px-3 text-sm font-semibold "
             onChange={(event) => setSubjectFilter(event.target.value)}
-            placeholder="Subject"
             value={subjectFilter}
-          />
+          >
+            <option value="">All subjects</option>
+            {subjects.map((subject) => (
+              <option key={subject._id} value={subject._id}>
+                {[subject.code, subject.name].filter(Boolean).join(" ")}
+              </option>
+            ))}
+          </select>
         </header>
 
         <section className="flex flex-1 flex-col gap-4">
@@ -586,14 +973,12 @@ export default function NewLibraryPage() {
                 <UploadCloud aria-hidden="true" />
                 Uploading, extracting text, and indexing for RAG
               </div>
-              <div className="h-2 overflow-hidden rounded-full bg-muted">
-                <div className="h-full w-2/3 animate-pulse rounded-full bg-primary" />
-              </div>
+              <CelestialProgress tone="cyan" />
             </div>
           )}
 
-          <div className="celestial-card celestial-table tone-surface tone-sapphire overflow-hidden">
-            <Table>
+          <div className="celestial-card celestial-table tone-surface tone-sapphire overflow-x-auto overflow-y-hidden">
+            <Table className="min-w-[820px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
@@ -643,9 +1028,6 @@ export default function NewLibraryPage() {
                             </div>
                             <div className="min-w-0">
                               <div className="truncate text-sm font-medium">
-                                {document.title}
-                              </div>
-                              <div className="truncate text-xs text-muted-foreground">
                                 {document.fileName}
                               </div>
                             </div>
@@ -653,7 +1035,7 @@ export default function NewLibraryPage() {
                         </TableCell>
                         <TableCell>
                           <span className="status-badge status-info normal-case">
-                            {document.subject || "Unsorted"}
+                            {(typeof document.subject === "object" ? document.subject?.name : document.subject) || "Unsorted"}
                           </span>
                         </TableCell>
                         <TableCell>
@@ -684,9 +1066,17 @@ export default function NewLibraryPage() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-44">
-                              <DropdownMenuItem onSelect={() => openFile(document)}>
+                              <DropdownMenuItem
+                                onSelect={() => openDetails(document)}
+                              >
+                                <FileText />
+                                View details
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onSelect={() => openFile(document)}
+                              >
                                 <ExternalLink />
-                                Open
+                                Preview
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onSelect={() => {
@@ -696,7 +1086,9 @@ export default function NewLibraryPage() {
                                 <Download />
                                 Download
                               </DropdownMenuItem>
-                              <DropdownMenuItem onSelect={() => openEdit(document)}>
+                              <DropdownMenuItem
+                                onSelect={() => openEdit(document)}
+                              >
                                 <Pencil />
                                 Edit details
                               </DropdownMenuItem>
@@ -724,11 +1116,15 @@ export default function NewLibraryPage() {
 
             {!isLoading && sortedDocuments.length === 0 && (
               <div className="flex min-h-72 flex-col items-center justify-center gap-3 rounded-md border border-dashed border-border p-8 text-center">
-                <BookOpenText className="text-muted-foreground" aria-hidden="true" />
+                <BookOpenText
+                  className="text-muted-foreground"
+                  aria-hidden="true"
+                />
                 <div className="flex flex-col gap-1">
                   <h2 className="font-medium">No documents found</h2>
                   <p className="max-w-md text-sm text-muted-foreground">
-                    Upload a PDF to store it in Cloudinary and prepare it for AI chat.
+                    Upload a PDF to store it in Cloudinary and prepare it for AI
+                    chat.
                   </p>
                 </div>
                 <Button onClick={() => setIsUploadOpen(true)}>
@@ -741,17 +1137,20 @@ export default function NewLibraryPage() {
         </section>
       </div>
 
-      <Sheet open={isUploadOpen} onOpenChange={setIsUploadOpen}>
-        <SheetContent>
-          <form className="flex min-h-0 flex-1 flex-col" onSubmit={handleUpload}>
-            <SheetHeader>
-              <SheetTitle>Upload document</SheetTitle>
-              <SheetDescription>
+      <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <form
+            className="flex min-h-0 flex-1 flex-col"
+            onSubmit={handleUpload}
+          >
+            <DialogHeader>
+              <DialogTitle>Upload document</DialogTitle>
+              <DialogDescription>
                 PDFs are stored in Cloudinary, parsed, and indexed for AI chat.
-              </SheetDescription>
-            </SheetHeader>
-            <Separator />
-            <div className="flex-1 overflow-y-auto p-4">
+              </DialogDescription>
+            </DialogHeader>
+            <Separator className="my-4" />
+            <div className="flex-grow py-2">
               <DocumentFields
                 disabled={isUploading}
                 fileInput={selectedFile}
@@ -759,17 +1158,21 @@ export default function NewLibraryPage() {
                 mode="upload"
                 onFileChange={setSelectedFile}
                 onFormChange={setUploadForm}
+                errors={uploadErrors}
+                touched={uploadTouched}
+                onBlur={(field) => setUploadTouched((prev) => ({ ...prev, [field]: true }))}
+                subjects={subjects}
               />
             </div>
-            <SheetFooter>
-              <Button disabled={isUploading} type="submit">
+            <DialogFooter className="mt-6">
+              <Button disabled={isUploading} type="submit" className="w-full sm:w-auto">
                 <UploadCloud data-icon="inline-start" aria-hidden="true" />
-                {isUploading ? "Uploading..." : "Upload PDF"}
+                {isUploading ? <CelestialInlineLoader label="Uploading..." /> : "Upload PDF"}
               </Button>
-            </SheetFooter>
+            </DialogFooter>
           </form>
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
 
       <Sheet
         open={isEditOpen}
@@ -795,6 +1198,10 @@ export default function NewLibraryPage() {
                 form={editForm}
                 mode="edit"
                 onFormChange={setEditForm}
+                errors={editErrors}
+                touched={editTouched}
+                onBlur={(field) => setEditTouched((prev) => ({ ...prev, [field]: true }))}
+                subjects={subjects}
               />
             </div>
             <SheetFooter>

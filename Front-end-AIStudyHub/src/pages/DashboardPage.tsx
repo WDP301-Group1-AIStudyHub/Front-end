@@ -1,15 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
-import {
-  Archive,
-  Bell,
-  Database,
-  FileText,
-  Plus,
-  Sparkles,
-  UploadCloud,
-} from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { Archive, Bell, Database, FileText, MessageSquareText, Plus, UploadCloud } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { CelestialInlineLoader, CelestialProgress } from '../components/shared/CelestialLoading'
 import { listDocuments } from '../services/documentApi'
 import type { DocumentItem } from '../types/document'
 
@@ -64,7 +58,8 @@ export default function DashboardPage() {
   const subjectClusters = useMemo(() => {
     const map = new Map<string, number>()
     for (const doc of docs) {
-      const key = doc.subject?.trim() || 'Uncategorized'
+      const subjectName = (typeof doc.subject === 'object' ? doc.subject?.name : doc.subject) || ''
+      const key = subjectName.trim() || 'Uncategorized'
       map.set(key, (map.get(key) ?? 0) + 1)
     }
     return [...map.entries()]
@@ -88,85 +83,66 @@ export default function DashboardPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  useEffect(() => {
-    const createRipple = (x: number, y: number) => {
-      const element = document.createElement('div')
-      element.className = 'db-ripple'
-      element.style.left = `${x}px`
-      element.style.top = `${y}px`
-      document.body.appendChild(element)
-      window.setTimeout(() => element.remove(), 1200)
-    }
-
-    const onMouseMove = (event: MouseEvent) => {
-      if (Math.random() > 0.965) createRipple(event.clientX, event.clientY)
-    }
-
-    window.addEventListener('mousemove', onMouseMove)
-    return () => window.removeEventListener('mousemove', onMouseMove)
-  }, [])
-
   return (
-    <main className="celestial-page min-h-svh overflow-y-auto p-5 md:p-8">
+    <main className="celestial-page min-h-svh overflow-y-auto p-5 text-foreground md:p-8">
       <header className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <h1 className="celestial-title text-4xl font-semibold tracking-tight md:text-5xl">
-            Commander's Deck
+          <p className="text-sm font-semibold text-primary">Workspace</p>
+          <h1 className="celestial-title mt-2 text-3xl leading-tight md:text-5xl">
+            Dashboard
           </h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-            Your scholarly universe, synchronized across the dark expanse of information.
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
+            Manage your library, ask questions against documents, and review evaluation signals.
           </p>
         </div>
-        <Button className="rounded-full" size="icon" type="button" variant="outline">
+        <Button className="size-11 rounded-lg" size="icon" type="button" variant="outline">
           <Bell aria-hidden="true" />
           <span className="sr-only">Notifications</span>
         </Button>
       </header>
 
       <section className="mt-8 grid gap-5 xl:grid-cols-12">
-        <article className="celestial-card tone-surface tone-teal p-6 xl:col-span-4">
-          <div className="flex items-start justify-between">
-            <span className="admin-icon-badge admin-tone-teal">
-              <Database />
+        <article className="celestial-card p-6 xl:col-span-4">
+          <div className="flex items-start justify-between gap-4">
+            <span className="admin-icon-badge">
+              <Database className="size-5" />
             </span>
-            <span className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              Storage
-            </span>
+            <span className="text-sm font-medium text-muted-foreground">Storage</span>
           </div>
-          <div className="mt-14">
+          <div className="mt-12">
             {loading ? (
               <Skeleton className="h-10 w-32" />
             ) : (
-              <p className="text-4xl font-light tracking-tight">{formatStorageSize(storageUsedBytes)}</p>
+              <p className="text-4xl font-semibold tracking-tight">{formatStorageSize(storageUsedBytes)}</p>
             )}
             <p className="mt-1 text-sm text-muted-foreground">of 10 GB limit used</p>
           </div>
-          <div className="mt-8 h-1 overflow-hidden rounded-full bg-muted">
-            <div
-              className="h-full rounded-full bg-[var(--accent-teal)] transition-all"
-              style={{ width: `${storagePercent.toFixed(1)}%` }}
-            />
+          <div className="mt-8">
+            {loading ? (
+              <CelestialProgress tone="teal" />
+            ) : (
+              <div className="h-2 overflow-hidden rounded-full bg-muted">
+                <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${storagePercent.toFixed(1)}%` }} />
+              </div>
+            )}
           </div>
         </article>
 
-        <article className="celestial-card tone-surface tone-gold group relative overflow-hidden p-6 xl:col-span-8">
-          <div className="pointer-events-none absolute -right-16 -top-16 size-64 rounded-full bg-[color-mix(in_oklab,var(--accent-blue)_24%,transparent)] blur-3xl transition-opacity group-hover:opacity-80" />
-          <div className="relative z-[1] flex h-full min-h-56 flex-col justify-between gap-8">
-            <div className="flex items-center gap-2">
-              <Sparkles className="size-5 text-[var(--accent-gold)]" aria-hidden="true" />
-              <span className="text-xs font-semibold uppercase tracking-[0.18em]">
-                Zenith Intelligence
-              </span>
+        <article className="celestial-card p-6 xl:col-span-8">
+          <div className="flex h-full min-h-56 flex-col justify-between gap-8">
+            <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+              <MessageSquareText className="size-5" aria-hidden="true" />
+              AI assistant
             </div>
-            <h2 className="max-w-xl text-2xl font-light leading-snug">
-              Transcend with AI: Interrogate your entire research library.
+            <h2 className="max-w-xl text-2xl font-semibold leading-snug text-foreground">
+              Chat with your documents for immediate summaries and practice questions.
             </h2>
             <div className="flex flex-wrap items-center gap-4">
-              <Button asChild className="rounded-full">
-                <a href="/aichatbox">Initiate Dialogue</a>
+              <Button asChild>
+                <Link to="/aichatbox">Start AI session</Link>
               </Button>
-              <span className="text-sm italic text-muted-foreground">
-                {loading ? 'Loading library...' : `Searching ${docs.length} archived papers...`}
+              <span className="text-sm text-muted-foreground">
+                {loading ? <CelestialInlineLoader label="Loading library..." /> : `Ready to analyze ${docs.length} documents.`}
               </span>
             </div>
           </div>
@@ -174,17 +150,17 @@ export default function DashboardPage() {
       </section>
 
       <section className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <article className="celestial-card celestial-table overflow-hidden">
-          <div className="flex items-center justify-between border-b border-border/70 p-5">
+        <article className="celestial-card overflow-hidden p-0">
+          <div className="flex items-center justify-between border-b border-border p-5">
             <div className="flex items-center gap-3">
-              <Archive className="size-5 text-[var(--accent-blue)]" aria-hidden="true" />
-              <h2 className="font-semibold">Recent Archives</h2>
+              <Archive className="size-5 text-primary" aria-hidden="true" />
+              <h2 className="text-lg font-semibold tracking-tight">Recent documents</h2>
             </div>
             <Button asChild size="sm" variant="outline">
-              <a href="/library">View all</a>
+              <Link to="/library">View all</Link>
             </Button>
           </div>
-          <div className="divide-y divide-border/60">
+          <div className="divide-y divide-border">
             {loading ? (
               Array.from({ length: 3 }).map((_, i) => (
                 <div className="grid gap-3 p-5 md:grid-cols-[1fr_180px_auto]" key={i}>
@@ -202,47 +178,43 @@ export default function DashboardPage() {
               <p className="p-5 text-sm text-muted-foreground">No documents yet. Upload one to get started.</p>
             ) : (
               recentDocs.map((doc) => (
-                <a
-                  className="grid gap-3 p-5 transition-colors hover:bg-muted/45 md:grid-cols-[1fr_180px_auto]"
-                  href="/library"
+                <Link
+                  className="grid gap-3 p-5 transition-colors hover:bg-muted/60 md:grid-cols-[1fr_180px_auto]"
                   key={doc.id}
+                  to="/library"
                 >
                   <div className="flex min-w-0 items-center gap-3">
-                    <span className="admin-icon-badge admin-tone-blue size-10">
+                    <span className="admin-icon-badge size-10">
                       <FileText className="size-4" />
                     </span>
                     <div className="min-w-0">
-                      <p className="truncate font-medium">{doc.title}</p>
-                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                        {formatRelativeTime(doc.createdAt)}
-                      </p>
+                      <p className="truncate font-semibold text-foreground">{doc.title}</p>
+                      <p className="text-xs text-muted-foreground">{formatRelativeTime(doc.createdAt)}</p>
                     </div>
                   </div>
-                  <span className="self-center text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                    {doc.subject || '—'}
+                  <span className="self-center text-xs text-muted-foreground">
+                    {(typeof doc.subject === 'object' ? doc.subject?.name : doc.subject) || 'Uncategorized'}
                   </span>
-                  <span className="self-center text-muted-foreground">...</span>
-                </a>
+                  <span className="self-center text-muted-foreground">Open</span>
+                </Link>
               ))
             )}
           </div>
         </article>
 
         <aside className="flex flex-col gap-5">
-          <a className="celestial-card tone-surface tone-cyan flex items-center justify-between gap-5 p-5" href="/library">
+          <Link className="celestial-card flex items-center justify-between gap-5 p-5" to="/library">
             <div>
-              <h2 className="font-semibold">Sync Documents</h2>
-              <p className="mt-1 text-sm text-muted-foreground">Upload to library</p>
+              <h2 className="font-semibold tracking-tight">Sync documents</h2>
+              <p className="mt-1 text-sm text-muted-foreground">Upload new source files</p>
             </div>
-            <span className="admin-icon-badge admin-tone-teal">
-              <UploadCloud />
+            <span className="admin-icon-badge">
+              <UploadCloud className="size-5" />
             </span>
-          </a>
+          </Link>
 
-          <article className="celestial-card tone-surface tone-violet p-5">
-            <span className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              Subject Clusters
-            </span>
+          <article className="celestial-card p-5">
+            <span className="text-sm font-medium text-muted-foreground">Subject clusters</span>
             <div className="mt-5 space-y-3">
               {loading ? (
                 Array.from({ length: 3 }).map((_, i) => (
@@ -255,48 +227,44 @@ export default function DashboardPage() {
                 <p className="text-sm text-muted-foreground">No subjects yet.</p>
               ) : (
                 subjectClusters.map((subject) => (
-                  <a className="flex items-center justify-between gap-4 rounded-lg p-1 transition-colors hover:bg-muted/45" href="/library" key={subject.name}>
-                    <span>{subject.name}</span>
-                    <span className="text-xs font-semibold text-muted-foreground">{subject.count}</span>
-                  </a>
+                  <Link className="flex items-center justify-between gap-4 rounded-lg p-1 transition-colors hover:bg-muted" key={subject.name} to="/library">
+                    <span className="font-medium text-foreground">{subject.name}</span>
+                    <span className="text-xs text-muted-foreground">{subject.count}</span>
+                  </Link>
                 ))
               )}
             </div>
             <Button asChild className="mt-5 w-full" variant="outline">
-              <a href="/library">Explore All Clusters</a>
+              <Link to="/library">Explore all clusters</Link>
             </Button>
           </article>
         </aside>
       </section>
 
-      <section className="celestial-card tone-surface tone-emerald mt-5 flex flex-col gap-4 p-5 lg:flex-row lg:items-center lg:justify-between">
+      <section className="celestial-card mt-5 flex flex-col gap-4 p-5 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex min-w-0 items-center gap-3">
-          <span className="db-pulse-dot" />
-          <p className="text-sm italic text-muted-foreground">
+          <span className="size-2 rounded-full bg-primary" />
+          <p className="text-sm text-muted-foreground">
             {docs.length === 0
               ? 'Upload documents to start building your research library.'
               : docsPerDay
-              ? `The library grows at ${docsPerDay} documents per day. ${docs.length} total archives available.`
-              : `${docs.length} document${docs.length === 1 ? '' : 's'} in your research library.`}
+                ? `The library grows at ${docsPerDay} documents per day. ${docs.length} total files available.`
+                : `${docs.length} document${docs.length === 1 ? '' : 's'} in your library.`}
           </p>
         </div>
         <div className="grid grid-cols-2 gap-6 text-sm">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Uptime</p>
-            <p className="mt-1">99.98%</p>
+            <p className="text-xs text-muted-foreground">Uptime</p>
+            <p className="mt-1 font-semibold text-foreground">99.98%</p>
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Neural Sync</p>
-            <p className="mt-1">Active</p>
+            <p className="text-xs text-muted-foreground">Sync status</p>
+            <p className="mt-1 font-semibold text-foreground">Connected</p>
           </div>
         </div>
       </section>
 
-      <Button
-        className="fixed bottom-6 right-6 z-40 size-12 rounded-full shadow-2xl"
-        title="New Document"
-        type="button"
-      >
+      <Button className="fixed bottom-6 right-6 z-40 size-12 rounded-lg" title="New document" type="button">
         <Plus aria-hidden="true" />
       </Button>
     </main>

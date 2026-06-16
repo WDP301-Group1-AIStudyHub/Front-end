@@ -51,7 +51,10 @@ import {
 } from "lucide-react";
 import type { FC } from "react";
 
-type SelectedDocInfo = { fileName: string; subject?: string };
+type SelectedDocInfo = {
+  fileName: string;
+  subject?: string | { _id: string; name: string; description?: string; color?: string; code?: string };
+};
 
 export const Thread: FC<{ selectedDoc?: SelectedDocInfo }> = ({ selectedDoc }) => {
   return (
@@ -86,15 +89,15 @@ export const Thread: FC<{ selectedDoc?: SelectedDocInfo }> = ({ selectedDoc }) =
             <ThreadScrollToBottom />
             <AuiIf condition={(s) => s.thread.isRunning}>
               <div className="flex items-center gap-2 px-2">
-                <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[radial-gradient(circle,color-mix(in_oklab,var(--accent-violet,#a78bfa)_70%,transparent),color-mix(in_oklab,var(--accent-blue,#60a5fa)_50%,transparent))] shadow-[0_0_10px_color-mix(in_oklab,var(--accent-violet,#a78bfa)_50%,transparent)]">
-                  <span className="size-1.5 rounded-full bg-white/80" />
+                <span className="flex size-5 shrink-0 items-center justify-center rounded-full border border-border bg-muted">
+                  <span className="size-1.5 rounded-full bg-black/80" />
                 </span>
                 <TextShimmerWave
                   className="text-sm font-medium"
                   duration={1.2}
                   spread={1.5}
-                  baseColor="color-mix(in oklab, var(--accent-violet, #a78bfa) 45%, transparent)"
-                  shimmerColor="var(--accent-violet, #c4b5fd)"
+                  baseColor="var(--foreground)"
+                  shimmerColor="var(--foreground)"
                 >
                   Đang suy nghĩ...
                 </TextShimmerWave>
@@ -188,7 +191,10 @@ const Composer: FC<{ selectedDoc?: SelectedDocInfo }> = ({ selectedDoc }) => {
             <div className="flex items-center gap-1.5 rounded-lg border border-[color-mix(in_oklab,var(--accent-violet,#a78bfa)_35%,transparent)] bg-[color-mix(in_oklab,var(--accent-violet,#a78bfa)_10%,transparent)] px-2.5 py-1.5">
               <FileTextIcon className="size-3 shrink-0 text-[var(--accent-violet,#a78bfa)]" />
               <span className="min-w-0 flex-1 truncate text-xs font-medium text-[var(--accent-violet,#c4b5fd)]">
-                {selectedDoc.subject ? `${selectedDoc.subject} · ` : ""}{selectedDoc.fileName}
+                {(() => {
+                  const subjectName = typeof selectedDoc.subject === "object" ? selectedDoc.subject?.name : selectedDoc.subject;
+                  return subjectName ? `${subjectName} · ` : "";
+                })()}{selectedDoc.fileName}
               </span>
               <XIcon className="size-3 shrink-0 text-muted-foreground opacity-50" />
             </div>
@@ -246,7 +252,7 @@ const ComposerAction: FC = () => {
 const MessageError: FC = () => {
   return (
     <MessagePrimitive.Error>
-      <ErrorPrimitive.Root className="aui-message-error-root mt-2 rounded-md border border-destructive bg-destructive/10 p-3 text-destructive text-sm dark:bg-destructive/5 dark:text-red-200">
+      <ErrorPrimitive.Root className="aui-message-error-root mt-2 rounded-md border border-destructive bg-destructive/10 p-3 text-sm text-destructive">
         <ErrorPrimitive.Message className="aui-message-error-message line-clamp-2" />
       </ErrorPrimitive.Root>
     </MessagePrimitive.Error>

@@ -27,7 +27,7 @@ export default function PasswordField({
 
   return (
     <label className="relative grid gap-2" htmlFor={id}>
-      <span className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">{label}</span>
+      <span className="text-sm font-medium text-muted-foreground">{label}</span>
       <input
         autoComplete={autoComplete}
         disabled={disabled}

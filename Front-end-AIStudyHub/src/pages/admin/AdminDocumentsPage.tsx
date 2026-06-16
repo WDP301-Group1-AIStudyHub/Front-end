@@ -11,11 +11,17 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import { Textarea } from '@/components/ui/textarea'
+import { LoadingState } from '../../components/shared/CelestialLoading'
 import { listAdminDocuments, updateDocumentMetadata } from '../../services/adminApi'
 import type { AdminDocument } from '../../types/admin'
 import { AdminPageHeader, formatDateTime, StatusBadge } from './adminPageUtils'
+import { Link } from 'react-router-dom'
 
-type DocumentFormState = Pick<AdminDocument, 'description' | 'subject' | 'title'>
+type DocumentFormState = {
+  description: string
+  subject: string
+  title: string
+}
 
 export default function AdminDocumentsPage() {
   const [documents, setDocuments] = useState<AdminDocument[]>([])
@@ -35,7 +41,8 @@ export default function AdminDocumentsPage() {
 
     return documents.filter((document) => {
       if (!normalizedQuery) return true
-      return [document.title, document.subject, document.ownerName, document.fileName]
+      const subjectName = (typeof document.subject === 'object' ? document.subject?.name : document.subject) || ''
+      return [document.title, subjectName, document.ownerName, document.fileName]
         .filter((value): value is string => Boolean(value))
         .some((value) => value.toLowerCase().includes(normalizedQuery))
     })
@@ -45,7 +52,7 @@ export default function AdminDocumentsPage() {
     setEditingDocument(document)
     setForm({
       description: document.description ?? '',
-      subject: document.subject ?? '',
+      subject: (typeof document.subject === 'object' ? document.subject?.name : document.subject) ?? '',
       title: document.title,
     })
   }
@@ -90,7 +97,9 @@ export default function AdminDocumentsPage() {
 
         <div className="divide-y divide-border/60">
           {isLoading ? (
-            <div className="p-6 text-sm text-muted-foreground">Loading documents...</div>
+            <div className="p-5">
+              <LoadingState label="Loading documents..." tone="gold" />
+            </div>
           ) : filteredDocuments.length === 0 ? (
             <div className="grid min-h-72 place-items-center p-8 text-center text-muted-foreground">
               <div>
@@ -106,7 +115,7 @@ export default function AdminDocumentsPage() {
                     <FileCog className="size-4" />
                   </span>
                   <div className="min-w-0">
-                    <h2 className="truncate font-semibold">{document.title}</h2>
+                    <h2 className="truncate font-semibold text-foreground">{document.title}</h2>
                     <p className="truncate text-sm text-muted-foreground">{document.fileName}</p>
                   </div>
                 </div>
@@ -116,12 +125,12 @@ export default function AdminDocumentsPage() {
                 </div>
                 <StatusBadge severity={document.indexedStatus}>{document.indexedStatus}</StatusBadge>
                 <div className="text-sm text-muted-foreground">
-                  <span className="block font-medium text-foreground">{document.subject || 'Unsorted'}</span>
+                  <span className="block font-medium text-foreground">{(typeof document.subject === 'object' ? document.subject?.name : document.subject) || 'Unsorted'}</span>
                   {formatDateTime(document.updatedAt)}
                 </div>
                 <div className="flex flex-wrap justify-start gap-2 xl:justify-end">
                   <Button asChild size="sm" type="button" variant="outline">
-                    <a href={document.fileUrl} rel="noreferrer" target="_blank">Open</a>
+                    <Link to={document.fileUrl} rel="noreferrer" target="_blank">Open</Link>
                   </Button>
                   <Button onClick={() => openEditor(document)} size="sm" type="button">
                     Edit metadata

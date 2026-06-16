@@ -10,6 +10,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
+import { LoadingState } from '../../components/shared/CelestialLoading'
 import { listAdminUsers, toggleUserActive, updateAdminUser } from '../../services/adminApi'
 import type { AdminUser } from '../../types/admin'
 import { AdminPageHeader, formatDateTime, StatusBadge } from './adminPageUtils'
@@ -119,7 +120,9 @@ export default function AdminUsersPage() {
 
         <div className="divide-y divide-border/60">
           {isLoading ? (
-            <div className="p-6 text-sm text-muted-foreground">Loading users...</div>
+            <div className="p-5">
+              <LoadingState label="Loading users..." tone="teal" />
+            </div>
           ) : filteredUsers.length === 0 ? (
             <div className="grid min-h-72 place-items-center p-8 text-center text-muted-foreground">
               <div>
@@ -131,11 +134,11 @@ export default function AdminUsersPage() {
             filteredUsers.map((user) => (
               <article className="grid gap-4 p-5 transition-colors hover:bg-muted/35 xl:grid-cols-[1fr_130px_160px_190px_220px]" key={user.id}>
                 <div className="flex min-w-0 items-center gap-3">
-                  <span className="grid size-11 shrink-0 place-items-center rounded-xl border border-[var(--accent-teal)]/35 bg-[color-mix(in_oklab,var(--accent-teal)_16%,transparent)] shadow-[0_0_22px_color-mix(in_oklab,var(--accent-teal)_22%,transparent)]">
+                  <span className="grid size-11 shrink-0 place-items-center rounded-xl border border-[var(--accent-teal)]/35 bg-[color-mix(in_oklab,var(--accent-teal)_16%,transparent)] ">
                     <img alt="" className="size-9 rounded-lg object-cover" src={user.avatar} />
                   </span>
                   <div className="min-w-0">
-                    <h2 className="truncate font-semibold">{user.fullName}</h2>
+                    <h2 className="truncate font-semibold text-foreground">{user.fullName}</h2>
                     <p className="truncate text-sm text-muted-foreground">{user.email}</p>
                   </div>
                 </div>

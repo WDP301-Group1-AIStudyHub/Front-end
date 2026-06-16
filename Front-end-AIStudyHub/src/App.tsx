@@ -9,36 +9,44 @@ import RegisterPage from './pages/auth/RegisterPage'
 import ResetPasswordPage from './pages/auth/ResetPasswordPage'
 import NewAIChatboxPage from './pages/new-AIChatboxPage'
 import NewLibraryPage from './pages/new-LibraryPage'
-import EvaluationPage from './pages/EvaluationPage'
+import DocumentDetailPage from './pages/DocumentDetailPage'
+import SubjectsPage from './pages/SubjectsPage'
+import AboutPage from './pages/AboutPage'
+import EvaluationPage from './pages/evaluation/EvaluationPage'
+import NewQuestion from './pages/evaluation/NewQuestion'
+import RunBenchmark from './pages/evaluation/RunBenchmark'
+import Summary from './pages/evaluation/Summary'
+import UserProfilePage from './pages/UserProfilePage'
 import AdminActivityPage from './pages/admin/AdminActivityPage'
 import AdminDashboardPage from './pages/admin/AdminDashboardPage'
 import AdminDocumentsPage from './pages/admin/AdminDocumentsPage'
 import AdminUsersPage from './pages/admin/AdminUsersPage'
+import { LoadingState } from './components/shared/CelestialLoading'
+import BackgroundUploadWidget from './components/upload/BackgroundUploadWidget'
+import ConflictModal from './components/upload/ConflictModal'
 import { getCurrentUser } from './services/authApi'
-import { getStoredUser, hasAuthSession, storeAuthSession } from './services/authStorage'
+import { getStoredToken, getStoredUser, hasAuthSession, storeAuthSession } from './services/authStorage'
 import type { AuthUser } from './types/auth'
 
 const demoAdminUser: AuthUser = {
-  id: 'admin-001',
-  avatar: 'https://i.pravatar.cc/150?img=11',
-  createdAt: '2025-08-12T09:00:00.000Z',
-  email: 'arjun.admin@aistudy.edu',
-  fullName: 'Arjun Sharma',
+  id: "admin-001",
+  avatar: "https://i.pravatar.cc/150?img=11",
+  createdAt: "2025-08-12T09:00:00.000Z",
+  email: "arjun.admin@aistudy.edu",
+  fullName: "Arjun Sharma",
   isActive: true,
   lastLoginAt: new Date().toISOString(),
-  role: 'admin',
-  status: 'active',
+  role: "admin",
+  status: "active",
   updatedAt: new Date().toISOString(),
-}
+};
 
 function AuthLoading() {
   return (
     <div className="celestial-page grid min-h-svh place-items-center">
-      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-        Verifying session...
-      </p>
+      <LoadingState className="min-h-48 w-[min(100%,420px)]" label="Verifying session..." tone="gold" />
     </div>
-  )
+  );
 }
 
 function AdminAccessDenied() {
@@ -46,13 +54,15 @@ function AdminAccessDenied() {
     <AppSidebarLayout>
       <main className="celestial-page flex min-h-svh items-center justify-center p-6">
         <section className="celestial-card max-w-lg p-8 text-center">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-amber-500">
+          <p className="mb-3 text-sm font-semibold text-primary">
             Admin only
           </p>
-          <h1 className="text-3xl font-semibold tracking-tight">Access denied</h1>
+          <h1 className="text-3xl font-semibold tracking-tight">
+            Access denied
+          </h1>
           <p className="mt-3 text-sm leading-6 text-muted-foreground">
-            This workspace is limited to administrator accounts. Sign in with an admin profile
-            to manage users, metadata, and system activity.
+            This workspace is limited to administrator accounts. Sign in with an
+            admin profile to manage users, metadata, and system activity.
           </p>
           <Link
             className="mt-6 inline-flex rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground"
@@ -63,59 +73,67 @@ function AdminAccessDenied() {
         </section>
       </main>
     </AppSidebarLayout>
-  )
+  );
 }
 
 function ProtectedRoute({
   adminOnly = false,
+  userOnly = false,
   children,
 }: {
   adminOnly?: boolean
+  userOnly?: boolean
   children: (user: AuthUser) => ReactNode
 }) {
-  const [user, setUser] = useState<AuthUser | null>(() => getStoredUser())
-  const [verified, setVerified] = useState(() => Boolean(getStoredUser() && hasAuthSession()))
-  const [redirectToLogin, setRedirectToLogin] = useState(false)
+  const [user, setUser] = useState<AuthUser | null>(() => getStoredUser());
+  const [verified, setVerified] = useState(() =>
+    Boolean(getStoredUser() && hasAuthSession())
+  );
+  const [redirectToLogin, setRedirectToLogin] = useState(false);
 
   useEffect(() => {
     if (!hasAuthSession()) {
-      setRedirectToLogin(true)
-      return
+      setRedirectToLogin(true);
+      return;
     }
 
-    const storedUser = getStoredUser()
+    const storedUser = getStoredUser();
     if (storedUser) {
-      setUser(storedUser)
-      setVerified(true)
+      setUser(storedUser);
+      setVerified(true);
     }
 
     getCurrentUser()
       .then((currentUser) => {
-        const token = localStorage.getItem('ai-study-hub:access-token') || 'mock-admin-token'
-        storeAuthSession(token, currentUser)
-        setUser(currentUser)
-        setVerified(true)
+        const token = getStoredToken() || "mock-admin-token";
+        storeAuthSession(token, currentUser);
+        setUser(currentUser);
+        setVerified(true);
       })
       .catch(() => {
         if (storedUser) {
-          setUser(storedUser)
-          setVerified(true)
-          return
+          setUser(storedUser);
+          setVerified(true);
+          return;
         }
-        setRedirectToLogin(true)
-      })
-  }, [])
+        setRedirectToLogin(true);
+      });
+  }, []);
 
   if (redirectToLogin) {
-    return <Navigate to="/login" replace />
+    return <Navigate to="/login" replace />;
   }
 
   if (!verified || !user) {
-    return <AuthLoading />
+    return <AuthLoading />;
   }
 
-  if (adminOnly && user.role !== 'admin') {
-    return <AdminAccessDenied />
+  if (adminOnly && user.role !== "admin") {
+    return <AdminAccessDenied />;
+  }
+
+  if (userOnly && user.role === 'admin') {
+    return <Navigate to="/admin" replace />
   }
 
   return children(user)
@@ -123,70 +141,100 @@ function ProtectedRoute({
 
 function PublicAuthRoute({ children }: { children: ReactNode }) {
   if (hasAuthSession()) {
-    return <Navigate to="/dashboard" replace />
+    const storedUser = getStoredUser()
+    return <Navigate to={storedUser?.role === 'admin' ? '/admin' : '/dashboard'} replace />
   }
-  return children
+  return children;
 }
 
 function routeWithShell(page: ReactNode) {
-  return <AppSidebarLayout>{page}</AppSidebarLayout>
+  return <AppSidebarLayout>{page}</AppSidebarLayout>;
 }
 
 function DemoAdminBootstrap() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   useEffect(() => {
-    storeAuthSession('mock-admin-token', demoAdminUser)
-    navigate('/admin', { replace: true })
-  }, [navigate])
-  return <AuthLoading />
+    storeAuthSession("mock-admin-token", demoAdminUser);
+    navigate("/admin", { replace: true });
+  }, [navigate]);
+  return <AuthLoading />;
 }
 
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/login" element={<PublicAuthRoute><LoginPage /></PublicAuthRoute>} />
-      <Route path="/register" element={<PublicAuthRoute><RegisterPage /></PublicAuthRoute>} />
-      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-      <Route path="/reset-password" element={<ResetPasswordPage />} />
-      <Route path="/demo-admin" element={<DemoAdminBootstrap />} />
-      <Route
-        path="/dashboard"
-        element={<ProtectedRoute>{() => routeWithShell(<DashboardPage />)}</ProtectedRoute>}
-      />
-      <Route
-        path="/library"
-        element={<ProtectedRoute>{() => routeWithShell(<NewLibraryPage />)}</ProtectedRoute>}
-      />
-      <Route path="/new-library" element={<Navigate to="/library" replace />} />
-      <Route
-        path="/aichatbox"
-        element={<ProtectedRoute>{() => routeWithShell(<NewAIChatboxPage />)}</ProtectedRoute>}
-      />
-      <Route path="/new-aichatbox" element={<Navigate to="/aichatbox" replace />} />
-      <Route
-        path="/evaluation"
-        element={<ProtectedRoute>{() => routeWithShell(<EvaluationPage />)}</ProtectedRoute>}
-      />
-      <Route
-        path="/admin"
-        element={<ProtectedRoute adminOnly>{() => routeWithShell(<AdminDashboardPage />)}</ProtectedRoute>}
-      />
-      <Route
-        path="/admin/users"
-        element={<ProtectedRoute adminOnly>{() => routeWithShell(<AdminUsersPage />)}</ProtectedRoute>}
-      />
-      <Route
-        path="/admin/documents"
-        element={<ProtectedRoute adminOnly>{() => routeWithShell(<AdminDocumentsPage />)}</ProtectedRoute>}
-      />
-      <Route
-        path="/admin/activity"
-        element={<ProtectedRoute adminOnly>{() => routeWithShell(<AdminActivityPage />)}</ProtectedRoute>}
-      />
-      <Route path="*" element={<LandingPage />} />
-    </Routes>
+    <>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/login" element={<PublicAuthRoute><LoginPage /></PublicAuthRoute>} />
+        <Route path="/register" element={<PublicAuthRoute><RegisterPage /></PublicAuthRoute>} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/demo-admin" element={<DemoAdminBootstrap />} />
+        <Route
+          path="/dashboard"
+          element={<ProtectedRoute userOnly>{() => routeWithShell(<DashboardPage />)}</ProtectedRoute>}
+        />
+        <Route
+          path="/library"
+          element={<ProtectedRoute userOnly>{() => routeWithShell(<NewLibraryPage />)}</ProtectedRoute>}
+        />
+        <Route
+          path="/documents/:id"
+          element={<ProtectedRoute userOnly>{() => routeWithShell(<DocumentDetailPage />)}</ProtectedRoute>}
+        />
+        <Route
+          path="/subjects"
+          element={<ProtectedRoute userOnly>{() => routeWithShell(<SubjectsPage />)}</ProtectedRoute>}
+        />
+        <Route path="/new-library" element={<Navigate to="/library" replace />} />
+        <Route
+          path="/aichatbox"
+          element={<ProtectedRoute userOnly>{() => routeWithShell(<NewAIChatboxPage />)}</ProtectedRoute>}
+        />
+        <Route path="/new-aichatbox" element={<Navigate to="/aichatbox" replace />} />
+        <Route
+          path="/evaluation"
+          element={<ProtectedRoute userOnly>{() => routeWithShell(<EvaluationPage />)}</ProtectedRoute>}
+        />
+        <Route
+          path="/evaluation/new"
+          element={<ProtectedRoute userOnly>{() => routeWithShell(<NewQuestion />)}</ProtectedRoute>}
+        />
+        <Route
+          path="/evaluation/run/:questionId"
+          element={<ProtectedRoute userOnly>{() => routeWithShell(<RunBenchmark />)}</ProtectedRoute>}
+        />
+        <Route
+          path="/evaluation/summary"
+          element={<ProtectedRoute userOnly>{() => routeWithShell(<Summary />)}</ProtectedRoute>}
+        />
+        <Route
+          path="/profile"
+          element={<ProtectedRoute>{() => routeWithShell(<UserProfilePage />)}</ProtectedRoute>}
+        />
+        <Route
+          path="/admin"
+          element={<ProtectedRoute adminOnly>{() => routeWithShell(<AdminDashboardPage />)}</ProtectedRoute>}
+        />
+        <Route
+          path="/admin/users"
+          element={<ProtectedRoute adminOnly>{() => routeWithShell(<AdminUsersPage />)}</ProtectedRoute>}
+        />
+        <Route
+          path="/admin/documents"
+          element={<ProtectedRoute adminOnly>{() => routeWithShell(<AdminDocumentsPage />)}</ProtectedRoute>}
+        />
+        <Route
+          path="/admin/activity"
+          element={<ProtectedRoute adminOnly>{() => routeWithShell(<AdminActivityPage />)}</ProtectedRoute>}
+        />
+        <Route path="*" element={<LandingPage />} />
+      </Routes>
+      <BackgroundUploadWidget />
+      <ConflictModal />
+    </>
   )
 }
 
-export default App
+export default App;

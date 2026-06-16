@@ -4,7 +4,7 @@ import {
   useAui,
   useLocalRuntime,
 } from "@assistant-ui/react";
-import type { ChatModelAdapter, ThreadMessage } from "@assistant-ui/react";
+import type { ChatModelAdapter, ThreadMessage, ThreadMessageLike } from "@assistant-ui/react";
 import {
   BookMarked,
   BookOpen,
@@ -13,19 +13,42 @@ import {
   FileText,
   GraduationCap,
   Library,
-  Loader2,
   PanelRight,
   Search,
   Zap,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
 import { Thread } from "@/components/assistant-ui/thread";
 import { Button } from "@/components/ui/button";
-import { ChatApiError, askChat } from "../services/chatApi";
+import { CelestialInlineLoader, CelestialLoader, LoadingState } from "../components/shared/CelestialLoading";
+import { ChatApiError, askChat, getChatHistoryById } from "../services/chatApi";
 import { listDocuments } from "../services/documentApi";
 import type { ChatEvaluation, ChatSource } from "../types/chat";
 import type { DocumentItem } from "../types/document";
+
+// ── Inner component: owns the runtime so key-remount works correctly ──────────
+type ChatThreadProps = {
+  adapter: ChatModelAdapter;
+  initialMessages: readonly ThreadMessageLike[];
+  selectedDoc?: { fileName: string; subject?: string };
+};
+
+function ChatThread({ adapter, initialMessages, selectedDoc }: ChatThreadProps) {
+  const suggestionsAui = useAui(
+    { suggestions: Suggestions(quickPrompts) },
+    { parent: null },
+  );
+  const runtime = useLocalRuntime(adapter, { initialMessages });
+  return (
+    <AssistantRuntimeProvider runtime={runtime} aui={suggestionsAui}>
+      <Thread selectedDoc={selectedDoc} />
+    </AssistantRuntimeProvider>
+  );
+}
+
+// ── Main page ─────────────────────────────────────────────────────────────────
 
 const quickPrompts = [
   {
@@ -59,6 +82,21 @@ function getMessageText(message: ThreadMessage) {
 }
 
 export default function NewAIChatboxPage() {
+  const [searchParams] = useSearchParams();
+  const historyId = searchParams.get("historyId") ?? undefined;
+  const sessionIdsParam = searchParams.get("sessionIds") ?? undefined;
+
+  // Support both new ?sessionIds=id1,id2,... and legacy ?historyId=id
+  const sessionIds = useMemo(
+    () =>
+      sessionIdsParam
+        ? sessionIdsParam.split(",").filter(Boolean)
+        : historyId
+        ? [historyId]
+        : [],
+    [sessionIdsParam, historyId],
+  );
+
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [loadingDocs, setLoadingDocs] = useState(true);
   const [selectedDocId, setSelectedDocId] = useState<string | undefined>(
@@ -71,6 +109,40 @@ export default function NewAIChatboxPage() {
   const [openSemesters, setOpenSemesters] = useState<Set<string>>(new Set());
   const [openSubjects, setOpenSubjects] = useState<Set<string>>(new Set());
   const [ragMode, setRagMode] = useState<"basic" | "corrective">("basic");
+
+  // History loading
+  const [historyMessages, setHistoryMessages] = useState<readonly ThreadMessageLike[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+
+  // Fetch all items in session and reconstruct full conversation
+  useEffect(() => {
+    if (sessionIds.length === 0) {
+      setHistoryMessages([]);
+      return;
+    }
+    setLoadingHistory(true);
+    Promise.all(sessionIds.map((id) => getChatHistoryById(id)))
+      .then((items) => {
+        const sorted = [...items].sort(
+          (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+        );
+        // Restore context from the most recent item
+        const last = sorted[sorted.length - 1];
+        if (last.documentId) setSelectedDocId(last.documentId);
+        if (last.mode === "basic" || last.mode === "corrective") setRagMode(last.mode);
+        if (last.sources?.length) setLastSources(last.sources);
+        if (last.evaluation) setLastEvaluation(last.evaluation);
+        // Reconstruct full thread: each item → user + assistant message
+        const messages: ThreadMessageLike[] = [];
+        for (const item of sorted) {
+          messages.push({ role: "user", content: item.question, id: `${item.id}-user`, createdAt: new Date(item.createdAt) });
+          messages.push({ role: "assistant", content: item.answer, id: `${item.id}-assistant`, createdAt: new Date(item.updatedAt) });
+        }
+        setHistoryMessages(messages);
+      })
+      .catch(() => setHistoryMessages([]))
+      .finally(() => setLoadingHistory(false));
+  }, [sessionIds]);
 
   // Refs so the stable adapter closure can read latest state
   const selectedDocRef = useRef<string | undefined>(undefined);
@@ -87,7 +159,7 @@ export default function NewAIChatboxPage() {
   useEffect(() => {
     selectedDocRef.current = selectedDocId;
     const doc = documents.find((d) => d.id === selectedDocId);
-    selectedDocSubjectRef.current = doc?.subject;
+    selectedDocSubjectRef.current = (typeof doc?.subject === "object" ? doc?.subject?.name : doc?.subject) ?? undefined;
   }, [selectedDocId, documents]);
 
   // Keep response callback up-to-date without recreating the adapter
@@ -109,7 +181,7 @@ export default function NewAIChatboxPage() {
         const subjs = new Set<string>();
         for (const doc of docs) {
           const sem = (doc.title || "Chưa phân loại").trim().toUpperCase();
-          const subj = doc.subject || "Không có môn";
+          const subj = (typeof doc.subject === "object" ? doc.subject?.name : doc.subject) || "Không có môn";
           subjs.add(`${sem}::${subj}`);
         }
         setOpenSubjects(subjs);
@@ -124,7 +196,7 @@ export default function NewAIChatboxPage() {
     const map: Record<string, Record<string, DocumentItem[]>> = {};
     for (const doc of documents) {
       const sem = (doc.title || "Chưa phân loại").trim().toUpperCase();
-      const subj = doc.subject || "Không có môn";
+      const subj = (typeof doc.subject === "object" ? doc.subject?.name : doc.subject) || "Không có môn";
       if (!map[sem]) map[sem] = {};
       if (!map[sem][subj]) map[sem][subj] = [];
       map[sem][subj].push(doc);
@@ -224,12 +296,6 @@ export default function NewAIChatboxPage() {
     [],
   );
 
-  const suggestionsAui = useAui(
-    { suggestions: Suggestions(quickPrompts) },
-    { parent: null },
-  );
-  const runtime = useLocalRuntime(realAdapter);
-
   const selectedDoc = documents.find((d) => d.id === selectedDocId);
 
   return (
@@ -256,7 +322,7 @@ export default function NewAIChatboxPage() {
               className="inline-flex items-center gap-2 px-3 py-2"
             >
               <Library className="size-4 text-foreground" aria-hidden="true" />
-              {selectedDoc ? selectedDoc.subject ?? selectedDoc.title : "Tất cả tài liệu"}
+              {selectedDoc ? (typeof selectedDoc.subject === "object" ? selectedDoc.subject?.name : selectedDoc.subject) ?? selectedDoc.title : "Tất cả tài liệu"}
             </Button>
             <Button
               variant={ragMode === "corrective" ? "default" : "outline"}
@@ -268,10 +334,7 @@ export default function NewAIChatboxPage() {
               title={ragMode === "corrective" ? "Click để chuyển về Basic (nhanh hơn)" : "Click để bật Corrective RAG (chính xác hơn)"}
             >
               {isThinking ? (
-                <Loader2
-                  className="size-4 animate-spin"
-                  aria-hidden="true"
-                />
+                <CelestialInlineLoader label="Thinking..." />
               ) : ragMode === "corrective" ? (
                 <Brain className="size-4" aria-hidden="true" />
               ) : (
@@ -285,9 +348,26 @@ export default function NewAIChatboxPage() {
 
       <div className="celestial-panel mt-4 grid min-h-0 flex-1 grid-cols-1 overflow-hidden lg:grid-cols-[minmax(0,1fr)_340px]">
         <section className="min-h-0 bg-transparent">
-          <AssistantRuntimeProvider runtime={runtime} aui={suggestionsAui}>
-            <Thread selectedDoc={selectedDoc} />
-          </AssistantRuntimeProvider>
+          {loadingHistory ? (
+            <LoadingState className="m-5 h-[calc(100%-2.5rem)]" label="Loading chat history..." tone="violet" />
+          ) : (
+            <ChatThread
+              key={sessionIdsParam ?? historyId ?? "new"}
+              adapter={realAdapter}
+              initialMessages={historyMessages}
+              selectedDoc={
+                selectedDoc
+                  ? {
+                      fileName: selectedDoc.fileName,
+                      subject:
+                        typeof selectedDoc.subject === "object"
+                          ? selectedDoc.subject?.name
+                          : selectedDoc.subject,
+                    }
+                  : undefined
+              }
+            />
+          )}
         </section>
 
         <aside className="hidden min-h-0 border-l border-border/80 bg-card/45 p-5 lg:block">
@@ -305,10 +385,7 @@ export default function NewAIChatboxPage() {
               </div>
 
               {loadingDocs ? (
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Loader2 className="size-3 animate-spin" />
-                  Loading documents…
-                </div>
+                <CelestialLoader label="Loading documents..." size="sm" tone="sapphire" />
               ) : documents.length === 0 ? (
                 <p className="text-xs text-muted-foreground">
                   No documents yet. Upload one in the Library.
@@ -320,7 +397,7 @@ export default function NewAIChatboxPage() {
                     onClick={() => setSelectedDocId(undefined)}
                     className={`w-full rounded-lg border px-3 py-2 text-left text-xs transition-colors ${
                       selectedDocId === undefined
-                        ? "border-primary/60 bg-primary/15 text-primary font-medium shadow-[0_0_26px_color-mix(in_oklab,var(--accent-blue)_22%,transparent)]"
+                        ? "border-primary/60 bg-primary/15 text-primary font-medium "
                         : "border-border/70 bg-background/35 text-muted-foreground hover:border-primary/35 hover:text-foreground"
                     }`}
                   >
@@ -339,7 +416,7 @@ export default function NewAIChatboxPage() {
                         {/* Header kỳ */}
                         <button
                           onClick={() => toggleSemester(sem)}
-                          className="flex w-full items-center gap-2 bg-[linear-gradient(135deg,color-mix(in_oklab,var(--accent-blue)_14%,transparent),color-mix(in_oklab,var(--accent-teal)_10%,transparent))] px-3 py-2 text-left transition-colors hover:bg-muted/70"
+                          className="flex w-full items-center gap-2 bg-[#f5f7ff] px-3 py-2 text-left transition-colors hover:bg-muted/70"
                         >
                           <GraduationCap className="size-3.5 shrink-0 text-primary" />
                           <span className="flex-1 truncate text-xs font-semibold text-card-foreground">
@@ -395,7 +472,7 @@ export default function NewAIChatboxPage() {
                                           }
                                           className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors ${
                                             selectedDocId === doc.id
-                                              ? "bg-primary/15 text-primary shadow-[inset_3px_0_0_var(--primary)]"
+                                              ? "bg-primary/15 text-primary "
                                               : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
                                           }`}
                                         >

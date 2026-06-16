@@ -54,7 +54,7 @@ export function TextShimmerWave({
           ...style,
           "--base-color":
             baseColor ?? "color-mix(in oklab, currentColor 55%, transparent)",
-          "--base-gradient-color": shimmerColor ?? "currentColor",
+          "--shine-color": shimmerColor ?? "currentColor",
         } as React.CSSProperties
       }
     >
@@ -81,7 +81,7 @@ export function TextShimmerWave({
               rotateY: [0, rotateYDistance, 0],
               color: [
                 "var(--base-color)",
-                "var(--base-gradient-color)",
+                "var(--shine-color)",
                 "var(--base-color)",
               ],
             }}

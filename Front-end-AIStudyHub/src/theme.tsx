@@ -2,28 +2,24 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react
 import { ThemeContext, type ThemeMode } from './theme-context'
 
 const THEME_STORAGE_KEY = 'ai-study-hub-theme'
+const FORCED_THEME: ThemeMode = 'light'
 
 function readInitialTheme(): ThemeMode {
-  if (typeof window === 'undefined') return 'dark'
-
-  const stored = window.localStorage.getItem(THEME_STORAGE_KEY)
-  return stored === 'light' || stored === 'dark' ? stored : 'dark'
+  return FORCED_THEME
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<ThemeMode>(readInitialTheme)
 
   const setTheme = useCallback((nextTheme: ThemeMode) => {
-    setThemeState(nextTheme)
-    window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme)
+    const effectiveTheme = nextTheme === 'dark' ? FORCED_THEME : nextTheme
+    setThemeState(effectiveTheme)
+    window.localStorage.setItem(THEME_STORAGE_KEY, effectiveTheme)
   }, [])
 
   const toggleTheme = useCallback(() => {
-    setThemeState((currentTheme) => {
-      const nextTheme = currentTheme === 'dark' ? 'light' : 'dark'
-      window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme)
-      return nextTheme
-    })
+    setThemeState(FORCED_THEME)
+    window.localStorage.setItem(THEME_STORAGE_KEY, FORCED_THEME)
   }, [])
 
   useEffect(() => {

@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Activity, Database, FileText, ShieldCheck, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { LoadingState } from '../../components/shared/CelestialLoading'
 import { listAdminDocuments, listAdminUsers, listSystemActivities } from '../../services/adminApi'
 import type { AdminDocument, AdminUser, SystemActivity } from '../../types/admin'
 import { AdminPageHeader, AdminStatCard, formatDateTime, StatusBadge } from './adminPageUtils'
+import { Link } from 'react-router-dom'
 
 export default function AdminDashboardPage() {
   const [activities, setActivities] = useState<SystemActivity[]>([])
@@ -41,9 +43,9 @@ export default function AdminDashboardPage() {
   return (
     <main className="celestial-page min-h-svh overflow-y-auto p-5 md:p-8">
       <AdminPageHeader
-        actions={<Button asChild><a href="/admin/users">Review users</a></Button>}
+        actions={<Button asChild><Link to="/admin/users">Review users</Link></Button>}
         description="Control accounts, review document metadata, and monitor the system health signals described by the admin usecase."
-        eyebrow="Admin constellation"
+        eyebrow="Admin workspace"
         title="Admin Dashboard"
       />
 
@@ -61,10 +63,14 @@ export default function AdminDashboardPage() {
               <h2 className="text-lg font-semibold">System activity stream</h2>
               <p className="text-sm text-muted-foreground">Recent admin and platform events.</p>
             </div>
-            <Button variant="outline" asChild><a href="/admin/activity">Open activity</a></Button>
+            <Button variant="outline" asChild><Link to="/admin/activity">Open activity</Link></Button>
           </div>
           <div className="divide-y divide-border/60">
-            {activities.slice(0, 6).map((activity) => (
+            {isLoading ? (
+              <div className="p-5">
+                <LoadingState label="Loading admin signals..." tone="sapphire" />
+              </div>
+            ) : activities.slice(0, 6).map((activity) => (
               <div className="grid gap-3 p-5 transition-colors hover:bg-muted/35 md:grid-cols-[160px_1fr_auto]" key={activity.id}>
                 <span className="text-xs text-muted-foreground">{formatDateTime(activity.createdAt)}</span>
                 <div>
@@ -77,14 +83,14 @@ export default function AdminDashboardPage() {
           </div>
         </article>
 
-        <aside className="celestial-card tone-surface tone-violet p-5">
+        <aside className="celestial-card p-5">
           <div className="admin-icon-badge admin-tone-violet">
             <Database />
           </div>
           <h2 className="mt-5 text-lg font-semibold">Usecase coverage</h2>
           <div className="mt-5 space-y-3 text-sm">
             {['View user list', 'Active/Inactive user account', 'Update user information', 'Edit metadata', 'Monitor system activities'].map((item) => (
-              <div className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-card/45 p-3 shadow-[inset_3px_0_0_color-mix(in_oklab,var(--accent-violet)_60%,transparent)]" key={item}>
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-card/45 p-3 " key={item}>
                 <span>{item}</span>
                 <StatusBadge severity="success">ready</StatusBadge>
               </div>
