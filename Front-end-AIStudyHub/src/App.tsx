@@ -25,7 +25,7 @@ import { LoadingState } from './components/shared/CelestialLoading'
 import BackgroundUploadWidget from './components/upload/BackgroundUploadWidget'
 import ConflictModal from './components/upload/ConflictModal'
 import { getCurrentUser } from './services/authApi'
-import { getStoredUser, hasAuthSession, storeAuthSession } from './services/authStorage'
+import { getStoredToken, getStoredUser, hasAuthSession, storeAuthSession } from './services/authStorage'
 import type { AuthUser } from './types/auth'
 
 const demoAdminUser: AuthUser = {
@@ -105,9 +105,7 @@ function ProtectedRoute({
 
     getCurrentUser()
       .then((currentUser) => {
-        const token =
-          localStorage.getItem("ai-study-hub:access-token") ||
-          "mock-admin-token";
+        const token = getStoredToken() || "mock-admin-token";
         storeAuthSession(token, currentUser);
         setUser(currentUser);
         setVerified(true);

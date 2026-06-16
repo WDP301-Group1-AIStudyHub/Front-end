@@ -34,7 +34,7 @@ export interface ChatSessionItem {
   id: string
   name: string
   url: string
-            emoji: "",
+  emoji: string
   dateLabel: string
   itemIds: string[]
 }
