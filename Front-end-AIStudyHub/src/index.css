@@ -790,23 +790,56 @@ html[data-theme="dark"] {
 
   .status-info,
   .status-processing {
-    color: var(--accent-blue);
+    border-color: rgb(125 211 252 / 0.25);
+    background: rgb(240 249 255);
+    color: rgb(3 105 161);
   }
 
   .status-success,
   .status-active,
   .status-indexed {
-    color: var(--accent-teal);
+    border-color: rgb(134 239 172 / 0.25);
+    background: rgb(240 253 244);
+    color: rgb(21 128 61);
   }
 
   .status-warning,
   .status-inactive {
-    color: var(--accent-gold);
+    border-color: rgb(216 180 254 / 0.25);
+    background: rgb(250 245 255);
+    color: rgb(126 34 206);
   }
 
   .status-critical,
   .status-failed {
-    color: var(--accent-coral);
+    border-color: rgb(252 165 165 / 0.25);
+    background: rgb(254 242 242);
+    color: rgb(185 28 28);
+  }
+
+  :is(.dark, html[data-theme="dark"]) .status-info,
+  :is(.dark, html[data-theme="dark"]) .status-processing {
+    background: rgb(8 47 73);
+    color: rgb(125 211 252);
+  }
+
+  :is(.dark, html[data-theme="dark"]) .status-success,
+  :is(.dark, html[data-theme="dark"]) .status-active,
+  :is(.dark, html[data-theme="dark"]) .status-indexed {
+    background: rgb(5 46 22);
+    color: rgb(134 239 172);
+  }
+
+  :is(.dark, html[data-theme="dark"]) .status-warning,
+  :is(.dark, html[data-theme="dark"]) .status-inactive {
+    background: rgb(59 7 100);
+    color: rgb(216 180 254);
+  }
+
+  :is(.dark, html[data-theme="dark"]) .status-critical,
+  :is(.dark, html[data-theme="dark"]) .status-failed {
+    background: rgb(69 10 10);
+    color: rgb(252 165 165);
   }
 
   .lp-galaxy-bg,

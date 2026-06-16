@@ -1,13 +1,14 @@
+import { Badge } from '@/components/ui/badge'
 import type { UploadSession } from '../../types/document'
 
 type StatusTone = 'neutral' | 'info' | 'success' | 'warning' | 'error'
 
 const toneClasses: Record<StatusTone, string> = {
-  error: 'border-red-400/30 bg-red-500/10 text-red-200',
-  info: 'border-sky-400/30 bg-sky-500/10 text-sky-200',
-  neutral: 'border-border bg-muted/40 text-muted-foreground',
-  success: 'border-emerald-400/30 bg-emerald-500/10 text-emerald-200',
-  warning: 'border-amber-400/30 bg-amber-500/10 text-amber-200',
+  error: 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300',
+  info: 'bg-sky-50 text-sky-700 dark:bg-sky-950 dark:text-sky-300',
+  neutral: 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300',
+  success: 'bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300',
+  warning: 'bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300',
 }
 
 function statusTone(status: string): StatusTone {
@@ -34,11 +35,11 @@ function statusTone(status: string): StatusTone {
 
 export function StatusBadge({ status }: { status: string }) {
   return (
-    <span
-      className={`inline-flex min-h-6 items-center rounded-full border px-2.5 text-xs font-semibold uppercase tracking-[0.08em] ${toneClasses[statusTone(status)]}`}
+    <Badge
+      className={`min-h-6 uppercase tracking-[0.08em] ${toneClasses[statusTone(status)]}`}
     >
       {status || 'UNKNOWN'}
-    </span>
+    </Badge>
   )
 }
 

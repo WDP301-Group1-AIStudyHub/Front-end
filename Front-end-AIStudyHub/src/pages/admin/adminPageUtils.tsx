@@ -1,6 +1,27 @@
 import type { ReactNode } from 'react'
+import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import type { SystemActivitySeverity } from '../../types/admin'
+
+type StatusBadgeSeverity =
+  | SystemActivitySeverity
+  | 'active'
+  | 'inactive'
+  | 'processing'
+  | 'indexed'
+  | 'failed'
+
+const statusBadgeToneClasses = {
+  active: 'bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300',
+  critical: 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300',
+  failed: 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300',
+  inactive: 'bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300',
+  indexed: 'bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300',
+  info: 'bg-sky-50 text-sky-700 dark:bg-sky-950 dark:text-sky-300',
+  processing: 'bg-sky-50 text-sky-700 dark:bg-sky-950 dark:text-sky-300',
+  success: 'bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300',
+  warning: 'bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300',
+} satisfies Record<StatusBadgeSeverity, string>
 
 export function formatDateTime(value?: string) {
   if (!value) return 'Never'
@@ -69,7 +90,11 @@ export function StatusBadge({
   severity = 'info',
 }: {
   children: ReactNode
-  severity?: SystemActivitySeverity | 'active' | 'inactive' | 'processing' | 'indexed' | 'failed'
+  severity?: StatusBadgeSeverity
 }) {
-  return <span className={cn('status-badge', `status-${severity}`)}>{children}</span>
+  return (
+    <Badge className={cn('uppercase tracking-[0.04em]', statusBadgeToneClasses[severity])}>
+      {children}
+    </Badge>
+  )
 }
