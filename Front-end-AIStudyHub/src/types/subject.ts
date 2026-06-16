@@ -4,7 +4,7 @@ export interface Subject {
   description?: string
   color?: string
   code?: string
-  createdAt: string
+  createdAt?: string
 }
 
 export interface SubjectPayload {

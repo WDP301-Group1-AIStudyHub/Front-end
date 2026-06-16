@@ -1,34 +1,29 @@
 import { useState } from 'react'
-import { useUploadStore } from '../../store/useUploadStore'
-import { 
-  ChevronDown, 
-  ChevronUp, 
-  X, 
-  Loader2, 
-  CheckCircle2, 
-  AlertCircle, 
-  FileText, 
+import {
+  AlertCircle,
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  FileText,
+  Loader2,
   Upload,
-  Sparkles
+  X,
 } from 'lucide-react'
+import { useUploadStore } from '../../store/useUploadStore'
 
 export default function BackgroundUploadWidget() {
   const { uploads, cancelUpload, cancelAll, removeUpload, clearFinished } = useUploadStore()
   const [isExpanded, setIsExpanded] = useState(true)
   const [activeTab, setActiveTab] = useState<'all' | 'completed' | 'failed'>('all')
 
-  if (uploads.length === 0) {
-    return null
-  }
+  if (uploads.length === 0) return null
 
-  // Count stats
   const activeCount = uploads.filter(
-    (u) => u.status === 'uploading' || u.status === 'processing' || u.status === 'pending'
+    (u) => u.status === 'uploading' || u.status === 'processing' || u.status === 'pending',
   ).length
   const completedCount = uploads.filter((u) => u.status === 'success').length
   const failedCount = uploads.filter((u) => u.status === 'failed').length
 
-  // Filter items
   const filteredUploads = uploads.filter((u) => {
     if (activeTab === 'completed') return u.status === 'success'
     if (activeTab === 'failed') return u.status === 'failed'
@@ -40,140 +35,106 @@ export default function BackgroundUploadWidget() {
     return parts.length > 1 ? parts[parts.length - 1].toUpperCase() : 'FILE'
   }
 
-  // Minimized view (just the bar)
   if (!isExpanded) {
     return (
-      <div 
+      <button
         onClick={() => setIsExpanded(true)}
-        className="fixed bottom-4 right-4 z-50 flex items-center justify-between w-80 bg-[#0061fe] hover:bg-[#0052d4] text-white px-4 py-3 rounded-lg shadow-lg cursor-pointer transition-all duration-200 select-none"
+        className="fixed bottom-4 right-4 z-50 flex w-80 items-center justify-between rounded-xl border border-border bg-card px-4 py-3 text-foreground shadow-[0_12px_32px_rgb(28_29_26/0.08)] transition-colors hover:bg-muted"
+        type="button"
       >
-        <div className="flex items-center gap-2 font-medium text-sm">
-          {activeCount > 0 ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Upload className="h-4 w-4" />
-          )}
+        <span className="flex items-center gap-2 text-sm font-medium">
+          {activeCount > 0 ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
           <span>
-            {activeCount > 0 
+            {activeCount > 0
               ? `Uploading ${activeCount} item${activeCount > 1 ? 's' : ''}`
               : `Uploads complete (${completedCount} success)`}
           </span>
-        </div>
-        <ChevronUp className="h-4 w-4 opacity-80" />
-      </div>
+        </span>
+        <ChevronUp className="h-4 w-4 text-muted-foreground" />
+      </button>
     )
   }
 
-  // Expanded card view (Dropbox style)
   return (
-    <div className="fixed bottom-4 right-4 z-50 w-96 bg-[#1e1e1e] border border-neutral-800 rounded-xl shadow-2xl overflow-hidden flex flex-col font-sans select-none">
-      
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-[#1e1e1e] border-b border-neutral-800">
-        <span className="text-white font-semibold text-base">Uploads</span>
-        <div className="flex items-center gap-3">
-          {activeCount > 0 && (
-            <button 
+    <div className="fixed bottom-4 right-4 z-50 flex w-[min(24rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-xl border border-border bg-card font-sans text-foreground shadow-[0_18px_48px_rgb(28_29_26/0.12)]">
+      <div className="flex items-center justify-between border-b border-border px-4 py-3">
+        <span className="text-base font-semibold">Uploads</span>
+        <div className="flex items-center gap-2">
+          {activeCount > 0 ? (
+            <button
               onClick={cancelAll}
-              className="text-xs text-neutral-300 hover:text-white bg-neutral-800 hover:bg-neutral-700 px-2.5 py-1 rounded transition-colors cursor-pointer"
+              className="rounded-lg border border-border bg-card px-2.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              type="button"
             >
               Cancel all
             </button>
-          )}
-          <button 
+          ) : null}
+          <button
             onClick={() => setIsExpanded(false)}
-            className="text-neutral-400 hover:text-white p-1 rounded hover:bg-neutral-800 transition-colors cursor-pointer"
+            className="rounded-lg p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            type="button"
           >
             <ChevronDown className="h-4 w-4" />
           </button>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex items-center gap-1.5 px-4 py-3 bg-[#1e1e1e]">
-        <button
-          onClick={() => setActiveTab('all')}
-          className={`text-xs px-3 py-1.5 rounded-full font-medium transition-all cursor-pointer ${
-            activeTab === 'all'
-              ? 'bg-neutral-800 text-white shadow-sm'
-              : 'text-neutral-400 hover:text-neutral-200'
-          }`}
-        >
-          All uploads ({uploads.length})
-        </button>
-        <button
-          onClick={() => setActiveTab('completed')}
-          className={`text-xs px-3 py-1.5 rounded-full font-medium transition-all cursor-pointer ${
-            activeTab === 'completed'
-              ? 'bg-neutral-800 text-white shadow-sm'
-              : 'text-neutral-400 hover:text-neutral-200'
-          }`}
-        >
-          Completed ({completedCount})
-        </button>
-        <button
-          onClick={() => setActiveTab('failed')}
-          className={`text-xs px-3 py-1.5 rounded-full font-medium transition-all cursor-pointer ${
-            activeTab === 'failed'
-              ? 'bg-neutral-800 text-white shadow-sm'
-              : 'text-neutral-400 hover:text-neutral-200'
-          }`}
-        >
-          Failed ({failedCount})
-        </button>
+      <div className="flex items-center gap-1.5 border-b border-border px-4 py-3">
+        {[
+          ['all', `All (${uploads.length})`],
+          ['completed', `Completed (${completedCount})`],
+          ['failed', `Failed (${failedCount})`],
+        ].map(([value, label]) => (
+          <button
+            className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+              activeTab === value
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+            }`}
+            key={value}
+            onClick={() => setActiveTab(value as typeof activeTab)}
+            type="button"
+          >
+            {label}
+          </button>
+        ))}
       </div>
 
-      {/* Uploading to path info */}
-      <div className="px-4 pb-2 bg-[#1e1e1e] text-[11px] text-neutral-400">
-        Uploading to <span className="underline cursor-default hover:text-neutral-200">Library</span>
+      <div className="px-4 py-2 text-[11px] text-muted-foreground">
+        Uploading to <span className="font-medium text-foreground">Library</span>
       </div>
 
-      {/* Item List */}
-      <div className="flex-1 max-h-64 overflow-y-auto divide-y divide-neutral-800 bg-[#1a1a1a]">
+      <div className="max-h-64 flex-1 divide-y divide-border overflow-y-auto">
         {filteredUploads.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-10 text-neutral-500">
-            <FileText className="h-8 w-8 stroke-1 mb-2 opacity-50" />
+          <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
+            <FileText className="mb-2 h-8 w-8 stroke-1 opacity-60" />
             <p className="text-xs">No uploads in this tab</p>
           </div>
         ) : (
           filteredUploads.map((item) => (
-            <div key={item.id} className="relative p-4 flex flex-col bg-[#1a1a1a] hover:bg-[#202020] transition-colors group">
+            <div key={item.id} className="relative flex flex-col p-4 transition-colors hover:bg-muted/50">
               <div className="flex items-start justify-between gap-3">
-                
-                {/* File Info */}
-                <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                  {/* Status Icon */}
-                  <div className="flex-shrink-0 text-neutral-400">
-                    {item.status === 'uploading' && (
-                      <Loader2 className="h-4 w-4 animate-spin text-[#0061fe]" />
-                    )}
-                    {item.status === 'processing' && (
-                      <Sparkles className="h-4 w-4 animate-pulse text-violet-400" />
-                    )}
-                    {item.status === 'success' && (
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                    )}
-                    {item.status === 'failed' && (
-                      <AlertCircle className="h-4 w-4 text-rose-500" />
-                    )}
-                    {item.status === 'pending' && (
-                      <Loader2 className="h-4 w-4 animate-spin opacity-50" />
-                    )}
+                <div className="flex min-w-0 flex-1 items-center gap-2.5">
+                  <div className="shrink-0 text-muted-foreground">
+                    {item.status === 'uploading' && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
+                    {item.status === 'processing' && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
+                    {item.status === 'success' && <CheckCircle2 className="h-4 w-4 text-primary" />}
+                    {item.status === 'failed' && <AlertCircle className="h-4 w-4 text-destructive" />}
+                    {item.status === 'pending' && <Loader2 className="h-4 w-4 animate-spin opacity-50" />}
                   </div>
 
-                  {/* Filename & Badge */}
-                  <div className="min-w-0 flex-1 flex flex-col">
-                    <span className="text-sm font-semibold text-neutral-200 truncate pr-2" title={item.fileName}>
+                  <div className="flex min-w-0 flex-1 flex-col">
+                    <span className="truncate pr-2 text-sm font-semibold" title={item.fileName}>
                       {item.fileName}
                     </span>
-                    <div className="flex items-center gap-1.5 mt-1">
-                      <span className="text-[10px] font-bold text-neutral-300 bg-neutral-800 px-1.5 py-0.5 rounded uppercase">
+                    <div className="mt-1 flex items-center gap-1.5">
+                      <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
                         {getFileExtension(item.fileName)}
                       </span>
-                      <span className="text-[11px] text-neutral-400 truncate">
-                        {item.status === 'pending' && 'Queued...'}
+                      <span className="truncate text-[11px] text-muted-foreground">
+                        {item.status === 'pending' && 'Queued'}
                         {item.status === 'uploading' && `Uploading (${item.progress}%)`}
-                        {item.status === 'processing' && (item.progress >= 95 ? 'AI chunking & indexing...' : 'Extracting text...')}
+                        {item.status === 'processing' && (item.progress >= 95 ? 'Indexing' : 'Extracting text')}
                         {item.status === 'success' && 'Completed'}
                         {item.status === 'failed' && (item.error || 'Failed')}
                       </span>
@@ -181,19 +142,20 @@ export default function BackgroundUploadWidget() {
                   </div>
                 </div>
 
-                {/* Actions */}
-                <div className="flex-shrink-0">
+                <div className="shrink-0">
                   {item.status === 'uploading' || item.status === 'processing' || item.status === 'pending' ? (
                     <button
                       onClick={() => cancelUpload(item.id)}
-                      className="text-xs text-neutral-400 hover:text-white bg-neutral-800 hover:bg-neutral-700 px-2 py-1 rounded transition-colors cursor-pointer"
+                      className="rounded-lg border border-border px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                      type="button"
                     >
                       Cancel
                     </button>
                   ) : (
                     <button
                       onClick={() => removeUpload(item.id)}
-                      className="text-neutral-400 hover:text-neutral-200 p-1 rounded hover:bg-neutral-800 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 cursor-pointer"
+                      className="rounded-lg p-1 text-muted-foreground opacity-0 transition-colors hover:bg-muted hover:text-foreground group-hover:opacity-100 focus:opacity-100"
+                      type="button"
                     >
                       <X className="h-4.5 w-4.5" />
                     </button>
@@ -201,13 +163,9 @@ export default function BackgroundUploadWidget() {
                 </div>
               </div>
 
-              {/* Individual Progress Bar */}
               {(item.status === 'uploading' || item.status === 'processing') && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-neutral-800">
-                  <div 
-                    className="h-full bg-[#0061fe] transition-all duration-200"
-                    style={{ width: `${item.progress}%` }}
-                  />
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-muted">
+                  <div className="h-full bg-primary transition-all duration-200" style={{ width: `${item.progress}%` }} />
                 </div>
               )}
             </div>
@@ -215,29 +173,25 @@ export default function BackgroundUploadWidget() {
         )}
       </div>
 
-      {/* Footer */}
-      <div className="flex items-center justify-between px-4 py-3 bg-[#0061fe] text-white">
-        <div className="flex items-center gap-2">
-          {activeCount > 0 ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Upload className="h-4 w-4" />
-          )}
-          <span className="font-semibold text-sm">
-            {activeCount > 0 
+      <div className="flex items-center justify-between border-t border-border px-4 py-3">
+        <div className="flex items-center gap-2 text-sm font-medium">
+          {activeCount > 0 ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+          <span>
+            {activeCount > 0
               ? `Uploading ${activeCount} item${activeCount > 1 ? 's' : ''}`
               : `All uploads completed (${completedCount} success)`}
           </span>
         </div>
-        
-        {activeCount === 0 && (
-          <button 
+
+        {activeCount === 0 ? (
+          <button
             onClick={clearFinished}
-            className="text-xs bg-white/20 hover:bg-white/30 text-white font-medium px-2.5 py-1 rounded transition-colors cursor-pointer"
+            className="rounded-lg border border-border px-2.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            type="button"
           >
             Clear all
           </button>
-        )}
+        ) : null}
       </div>
     </div>
   )

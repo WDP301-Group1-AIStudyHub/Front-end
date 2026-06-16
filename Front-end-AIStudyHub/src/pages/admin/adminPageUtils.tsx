@@ -32,10 +32,10 @@ export function AdminPageHeader({
   return (
     <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-amber-500">
+        <p className="text-sm font-semibold text-primary">
           {eyebrow}
         </p>
-        <h1 className="celestial-title mt-2 text-3xl font-semibold tracking-tight md:text-5xl">{title}</h1>
+        <h1 className="celestial-title mt-2 text-3xl md:text-5xl">{title}</h1>
         <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">{description}</p>
       </div>
       {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
@@ -55,9 +55,9 @@ export function AdminStatCard({
   value: string
 }) {
   return (
-    <article className={cn('celestial-card tone-surface p-5', `tone-${tone === 'blue' ? 'sapphire' : tone}`)}>
+    <article className={cn('celestial-card p-5', `tone-${tone === 'blue' ? 'sapphire' : tone}`)}>
       <div className={cn('admin-icon-badge', `admin-tone-${tone}`)}>{icon}</div>
-      <p className="mt-5 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+      <p className="mt-5 text-sm font-medium text-muted-foreground">
         {label}
       </p>
       {value === '...' ? (

@@ -72,3 +72,11 @@ export interface UpdateDocumentPayload {
 }
 
 export type DocumentsResponse = DocumentItem[]
+
+export interface UploadSession {
+  id: string
+  progress: number
+  status: string
+  stage: string
+  message?: string
+}

@@ -276,11 +276,11 @@ function MetricBars({ summary }: { summary: NormalizedSummary }) {
         <h2 className="text-lg font-semibold">Average score per metric</h2>
         <div className="flex gap-3 text-xs font-semibold text-muted-foreground">
           <span className="inline-flex items-center gap-1">
-            <span className="size-2 rounded-full bg-blue-500" />
+            <span className="size-2 rounded-full bg-primary" />
             Basic
           </span>
           <span className="inline-flex items-center gap-1">
-            <span className="size-2 rounded-full bg-teal-500" />
+            <span className="size-2 rounded-full bg-primary" />
             Corrective
           </span>
         </div>
@@ -291,24 +291,24 @@ function MetricBars({ summary }: { summary: NormalizedSummary }) {
           <div key={metric.key}>
             <div className="mb-2 grid grid-cols-[92px_44px_1fr_44px] items-center gap-3 text-sm">
               <span className="font-medium">{metric.label}</span>
-              <span className="text-right text-xs font-semibold text-blue-500">
+              <span className="text-right text-xs font-semibold text-primary">
                 {metric.basic.toFixed(2)}
               </span>
               <div className="grid gap-1">
-                <div className="h-2 overflow-hidden rounded-full bg-blue-500/10">
+                <div className="h-2 overflow-hidden rounded-full bg-muted">
                   <div
-                    className="h-full rounded-full bg-blue-500"
+                    className="h-full rounded-full bg-primary"
                     style={{ width: `${metric.basic * 100}%` }}
                   />
                 </div>
-                <div className="h-2 overflow-hidden rounded-full bg-teal-500/10">
+                <div className="h-2 overflow-hidden rounded-full bg-muted">
                   <div
-                    className="h-full rounded-full bg-teal-500"
+                    className="h-full rounded-full bg-primary"
                     style={{ width: `${metric.corrective * 100}%` }}
                   />
                 </div>
               </div>
-              <span className="text-xs font-semibold text-teal-500">
+              <span className="text-xs font-semibold text-primary">
                 {metric.corrective.toFixed(2)}
               </span>
             </div>
@@ -333,17 +333,17 @@ function WinRatePanel({ summary }: { summary: NormalizedSummary }) {
       <div className="overflow-hidden rounded-lg border border-border/70">
         <div className="flex h-8">
           <div
-            className="bg-teal-500"
+            className="bg-primary"
             style={{
               width: `${(summary.winCounts.corrective / total) * 100}%`,
             }}
           />
           <div
-            className="bg-blue-500"
+            className="bg-primary"
             style={{ width: `${(summary.winCounts.basic / total) * 100}%` }}
           />
           <div
-            className="bg-amber-500"
+            className="bg-muted-foreground"
             style={{ width: `${(summary.winCounts.tie / total) * 100}%` }}
           />
         </div>
@@ -351,17 +351,17 @@ function WinRatePanel({ summary }: { summary: NormalizedSummary }) {
 
       <div className="grid gap-3 text-sm">
         <WinRow
-          color="bg-teal-500"
+          color="bg-primary"
           label="Corrective"
           value={summary.winCounts.corrective}
         />
         <WinRow
-          color="bg-blue-500"
+          color="bg-primary"
           label="Basic"
           value={summary.winCounts.basic}
         />
         <WinRow
-          color="bg-amber-500"
+          color="bg-muted-foreground"
           label="Tie"
           value={summary.winCounts.tie}
         />
@@ -465,11 +465,11 @@ function RecentRuns({ runs }: { runs: BenchmarkRecentRun[] }) {
 function WinnerBadge({ winner }: { winner: BenchmarkWinner }) {
   const classes =
     winner === "corrective"
-      ? "bg-teal-500/12 text-teal-500"
+      ? "bg-primary/10 text-primary"
       : winner === "basic"
-        ? "bg-blue-500/12 text-blue-500"
+        ? "bg-primary/10 text-primary"
         : winner === "tie"
-          ? "bg-amber-500/12 text-amber-500"
+          ? "bg-muted text-muted-foreground"
           : "bg-muted text-muted-foreground";
 
   return (

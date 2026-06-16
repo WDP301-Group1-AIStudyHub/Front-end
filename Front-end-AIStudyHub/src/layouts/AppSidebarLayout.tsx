@@ -14,7 +14,6 @@ import {
 import { AppSidebar } from '@/components/app-sidebar'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 import { TooltipProvider } from '@/components/ui/tooltip'
-import CelestialBackdrop from '@/src/components/shared/CelestialBackdrop'
 import { getStoredUser } from '@/src/services/authStorage'
 import { cn } from '@/lib/utils'
 
@@ -45,8 +44,8 @@ function MobileAppNav() {
       aria-label="Mobile app navigation"
       className="fixed inset-x-3 bottom-3 z-50 md:hidden"
     >
-      <div className="celestial-card tone-surface tone-sapphire grid grid-cols-5 items-center gap-1 px-2 py-2 shadow-2xl backdrop-blur">
-        <SidebarTrigger className="h-12 w-full rounded-xl border border-border/70 bg-card/55 text-foreground" />
+      <div className="grid grid-cols-5 items-center gap-1 rounded-xl border border-border bg-card px-2 py-2 ">
+        <SidebarTrigger className="h-11 w-full rounded-lg border border-border bg-card text-foreground" />
         {items.map((item) => {
           const Icon = item.icon
           const isActive =
@@ -57,9 +56,9 @@ function MobileAppNav() {
             <Link
               aria-current={isActive ? 'page' : undefined}
               className={cn(
-                'flex h-12 min-w-0 flex-col items-center justify-center gap-1 rounded-xl border border-transparent px-1 text-[0.66rem] font-semibold text-muted-foreground transition-colors',
+                'flex h-11 min-w-0 flex-col items-center justify-center gap-1 rounded-lg border border-transparent px-1 text-[0.66rem] font-medium text-muted-foreground transition-colors',
                 isActive
-                  ? 'border-primary/35 bg-primary/15 text-primary shadow-[inset_0_2px_0_var(--accent-gold)]'
+                  ? 'border-primary bg-primary text-primary-foreground'
                   : 'hover:border-border/80 hover:bg-muted/45 hover:text-foreground',
               )}
               key={item.href}
@@ -79,9 +78,8 @@ export default function AppSidebarLayout({ children }: AppSidebarLayoutProps) {
   return (
     <TooltipProvider>
       <SidebarProvider>
-        <CelestialBackdrop intensity="dramatic" />
         <AppSidebar />
-        <SidebarInset className="relative z-10 min-h-svh w-0 min-w-0 flex-1 overflow-hidden bg-transparent">
+        <SidebarInset className="relative z-10 min-h-svh w-0 min-w-0 flex-1 overflow-hidden bg-background">
           {children}
         </SidebarInset>
         <MobileAppNav />

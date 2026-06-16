@@ -22,7 +22,6 @@ import AdminDashboardPage from './pages/admin/AdminDashboardPage'
 import AdminDocumentsPage from './pages/admin/AdminDocumentsPage'
 import AdminUsersPage from './pages/admin/AdminUsersPage'
 import { LoadingState } from './components/shared/CelestialLoading'
-import AppVideoBackground from './components/shared/AppVideoBackground'
 import BackgroundUploadWidget from './components/upload/BackgroundUploadWidget'
 import ConflictModal from './components/upload/ConflictModal'
 import { getCurrentUser } from './services/authApi'
@@ -55,7 +54,7 @@ function AdminAccessDenied() {
     <AppSidebarLayout>
       <main className="celestial-page flex min-h-svh items-center justify-center p-6">
         <section className="celestial-card max-w-lg p-8 text-center">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-amber-500">
+          <p className="mb-3 text-sm font-semibold text-primary">
             Admin only
           </p>
           <h1 className="text-3xl font-semibold tracking-tight">
@@ -166,7 +165,6 @@ function DemoAdminBootstrap() {
 function App() {
   return (
     <>
-      <AppVideoBackground />
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/about" element={<AboutPage />} />

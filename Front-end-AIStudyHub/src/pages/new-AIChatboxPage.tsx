@@ -397,7 +397,7 @@ export default function NewAIChatboxPage() {
                     onClick={() => setSelectedDocId(undefined)}
                     className={`w-full rounded-lg border px-3 py-2 text-left text-xs transition-colors ${
                       selectedDocId === undefined
-                        ? "border-primary/60 bg-primary/15 text-primary font-medium shadow-[0_0_26px_color-mix(in_oklab,var(--accent-blue)_22%,transparent)]"
+                        ? "border-primary/60 bg-primary/15 text-primary font-medium "
                         : "border-border/70 bg-background/35 text-muted-foreground hover:border-primary/35 hover:text-foreground"
                     }`}
                   >
@@ -416,7 +416,7 @@ export default function NewAIChatboxPage() {
                         {/* Header kỳ */}
                         <button
                           onClick={() => toggleSemester(sem)}
-                          className="flex w-full items-center gap-2 bg-[linear-gradient(135deg,color-mix(in_oklab,var(--accent-blue)_14%,transparent),color-mix(in_oklab,var(--accent-teal)_10%,transparent))] px-3 py-2 text-left transition-colors hover:bg-muted/70"
+                          className="flex w-full items-center gap-2 bg-[#f5f7ff] px-3 py-2 text-left transition-colors hover:bg-muted/70"
                         >
                           <GraduationCap className="size-3.5 shrink-0 text-primary" />
                           <span className="flex-1 truncate text-xs font-semibold text-card-foreground">
@@ -472,7 +472,7 @@ export default function NewAIChatboxPage() {
                                           }
                                           className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors ${
                                             selectedDocId === doc.id
-                                              ? "bg-primary/15 text-primary shadow-[inset_3px_0_0_var(--primary)]"
+                                              ? "bg-primary/15 text-primary "
                                               : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
                                           }`}
                                         >

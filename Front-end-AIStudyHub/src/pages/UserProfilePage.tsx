@@ -30,7 +30,7 @@ function Field({
 }) {
   return (
     <div className="space-y-1.5">
-      <label className="block text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+      <label className="block text-sm font-medium text-muted-foreground">
         {label}
       </label>
       <div className="relative flex items-center">
@@ -60,12 +60,12 @@ function InfoChip({
   value: string
 }) {
   return (
-    <div className="celestial-card tone-surface tone-sapphire flex items-center gap-3 px-4 py-3">
-      <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[color-mix(in_oklab,var(--accent-blue)_14%,transparent)] text-(--accent-blue) [&>svg]:size-4">
+    <div className="celestial-card flex items-center gap-3 px-4 py-3">
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted text-primary [&>svg]:size-4">
         {icon}
       </span>
       <div className="min-w-0">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
+        <p className="text-xs font-medium text-muted-foreground">{label}</p>
         <p className="truncate text-sm font-medium">{value}</p>
       </div>
     </div>
@@ -112,13 +112,13 @@ export default function UserProfilePage() {
     ? new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'long', year: 'numeric' }).format(
         new Date(storedUser.createdAt),
       )
-    : '—'
+    : 'Not available'
 
   return (
     <main className="celestial-page min-h-svh overflow-y-auto p-5 md:p-8">
       {/* ── Page header ── */}
       <header className="flex flex-col gap-2">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-(--accent-gold)">
+        <p className="text-sm font-semibold text-primary">
           Account settings
         </p>
         <h1 className="celestial-title text-3xl font-semibold tracking-tight md:text-4xl">
@@ -132,9 +132,9 @@ export default function UserProfilePage() {
       <div className="mt-8 grid gap-6 lg:grid-cols-[280px_1fr]">
         {/* ── Left column – avatar card ── */}
         <div className="flex flex-col gap-4">
-          <div className="celestial-card tone-surface tone-gold flex flex-col items-center gap-4 p-6 text-center">
+          <div className="celestial-card flex flex-col items-center gap-4 p-6 text-center">
             <div className="relative">
-              <div className="flex size-24 items-center justify-center overflow-hidden rounded-full border-2 border-(--accent-gold)/40 bg-[color-mix(in_oklab,var(--accent-gold)_14%,transparent)] shadow-[0_0_32px_color-mix(in_oklab,var(--accent-gold)_20%,transparent)]">
+              <div className="flex size-24 items-center justify-center overflow-hidden rounded-full border border-border bg-muted">
                 {avatar ? (
                   <img
                     alt={fullName}
@@ -144,7 +144,7 @@ export default function UserProfilePage() {
                   />
                 ) : null}
                 <span
-                  className={`absolute inset-0 flex items-center justify-center text-2xl font-semibold text-(--accent-gold) ${avatar ? 'opacity-0' : 'opacity-100'}`}
+                  className={`absolute inset-0 flex items-center justify-center text-2xl font-semibold text-primary ${avatar ? 'opacity-0' : 'opacity-100'}`}
                 >
                   {initials || <UserRound className="size-8" />}
                 </span>
@@ -162,8 +162,8 @@ export default function UserProfilePage() {
             <span
               className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${
                 storedUser?.role === 'admin'
-                  ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
-                  : 'bg-[color-mix(in_oklab,var(--accent-blue)_12%,transparent)] text-(--accent-blue)'
+                  ? 'bg-muted text-muted-foreground'
+                  : 'bg-primary/10 text-primary'
               }`}
             >
               <ShieldCheck className="size-3" />
@@ -193,7 +193,7 @@ export default function UserProfilePage() {
 
         {/* ── Right column – edit form ── */}
         <div className="flex flex-col gap-5">
-          <div className="celestial-card tone-surface tone-sapphire p-6">
+          <div className="celestial-card p-6">
             <div className="mb-5 border-b border-border/60 pb-4">
               <h2 className="text-base font-semibold">Personal information</h2>
               <p className="mt-0.5 text-sm text-muted-foreground">
@@ -234,7 +234,7 @@ export default function UserProfilePage() {
           </div>
 
           {/* Read-only account info */}
-          <div className="celestial-card tone-surface tone-teal p-6">
+          <div className="celestial-card p-6">
             <div className="mb-5 border-b border-border/60 pb-4">
               <h2 className="text-base font-semibold">Account details</h2>
               <p className="mt-0.5 text-sm text-muted-foreground">
@@ -268,7 +268,7 @@ export default function UserProfilePage() {
 
           {/* Success */}
           {saved && (
-            <div className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-600 dark:text-emerald-400">
+            <div className="flex items-center gap-2 rounded-xl border border-primary/25 bg-primary/10 px-4 py-3 text-sm text-primary">
               <CheckCircle2 className="size-4" />
               Profile updated successfully.
             </div>

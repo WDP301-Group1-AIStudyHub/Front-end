@@ -10,7 +10,6 @@ import type {
   DocumentItem,
   UpdateDocumentPayload,
   UploadDocumentPayload,
-  UploadDocumentResult,
 } from '../types/document'
 
 export function useDocuments() {
@@ -50,13 +49,9 @@ export function useDocuments() {
     }
   }, [])
 
-  const upload = useCallback(async (payload: UploadDocumentPayload): Promise<UploadDocumentResult> => {
+  const upload = useCallback(async (payload: UploadDocumentPayload): Promise<DocumentItem> => {
     const result = await uploadDocument(payload)
-
-    if (result.document) {
-      setDocuments((current) => [result.document as DocumentItem, ...current])
-    }
-
+    setDocuments((current) => [result, ...current])
     return result
   }, [])
 

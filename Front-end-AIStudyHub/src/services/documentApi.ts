@@ -7,6 +7,7 @@ import type {
   DocumentsResponse,
   UpdateDocumentPayload,
   UploadDocumentPayload,
+  UploadSession,
 } from '../types/document'
 import { clearAuthSession, getStoredToken } from './authStorage'
 
@@ -256,4 +257,9 @@ export async function deleteDocument(documentId: string): Promise<void> {
   await request<void>(`/api/documents/${documentId}`, {
     method: 'DELETE',
   })
+}
+
+export async function getUploadSession(sessionId: string): Promise<UploadSession> {
+  const response = await request<UploadSession>(`/api/documents/upload/session/${sessionId}`)
+  return unwrapData(response, 'Upload session response was empty')
 }

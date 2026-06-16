@@ -47,7 +47,7 @@ export default function LoginPage() {
   return (
     <AuthScaffold action="Sign Up" mode="centered">
       <AcademicAside />
-      <AuthCardShell subtitle="Authentication Required" title="Welcome Back">
+      <AuthCardShell subtitle="Authentication required" title="Welcome back">
         <form className="grid gap-[22px] mt-10" onSubmit={handleSubmit}>
           <FloatingField
             autoComplete="email"
@@ -71,22 +71,22 @@ export default function LoginPage() {
             type="password"
             value={form.password}
           />
-          <div className="flex items-center justify-between gap-[18px] text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+          <div className="flex items-center justify-between gap-[18px] text-xs font-medium text-muted-foreground">
             <label className="inline-flex items-center gap-2">
               <input checked readOnly type="checkbox" className="h-4 w-4 accent-[var(--accent-blue)]" />
-              <span>Remember Me</span>
+              <span>Remember me</span>
             </label>
             <Link to="/forgot-password" className="text-foreground hover:text-primary">Forgot?</Link>
           </div>
           {error ? (
-            <p className="m-0 text-xs leading-relaxed text-red-300">{error}</p>
+            <p className="m-0 text-xs leading-relaxed text-destructive">{error}</p>
           ) : null}
           <button
             disabled={loading}
             type="submit"
-            className="min-h-[56px] w-full rounded-lg bg-primary text-xs font-semibold uppercase tracking-[0.15em] text-primary-foreground transition-all hover:scale-[1.01] hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100"
+            className="min-h-[52px] w-full rounded-lg bg-primary text-sm font-semibold text-primary-foreground transition-colors hover:bg-[color-mix(in_oklab,var(--primary),black_12%)] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {loading ? <CelestialInlineLoader className="justify-center" label="Authenticating..." /> : 'Log In To Dashboard'}
+            {loading ? <CelestialInlineLoader className="justify-center" label="Authenticating..." /> : 'Log in to dashboard'}
           </button>
         </form>
       </AuthCardShell>

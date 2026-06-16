@@ -1,4 +1,4 @@
-import { Loader2, Sparkles } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 type Tone = 'sapphire' | 'teal' | 'gold' | 'violet' | 'coral' | 'emerald' | 'cyan'
@@ -16,9 +16,7 @@ export function CelestialLoader({
 }) {
   return (
     <div className={cn('celestial-loader', `tone-${tone}`, `celestial-loader-${size}`, className)} role="status">
-      <span className="celestial-loader-orbit" aria-hidden="true">
-        <Sparkles className="celestial-loader-star" />
-      </span>
+      <span className="celestial-loader-mark" aria-hidden="true" />
       <span className="celestial-loader-label">{label}</span>
     </div>
   )

@@ -153,8 +153,8 @@ export default function EvaluationPage() {
                             <span
                               className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
                                 log.mode === 'corrective'
-                                  ? 'bg-teal-500/15 text-teal-400'
-                                  : 'bg-blue-500/15 text-blue-400'
+                                  ? 'bg-primary/10 text-primary'
+                                  : 'bg-primary/10 text-primary'
                               }`}
                             >
                               {log.mode}

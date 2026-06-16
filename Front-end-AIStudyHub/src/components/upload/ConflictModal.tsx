@@ -16,15 +16,15 @@ export default function ConflictModal() {
   const { payload } = conflict;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/60 backdrop-blur-md animate-fade-in">
-      <div className="celestial-card border border-border/80 p-6 max-w-md w-full shadow-2xl bg-card/90 text-card-foreground backdrop-blur flex flex-col gap-5 rounded-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/70 p-4 animate-fade-in">
+      <div className="celestial-card flex w-full max-w-md flex-col gap-5 p-6 text-card-foreground">
         <div className="flex items-center gap-3">
-          <div className="admin-icon-badge admin-tone-orange flex size-12 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500">
+          <div className="admin-icon-badge admin-tone-gold flex size-12 shrink-0 items-center justify-center rounded-xl">
             <AlertTriangle className="size-6" aria-hidden="true" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold tracking-tight">Duplicate Document Found</h3>
-            <p className="text-xs text-muted-foreground">Naming Conflict detected</p>
+            <h3 className="text-lg font-semibold tracking-tight">Duplicate document found</h3>
+            <p className="text-xs text-muted-foreground">Filename conflict detected</p>
           </div>
         </div>
 
@@ -42,7 +42,7 @@ export default function ConflictModal() {
         <div className="flex flex-col gap-2.5 mt-2">
           <button
             onClick={() => resolveConflict(currentId, "REPLACE")}
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-2.5 rounded-xl text-sm transition-all shadow-lg shadow-primary/20 hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
+            className="w-full cursor-pointer rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-[color-mix(in_oklab,var(--primary),black_12%)]"
             type="button"
           >
             Replace existing document
@@ -50,7 +50,7 @@ export default function ConflictModal() {
           
           <button
             onClick={() => resolveConflict(currentId, "KEEP_BOTH")}
-            className="w-full border border-border bg-secondary/30 hover:bg-secondary/70 text-secondary-foreground font-semibold py-2.5 rounded-xl text-sm transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer inline-flex items-center justify-center gap-2"
+            className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-border bg-card py-2.5 text-sm font-semibold text-secondary-foreground transition-colors hover:bg-muted"
             type="button"
           >
             <Files className="size-4" />
@@ -59,7 +59,7 @@ export default function ConflictModal() {
 
           <button
             onClick={() => resolveConflict(currentId, "CANCEL")}
-            className="w-full text-muted-foreground hover:text-foreground font-semibold py-2.5 rounded-xl text-sm transition-colors cursor-pointer"
+            className="w-full cursor-pointer rounded-lg py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             type="button"
           >
             Cancel upload

@@ -1,6 +1,5 @@
 import { ChevronDown } from 'lucide-react'
 import BrandLogo from './BrandLogo'
-import ThemeToggle from './ThemeToggle'
 
 type PublicNavProps = {
   ctaHref?: string
@@ -16,13 +15,13 @@ export default function PublicNav({
   showLogin = true,
 }: PublicNavProps) {
   return (
-    <nav className="public-nav fixed left-0 right-0 top-6 z-50">
-      <div className="mx-auto flex w-[calc(100%-48px)] max-w-[1240px] items-center justify-between gap-4 rounded-[28px] border border-white/14 bg-black/18 px-5 py-3 shadow-[0_24px_80px_-58px_rgba(0,0,0,0.92)] backdrop-blur-[24px] sm:px-6">
-        <a className="min-w-0" href="/">
+    <nav className="public-nav fixed left-0 right-0 top-4 z-50">
+      <div className="mx-auto flex w-[calc(100%-32px)] max-w-[1180px] items-center justify-between gap-4 rounded-xl border border-border bg-card/95 px-4 py-3 text-foreground  sm:px-5">
+        <a className="flex min-w-0 items-center gap-2" href="/">
           <BrandLogo />
         </a>
 
-        <div className="hidden items-center gap-[30px] md:flex">
+        <div className="hidden items-center gap-2 md:flex">
           {[
             { href: dashboardHref, label: 'Dashboard' },
             { href: '/about', label: 'About Us' },
@@ -30,7 +29,7 @@ export default function PublicNav({
             <a
               key={item.label}
               href={item.href}
-              className="inline-flex items-center gap-3 text-sm font-medium text-white/78 transition-colors hover:text-white"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-transparent px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:border-border hover:bg-muted hover:text-foreground"
             >
               <span>{item.label}</span>
               <ChevronDown className="size-3.5" aria-hidden="true" />
@@ -38,19 +37,18 @@ export default function PublicNav({
           ))}
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-4">
-          <ThemeToggle compact />
+        <div className="flex items-center gap-2 sm:gap-3">
           {showLogin ? (
             <a
               href="/login"
-              className="hidden bg-transparent p-0 text-xs font-semibold uppercase tracking-[0.15em] text-white/68 transition-colors hover:text-white sm:inline-flex"
+              className="hidden rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:inline-flex"
             >
               Login
             </a>
           ) : null}
           <a
             href={ctaHref}
-            className="lp-pulsing-btn inline-flex min-h-[42px] items-center justify-center rounded-full px-5 text-sm font-medium transition-all sm:px-[29px]"
+            className="inline-flex min-h-10 items-center justify-center rounded-lg border border-primary bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-[color-mix(in_oklab,var(--primary),black_12%)] sm:px-5"
           >
             {ctaLabel}
           </a>

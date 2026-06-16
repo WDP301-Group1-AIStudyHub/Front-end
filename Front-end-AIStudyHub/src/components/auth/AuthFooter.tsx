@@ -15,7 +15,7 @@ export default function AuthFooter({ compact = false }: { compact?: boolean }) {
           </a>
         ))}
       </nav>
-      <span className="text-xs font-semibold uppercase tracking-[0.15em]">&copy; 2024 AI Study Hub. The Scholarly Cosmos.</span>
+      <span className="text-xs font-semibold uppercase tracking-[0.15em]">&copy; 2024 AI Study Hub. Built for focused study.</span>
     </footer>
   )
 }

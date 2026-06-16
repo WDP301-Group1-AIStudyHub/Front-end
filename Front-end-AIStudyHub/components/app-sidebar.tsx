@@ -16,7 +16,6 @@ import {
 import { useNavigate, useLocation, Link } from "react-router-dom"
 import { NavMain } from "@/components/nav-main"
 import { NavChats } from "@/components/nav-chats"
-import type { ChatSessionItem } from "@/components/nav-chats"
 import { NavUser } from "@/components/nav-user"
 import { groupBySession } from "@/src/lib/groupChatHistory"
 import {
@@ -26,12 +25,19 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar"
-import ThemeToggle from "@/src/components/shared/ThemeToggle"
 import BrandLogo from "@/src/components/shared/BrandLogo"
 import { logout } from "@/src/services/authApi"
 import { getStoredUser } from "@/src/services/authStorage"
 import { deleteChatHistory, getChatHistory } from "@/src/services/chatApi"
 
+export interface ChatSessionItem {
+  id: string
+  name: string
+  url: string
+            emoji: "",
+  dateLabel: string
+  itemIds: string[]
+}
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const navigate = useNavigate()
@@ -55,8 +61,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           groupBySession(items).map((g) => ({
             id: g.id,
             name: g.name,
-            url: "/aichatbox",
-            emoji: "💬",
+            url: `/aichatbox?sessionIds=${g.itemIds.join(",")}`,
+            emoji: "",
             dateLabel: g.dateLabel,
             itemIds: g.itemIds,
           })),
@@ -65,17 +71,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       .catch(() => setChatSessions([]))
   }, [isAdmin])
 
-  const handleDeleteChat = async (itemIds: string[]) => {
+  const handleDeleteChat = async (sessionId: string) => {
+    const session = chatSessions.find((s) => s.id === sessionId)
+    if (!session) return
+    const itemIds = session.itemIds
     try {
       await Promise.all(itemIds.map((id) => deleteChatHistory(id)))
-      setChatSessions((prev) => prev.filter((s) => s.id !== itemIds[0]))
+      setChatSessions((prev) => prev.filter((s) => s.id !== sessionId))
     } catch {
       // silently ignore
     }
-  }
-
-  const handleSelectChat = (itemIds: string[]) => {
-    navigate(`/aichatbox?sessionIds=${itemIds.join(",")}`)
   }
 
   const baseNav = [
@@ -149,16 +154,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar className="border-r-0" {...props}>
       <SidebarHeader>
-        <div className="flex items-center justify-between gap-2 px-2 py-1.5">
+        <div className="flex items-center justify-between gap-2 px-2 py-2">
           <Link className="min-w-0" to="/dashboard">
             <BrandLogo />
           </Link>
-          <ThemeToggle compact />
         </div>
         <NavMain items={isAdmin ? adminNav : baseNav} />
       </SidebarHeader>
       <SidebarContent>
-      {!isAdmin && <NavChats onDelete={handleDeleteChat} onSelect={handleSelectChat} recentChats={chatSessions} />}
+      {!isAdmin && <NavChats onDelete={handleDeleteChat} recentChats={chatSessions} />}
       </SidebarContent>
       <SidebarFooter>
         <NavUser onLogout={handleLogout} user={user} />

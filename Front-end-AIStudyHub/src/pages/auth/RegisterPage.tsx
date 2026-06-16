@@ -57,7 +57,7 @@ export default function RegisterPage() {
   return (
     <AuthScaffold action="Sign In" mode="centered" showFooter>
       <AcademicAside />
-      <AuthCardShell subtitle="Join the Academic Constellation" title="Create Account">
+      <AuthCardShell subtitle="Create your study workspace" title="Create account">
         <form className="grid gap-5 mt-8" onSubmit={handleSubmit}>
           <FloatingField
             autoComplete="name"
@@ -100,26 +100,26 @@ export default function RegisterPage() {
             required
             value={form.confirmPassword}
           />
-          <div className="flex items-center justify-between gap-[18px] text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+          <div className="flex items-center justify-between gap-[18px] text-xs font-medium text-muted-foreground">
             <label className="inline-flex items-center gap-2">
               <input checked readOnly type="checkbox" className="h-4 w-4 accent-[var(--accent-blue)]" />
-              <span>Remember Me</span>
+              <span>Remember me</span>
             </label>
             <Link to="/forgot-password" className="text-foreground hover:text-primary">Forgot?</Link>
           </div>
           {error ? (
-            <p className="m-0 text-xs leading-relaxed text-red-300">{error}</p>
+            <p className="m-0 text-xs leading-relaxed text-destructive">{error}</p>
           ) : null}
           <button
             disabled={loading}
             type="submit"
-            className="min-h-[56px] w-full rounded-lg bg-primary text-xs font-semibold uppercase tracking-[0.15em] text-primary-foreground transition-all hover:scale-[1.01] hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100"
+            className="min-h-[52px] w-full rounded-lg bg-primary text-sm font-semibold text-primary-foreground transition-colors hover:bg-[color-mix(in_oklab,var(--primary),black_12%)] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {loading ? <CelestialInlineLoader className="justify-center" label="Creating Account..." /> : 'Create Account'}
+            {loading ? <CelestialInlineLoader className="justify-center" label="Creating account..." /> : 'Create account'}
           </button>
         </form>
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          Already a researcher? <Link to="/login" className="text-foreground hover:text-primary">Sign In</Link>
+          Already a researcher? <Link to="/login" className="text-foreground hover:text-primary">Sign in</Link>
         </p>
       </AuthCardShell>
     </AuthScaffold>

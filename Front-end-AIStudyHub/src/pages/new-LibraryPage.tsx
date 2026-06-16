@@ -372,7 +372,7 @@ function DocumentFields({
       <label className="flex flex-col gap-2 text-sm font-medium">
         Subject
         <select
-          className="h-9 w-full min-w-0 rounded-md border-2 border-foreground bg-background px-3 text-sm font-semibold shadow-[3px_3px_0_var(--foreground)] outline-none focus:translate-x-[1px] focus:translate-y-[1px] focus:shadow-[2px_2px_0_var(--foreground)] disabled:opacity-50"
+          className="h-9 w-full min-w-0 rounded-md border-2 border-foreground bg-background px-3 text-sm font-semibold  outline-none focus:translate-x-[1px] focus:translate-y-[1px] focus: disabled:opacity-50"
           disabled={disabled}
           onChange={(event) =>
             onFormChange({ ...form, subject: event.target.value })
@@ -885,7 +885,7 @@ export default function NewLibraryPage() {
 
           <select
             aria-label="Filter by subject"
-            className="h-9 w-full max-w-56 rounded-md border-2 border-foreground bg-background px-3 text-sm font-semibold shadow-[3px_3px_0_var(--foreground)]"
+            className="h-9 w-full max-w-56 rounded-md border-2 border-foreground bg-background px-3 text-sm font-semibold "
             onChange={(event) => setSubjectFilter(event.target.value)}
             value={subjectFilter}
           >

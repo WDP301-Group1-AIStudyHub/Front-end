@@ -134,7 +134,7 @@ export default function AdminUsersPage() {
             filteredUsers.map((user) => (
               <article className="grid gap-4 p-5 transition-colors hover:bg-muted/35 xl:grid-cols-[1fr_130px_160px_190px_220px]" key={user.id}>
                 <div className="flex min-w-0 items-center gap-3">
-                  <span className="grid size-11 shrink-0 place-items-center rounded-xl border border-[var(--accent-teal)]/35 bg-[color-mix(in_oklab,var(--accent-teal)_16%,transparent)] shadow-[0_0_22px_color-mix(in_oklab,var(--accent-teal)_22%,transparent)]">
+                  <span className="grid size-11 shrink-0 place-items-center rounded-xl border border-[var(--accent-teal)]/35 bg-[color-mix(in_oklab,var(--accent-teal)_16%,transparent)] ">
                     <img alt="" className="size-9 rounded-lg object-cover" src={user.avatar} />
                   </span>
                   <div className="min-w-0">

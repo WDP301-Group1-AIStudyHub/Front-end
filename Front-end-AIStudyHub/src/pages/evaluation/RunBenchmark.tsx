@@ -253,10 +253,10 @@ function normalizeRunResult(
 function WinnerBadge({ winner }: { winner: BenchmarkWinner }) {
   const classes =
     winner === "corrective"
-      ? "bg-teal-500/12 text-teal-500"
+      ? "bg-primary/10 text-primary"
       : winner === "basic"
-        ? "bg-blue-500/12 text-blue-500"
-        : "bg-amber-500/12 text-amber-500";
+        ? "bg-primary/10 text-primary"
+        : "bg-muted text-muted-foreground";
 
   return (
     <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold ${classes}`}>
@@ -426,11 +426,11 @@ function ScoreDiffPanel({ result }: { result: NormalizedBenchmarkRunResult }) {
               <div className="grid grid-cols-[48px_1fr_48px] items-center gap-2 text-xs">
                 <span className="text-right font-semibold">{basic.toFixed(2)}</span>
                 <div className="grid gap-1">
-                  <div className="h-2 overflow-hidden rounded-full bg-blue-500/10">
-                    <div className="h-full rounded-full bg-blue-500" style={{ width: `${basic * 100}%` }} />
+                  <div className="h-2 overflow-hidden rounded-full bg-muted">
+                    <div className="h-full rounded-full bg-primary" style={{ width: `${basic * 100}%` }} />
                   </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-teal-500/10">
-                    <div className="h-full rounded-full bg-teal-500" style={{ width: `${corrective * 100}%` }} />
+                  <div className="h-2 overflow-hidden rounded-full bg-muted">
+                    <div className="h-full rounded-full bg-primary" style={{ width: `${corrective * 100}%` }} />
                   </div>
                 </div>
                 <span className="font-semibold">{corrective.toFixed(2)}</span>
@@ -626,11 +626,11 @@ export default function RunBenchmark() {
             <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border/70 bg-muted/20 px-4 py-3 text-xs text-muted-foreground">
               <span className="font-semibold text-foreground">Diff coloring</span>
               <span className="inline-flex items-center gap-1">
-                <span className="size-2 rounded-full bg-blue-500" />
+                <span className="size-2 rounded-full bg-primary" />
                 weaker answer
               </span>
               <span className="inline-flex items-center gap-1">
-                <span className="size-2 rounded-full bg-teal-500" />
+                <span className="size-2 rounded-full bg-primary" />
                 stronger answer
               </span>
             </div>

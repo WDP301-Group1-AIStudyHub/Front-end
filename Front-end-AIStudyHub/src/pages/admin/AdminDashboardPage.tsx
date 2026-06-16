@@ -45,7 +45,7 @@ export default function AdminDashboardPage() {
       <AdminPageHeader
         actions={<Button asChild><Link to="/admin/users">Review users</Link></Button>}
         description="Control accounts, review document metadata, and monitor the system health signals described by the admin usecase."
-        eyebrow="Admin constellation"
+        eyebrow="Admin workspace"
         title="Admin Dashboard"
       />
 
@@ -83,14 +83,14 @@ export default function AdminDashboardPage() {
           </div>
         </article>
 
-        <aside className="celestial-card tone-surface tone-violet p-5">
+        <aside className="celestial-card p-5">
           <div className="admin-icon-badge admin-tone-violet">
             <Database />
           </div>
           <h2 className="mt-5 text-lg font-semibold">Usecase coverage</h2>
           <div className="mt-5 space-y-3 text-sm">
             {['View user list', 'Active/Inactive user account', 'Update user information', 'Edit metadata', 'Monitor system activities'].map((item) => (
-              <div className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-card/45 p-3 shadow-[inset_3px_0_0_color-mix(in_oklab,var(--accent-violet)_60%,transparent)]" key={item}>
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-card/45 p-3 " key={item}>
                 <span>{item}</span>
                 <StatusBadge severity="success">ready</StatusBadge>
               </div>

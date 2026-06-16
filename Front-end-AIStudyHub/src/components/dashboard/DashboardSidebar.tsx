@@ -39,7 +39,7 @@ export default function DashboardSidebar({ collapsed, onToggle }: DashboardSideb
     >
       {/* Toggle chevron */}
       <button
-        className="absolute top-2.5 right-1.5 w-[22px] h-[22px] p-0 flex items-center justify-center bg-transparent border-none cursor-pointer text-white/40 rounded hover:text-white hover:bg-white/[0.06] transition-colors z-[1]"
+        className="absolute top-2.5 right-1.5 w-[22px] h-[22px] p-0 flex items-center justify-center bg-transparent border-none cursor-pointer text-white/40 rounded hover:text-white hover:bg-card/[0.06] transition-colors z-[1]"
         onClick={onToggle}
         title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
       >
@@ -60,7 +60,7 @@ export default function DashboardSidebar({ collapsed, onToggle }: DashboardSideb
         ) : (
           <div className="overflow-hidden">
             <p className="text-white font-bold text-sm leading-tight tracking-[0.05em] whitespace-nowrap">AI Study Hub</p>
-            <p className="text-white/30 text-[9px] tracking-[0.2em] uppercase whitespace-nowrap">Scholarly Universe</p>
+            <p className="text-white/30 text-[9px] tracking-[0.2em] uppercase whitespace-nowrap">Study workspace</p>
           </div>
         )}
       </div>
@@ -74,7 +74,7 @@ export default function DashboardSidebar({ collapsed, onToggle }: DashboardSideb
               key={item.icon}
               title={item.label}
               onClick={() => { navigate(item.path) }}
-              className={`w-full py-2 flex items-center gap-0 bg-transparent border-none border-r-2 font-medium cursor-pointer transition-all duration-300 whitespace-nowrap overflow-hidden hover:bg-white/5 active:scale-95 ${collapsed ? 'justify-center px-0' : 'justify-start px-5 gap-3'} ${isActive ? 'text-white font-bold border-r-white' : 'text-[rgba(196,199,200,0.6)] border-r-transparent hover:text-[#e5e2e1]'}`}
+              className={`w-full py-2 flex items-center gap-0 bg-transparent border-none border-r-2 font-medium cursor-pointer transition-all duration-300 whitespace-nowrap overflow-hidden hover:bg-card/5 active:scale-95 ${collapsed ? 'justify-center px-0' : 'justify-start px-5 gap-3'} ${isActive ? 'text-white font-bold border-r-white' : 'text-[rgba(196,199,200,0.6)] border-r-transparent hover:text-[#e5e2e1]'}`}
             >
               <span
                 className="material-symbols-outlined text-[24px] flex-shrink-0"
@@ -99,7 +99,7 @@ export default function DashboardSidebar({ collapsed, onToggle }: DashboardSideb
             <span className="text-[9px] tracking-[0.2em] text-white/30 uppercase font-semibold">Recent Chats</span>
             <button
               onClick={() => { navigate('/aichatbox') }}
-              className="w-5 h-5 flex items-center justify-center rounded-md bg-white/5 hover:bg-white/10 transition-colors"
+              className="w-5 h-5 flex items-center justify-center rounded-md bg-card/5 hover:bg-card/10 transition-colors"
             >
               <span className="material-symbols-outlined text-[14px] text-white/50" style={{ fontVariationSettings: "'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 24" }}>add</span>
             </button>
@@ -109,7 +109,7 @@ export default function DashboardSidebar({ collapsed, onToggle }: DashboardSideb
               <div
                 key={chat.id}
                 className={`flex items-start gap-2.5 px-3 py-2 rounded-xl cursor-pointer group transition-all ${
-                  chat.active ? 'bg-white/[0.08]' : 'hover:bg-white/5'
+                  chat.active ? 'bg-card/[0.08]' : 'hover:bg-card/5'
                 }`}
               >
                 <span

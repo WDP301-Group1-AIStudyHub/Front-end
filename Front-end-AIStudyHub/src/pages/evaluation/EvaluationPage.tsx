@@ -39,9 +39,9 @@ const emptySummary: BenchmarkSummary = {
 };
 
 const difficultyStyles: Record<BenchmarkDifficulty, string> = {
-  easy: "border-emerald-500/30 bg-emerald-500/10 text-emerald-500",
-  hard: "border-red-500/30 bg-red-500/10 text-red-500",
-  medium: "border-amber-500/30 bg-amber-500/10 text-amber-500",
+  easy: "border border-border bg-card text-foreground",
+  hard: "border border-border bg-destructive/10 text-foreground",
+  medium: "border border-border bg-muted text-foreground",
 };
 
 
@@ -95,6 +95,15 @@ function getLastRunAt(question: BenchmarkQuestion): string | undefined {
   );
 }
 
+const toneColors: Record<string, string> = {
+  blue: "bg-card",
+  coral: "bg-destructive/10",
+  teal: "bg-card",
+  gold: "bg-muted",
+  violet: "bg-muted",
+  emerald: "bg-card",
+};
+
 function StatCard({
   icon,
   label,
@@ -106,16 +115,17 @@ function StatCard({
   tone: string;
   value: string;
 }) {
+  const bgClass = toneColors[tone] || "bg-card";
   return (
-    <article className={`celestial-card tone-surface tone-${tone} p-4`}>
+    <article className={`celestial-card ${bgClass} border border-border text-foreground  p-4 hover:-translate-x-[2px] hover:-translate-y-[2px] hover: transition-all`}>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+          <p className="text-[11px] font-black uppercase tracking-[0.16em] text-foreground/75">
             {label}
           </p>
-          <p className="mt-3 text-2xl font-semibold tracking-tight">{value}</p>
+          <p className="mt-3 text-2xl font-black tracking-tight text-foreground">{value}</p>
         </div>
-        <div className={`admin-icon-badge admin-tone-${tone}`}>{icon}</div>
+        <div className="inline-flex size-10 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-foreground">{icon}</div>
       </div>
     </article>
   );
@@ -247,9 +257,7 @@ export default function EvaluationPage() {
       setSummary(summaryData);
     } catch (err) {
       setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to delete benchmark question",
+        err instanceof Error ? err.message : "Failed to delete question",
       );
     } finally {
       setDeletingQuestionId(null);
@@ -257,72 +265,35 @@ export default function EvaluationPage() {
   }
 
   useEffect(() => {
-    let mounted = true;
-
-    async function load() {
-      setError(null);
-      setLoading(true);
-
-      try {
-        const [questionList, summaryData] = await Promise.all([
-          getBenchmarkQuestions(),
-          getBenchmarkSummary(),
-        ]);
-        if (!mounted) return;
-        setQuestions(questionList);
-        setSummary(summaryData);
-      } catch (err) {
-        if (!mounted) return;
-        setError(
-          err instanceof Error ? err.message : "Failed to load benchmark data",
-        );
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    }
-
-    load();
-
-    return () => {
-      mounted = false;
-    };
+    loadBenchmarkData();
   }, []);
 
   return (
-    <main className="celestial-page min-h-svh overflow-y-auto px-4 py-5 sm:px-6 lg:px-8">
-      <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-5">
-        <header className="flex flex-col gap-4 border-b border-border/60 pb-5 lg:flex-row lg:items-end lg:justify-between">
+    <main className="celestial-page min-h-svh overflow-y-auto bg-card p-5 md:p-8 text-foreground">
+      <div className="mx-auto max-w-7xl space-y-8">
+        <header className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
-            <div className="mb-3 flex flex-wrap items-center gap-2 text-xs font-semibold text-muted-foreground">
-              <span className="rounded-full border border-border/70 px-2 py-1 text-[10px] uppercase tracking-[0.14em]">
-                v0.4 · dev
-              </span>
-            </div>
-            <h1 className="celestial-title text-3xl font-semibold tracking-tight md:text-4xl">
+            <h1 className="text-4xl font-black tracking-tight md:text-5xl text-foreground uppercase">
               Evaluation
             </h1>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Create benchmark questions with expected answers, then run them
-              <br />
-              through Basic RAG and Corrective RAG to compare performance and
-              improvements.
+            <p className="mt-2 text-sm font-bold text-muted-foreground">
+              Create benchmark questions with expected answers, then run them through Basic RAG and Corrective RAG to compare performance.
             </p>
-            <p className="mt-2 text-sm text-muted-foreground">
-              {questions.length} questions across {subjectCount || 0} subjects ·
-              compare Basic RAG and Corrective RAG.
+            <p className="mt-2 text-xs font-bold text-foreground/60">
+              {questions.length} questions across {subjectCount || 0} subjects.
             </p>
           </div>
 
           <div className="flex flex-wrap gap-2">
             <Link
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-border bg-background/60 px-4 text-sm font-semibold transition hover:border-primary"
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 text-sm font-extrabold text-foreground  hover:bg-gray-100 active:translate-x-[1px] active:translate-y-[1px] active: transition-all"
               to="/evaluation/summary"
             >
               <BarChart3 className="size-4" />
               Summary
             </Link>
             <Link
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-sm transition hover:opacity-90"
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-border bg-muted px-4 text-sm font-extrabold text-foreground  hover:bg-muted/90 active:translate-x-[1px] active:translate-y-[1px] active: transition-all"
               to="/evaluation/new"
             >
               <Plus className="size-4" />
@@ -332,13 +303,13 @@ export default function EvaluationPage() {
         </header>
 
         {error && (
-          <div className="flex flex-col gap-3 rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive sm:flex-row sm:items-center sm:justify-between">
-            <span className="inline-flex items-center gap-2">
+          <div className="flex flex-col gap-3 rounded-lg border border-border bg-destructive/10 p-4 text-sm text-foreground sm:flex-row sm:items-center sm:justify-between ">
+            <span className="inline-flex items-center gap-2 font-bold">
               <AlertCircle className="size-4" />
               {error}
             </span>
             <button
-              className="inline-flex items-center justify-center gap-2 rounded-md border border-destructive/40 px-3 py-2 font-semibold"
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-3 py-1 font-extrabold text-foreground  hover:bg-gray-100"
               onClick={loadBenchmarkData}
               type="button"
             >
@@ -348,7 +319,7 @@ export default function EvaluationPage() {
           </div>
         )}
 
-        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
           <StatCard
             icon={<Gauge />}
             label="Total runs"
@@ -387,15 +358,15 @@ export default function EvaluationPage() {
           />
         </section>
 
-        <section className="celestial-panel overflow-hidden">
-          <div className="flex flex-col gap-4 border-b border-border/70 p-4">
-            <div className="flex gap-1 overflow-x-auto">
+        <section className="celestial-panel overflow-hidden border border-border bg-card  rounded-xl">
+          <div className="flex flex-col gap-4 border-b border-border p-4 bg-gray-55">
+            <div className="flex gap-2 overflow-x-auto pb-1">
               {tabs.map((tab) => (
                 <button
-                  className={`h-9 shrink-0 border-b px-3 text-sm font-medium transition ${
+                  className={`h-9 shrink-0 rounded-lg border border-border px-4 text-xs font-black uppercase tracking-wider transition  ${
                     activeTab === tab.key
-                      ? "border-foreground text-foreground"
-                      : "border-transparent text-muted-foreground hover:text-foreground"
+                      ? "bg-muted text-foreground"
+                      : "bg-card text-foreground hover:bg-gray-100"
                   }`}
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
@@ -408,16 +379,16 @@ export default function EvaluationPage() {
 
             <div className="grid gap-3 lg:grid-cols-[1fr_180px_180px]">
               <label className="relative block">
-                <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-foreground" />
                 <input
-                  className="h-10 w-full rounded-lg border border-input bg-background/70 pl-9 pr-3 text-sm outline-none transition focus:border-primary"
+                  className="h-10 w-full rounded-lg border border-border bg-card pl-9 pr-3 text-sm font-bold text-foreground outline-none  focus:"
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder="Search benchmark questions..."
                   value={query}
                 />
               </label>
               <select
-                className="h-10 rounded-lg border border-input bg-background/70 px-3 text-sm outline-none transition focus:border-primary"
+                className="h-10 rounded-lg border border-border bg-card px-3 text-sm font-bold text-foreground outline-none "
                 onChange={(event) =>
                   setDifficultyFilter(
                     event.target.value as "all" | BenchmarkDifficulty,
@@ -431,7 +402,7 @@ export default function EvaluationPage() {
                 <option value="hard">Hard</option>
               </select>
               <select
-                className="h-10 rounded-lg border border-input bg-background/70 px-3 text-sm outline-none transition focus:border-primary"
+                className="h-10 rounded-lg border border-border bg-card px-3 text-sm font-bold text-foreground outline-none "
                 onChange={(event) => setSubjectFilter(event.target.value)}
                 value={subjectFilter}
               >
@@ -447,45 +418,43 @@ export default function EvaluationPage() {
 
           {loading ? (
             <div className="grid min-h-64 place-items-center p-8">
-              <Loader2 className="size-7 animate-spin text-muted-foreground" />
+              <Loader2 className="size-7 animate-spin text-foreground" />
             </div>
           ) : filteredQuestions.length === 0 ? (
-            <div className="grid min-h-64 place-items-center p-8 text-center">
+            <div className="grid min-h-64 place-items-center p-8 text-center bg-card">
               <div>
-                <FileText className="mx-auto size-9 text-muted-foreground" />
-                <h2 className="mt-3 text-lg font-semibold">
+                <FileText className="mx-auto size-9 text-foreground" />
+                <h2 className="mt-3 text-lg font-black uppercase text-foreground">
                   No benchmark questions found
                 </h2>
-                <p className="mt-1 max-w-md text-sm text-muted-foreground">
-                  Create a question with an expected answer, then run it through
-                  Basic RAG and Corrective RAG.
+                <p className="mt-1 max-w-md text-sm font-bold text-muted-foreground">
+                  Create a question with an expected answer, then run it through Basic RAG and Corrective RAG.
                 </p>
               </div>
             </div>
           ) : (
-            <div className="grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-4 p-4 md:grid-cols-2 xl:grid-cols-3 bg-card">
               {filteredQuestions.map((question) => {
-
                 return (
                   <article
-                    className="celestial-card tone-surface tone-blue relative flex min-h-[230px] flex-col p-4"
+                    className="celestial-card bg-card border border-border text-foreground  relative flex min-h-[230px] flex-col p-5 hover:-translate-x-[2px] hover:-translate-y-[2px] hover: transition-all"
                     key={question.id}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <span
-                          className={`inline-flex rounded-full border px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] ${difficultyStyles[question.difficulty]}`}
+                          className={`inline-flex rounded-lg px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ${difficultyStyles[question.difficulty]}`}
                         >
                           {question.difficulty}
                         </span>
-                        <p className="mt-3 text-xs font-semibold text-muted-foreground">
-                          #{question.id}
+                        <p className="mt-3 text-xs font-black text-foreground/60">
+                          #{question.id.substring(0, 8)}
                         </p>
                       </div>
                       <button
                         aria-label="Question actions"
                         aria-expanded={openMenuQuestionId === question.id}
-                        className="grid size-8 shrink-0 place-items-center rounded-lg border border-border/70 text-muted-foreground transition hover:text-foreground"
+                        className="grid size-8 shrink-0 place-items-center rounded-lg border border-border bg-card text-foreground  hover:bg-gray-100"
                         onClick={() =>
                           setOpenMenuQuestionId((currentId) =>
                             currentId === question.id ? null : question.id,
@@ -496,9 +465,9 @@ export default function EvaluationPage() {
                         <MoreHorizontal className="size-4" />
                       </button>
                       {openMenuQuestionId === question.id && (
-                        <div className="absolute right-4 top-12 z-20 w-44 rounded-lg border border-border bg-background p-1 shadow-lg">
+                        <div className="absolute right-4 top-12 z-20 w-44 rounded-lg border border-border bg-card p-1 ">
                           <button
-                            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-semibold text-destructive transition hover:bg-destructive/10 disabled:opacity-60"
+                            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-extrabold text-destructive transition hover:bg-destructive/10 disabled:opacity-60"
                             disabled={deletingQuestionId === question.id}
                             onClick={() => {
                               setConfirmDeleteQuestion(question);
@@ -513,11 +482,11 @@ export default function EvaluationPage() {
                       )}
                     </div>
 
-                    <h2 className="mt-3 line-clamp-3 min-h-[4.5rem] text-base font-semibold leading-6">
+                    <h2 className="mt-3 line-clamp-3 min-h-[4.5rem] text-base font-extrabold leading-6 text-foreground uppercase">
                       {question.question}
                     </h2>
 
-                    <div className="mt-3 flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
+                    <div className="mt-3 flex min-w-0 items-center gap-2 text-sm font-bold text-muted-foreground">
                       <FileText className="size-4 shrink-0" />
                       <span className="truncate">
                         {question.subject ||
@@ -527,19 +496,10 @@ export default function EvaluationPage() {
                     </div>
 
                     <div className="mt-auto flex items-center justify-between gap-3 pt-4 text-sm">
-                      <div className="min-w-0 text-muted-foreground">
-                        {/* <p>
-                          <span className="font-semibold text-foreground">
-                            {runCount}
-                          </span>{" "}
-                          runs · {compactDate(getLastRunAt(question))}
-                        </p> */}
-                        {/* <div className="mt-2">
-                          <WinnerBadge winner={winner} />
-                        </div> */}
+                      <div className="min-w-0 text-foreground/60">
                       </div>
                       <Link
-                        className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-60"
+                        className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-lg border border-border bg-card text-foreground  px-3 text-xs font-extrabold hover:bg-gray-100 active:translate-x-[1px] active:translate-y-[1px] active:"
                         to={`/evaluation/run/${question.id}`}
                       >
                         <RefreshCw className="size-4" />
@@ -554,36 +514,35 @@ export default function EvaluationPage() {
         </section>
 
         {confirmDeleteQuestion && (
-          <div className="fixed inset-0 z-50 grid place-items-center bg-background/75 px-4 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 px-4 backdrop-blur-sm">
             <div
               aria-labelledby="delete-benchmark-question-title"
               aria-modal="true"
-              className="w-full max-w-md rounded-xl border border-border bg-background p-5 shadow-2xl"
+              className="w-full max-w-md rounded-xl border border-border bg-card p-5 "
               role="dialog"
             >
               <div className="flex items-start gap-3">
-                <div className="grid size-10 shrink-0 place-items-center rounded-full bg-destructive/10 text-destructive">
+                <div className="grid size-10 shrink-0 place-items-center rounded-lg border border-border bg-destructive/10 text-foreground">
                   <Trash2 className="size-5" />
                 </div>
                 <div className="min-w-0">
                   <h2
-                    className="text-lg font-semibold"
+                    className="text-lg font-black text-foreground uppercase"
                     id="delete-benchmark-question-title"
                   >
-                    Delete benchmark question?
+                    Delete question?
                   </h2>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  <p className="mt-2 text-sm font-bold leading-6 text-muted-foreground">
                     This will delete "
                     {shortenText(confirmDeleteQuestion.question)}
-                    ". Benchmark run history may also be removed if the backend
-                    cascades this deletion.
+                    ". Benchmark run history may also be removed.
                   </p>
                 </div>
               </div>
 
               <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                 <button
-                  className="inline-flex h-10 items-center justify-center rounded-lg border border-border px-4 text-sm font-semibold transition hover:border-primary disabled:opacity-60"
+                  className="inline-flex h-10 items-center justify-center rounded-lg border border-border bg-card px-4 text-sm font-extrabold text-foreground  hover:bg-gray-100"
                   disabled={deletingQuestionId === confirmDeleteQuestion.id}
                   onClick={() => setConfirmDeleteQuestion(null)}
                   type="button"
@@ -591,7 +550,7 @@ export default function EvaluationPage() {
                   Cancel
                 </button>
                 <button
-                  className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-destructive px-4 text-sm font-semibold text-destructive-foreground transition hover:opacity-90 disabled:opacity-60"
+                  className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-border bg-destructive/10 px-4 text-sm font-extrabold text-foreground  hover:bg-destructive/10/90"
                   disabled={deletingQuestionId === confirmDeleteQuestion.id}
                   onClick={handleDeleteQuestion}
                   type="button"

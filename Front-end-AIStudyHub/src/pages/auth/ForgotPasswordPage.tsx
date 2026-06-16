@@ -35,24 +35,24 @@ export default function ForgotPasswordPage() {
   return (
     <AuthScaffold action="Register" mode="split">
       <SplitInfoCard
-        eyebrow="Navigation Lost"
-        footer="Guidance System Active"
-        title={<>Lost in<br />Space?</>}
+        eyebrow="Account recovery"
+        footer="Recovery support"
+        title={<>Need access<br />again?</>}
         variant="lost"
       />
-      <section className="celestial-card tone-surface tone-cyan relative min-h-[430px] overflow-hidden p-12">
-        <h2 className="celestial-title m-0 mb-9 text-[32px] font-light leading-[1.2]">Recovery</h2>
-        <p className="mb-9 max-w-[330px] text-sm leading-[1.5] text-muted-foreground">Enter your email to receive a celestial link to reset your access.</p>
+      <section className="celestial-card relative min-h-[430px] overflow-hidden p-12">
+        <h2 className="celestial-title m-0 mb-4 text-[32px] leading-[1.2]">Recovery</h2>
+        <p className="mb-9 max-w-[330px] text-sm leading-[1.6] text-muted-foreground">Enter your email to receive a secure reset link.</p>
         <form className="grid gap-5" onSubmit={handleSubmit}>
           <label className="grid gap-2" htmlFor="recovery-email">
-            <span className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">Stellar Identifier</span>
+            <span className="text-sm font-medium text-muted-foreground">Email address</span>
             <input
               autoComplete="email"
               disabled={loading}
               id="recovery-email"
               name="email"
               onChange={handleChange}
-              placeholder="scholar@astronomy.edu"
+              placeholder="scholar@example.edu"
               required
               type="email"
               value={email}
@@ -60,17 +60,17 @@ export default function ForgotPasswordPage() {
             />
           </label>
           {error ? (
-            <p className="m-0 text-xs leading-relaxed text-red-300">{error}</p>
+            <p className="m-0 rounded-lg border border-destructive/25 bg-destructive/10 px-3 py-2 text-xs leading-relaxed text-destructive">{error}</p>
           ) : null}
           {success ? (
-            <p className="m-0 text-xs leading-relaxed text-emerald-200">{success}</p>
+            <p className="m-0 rounded-lg border border-primary/20 bg-primary/10 px-3 py-2 text-xs leading-relaxed text-primary">{success}</p>
           ) : null}
           <button
             disabled={loading}
             type="submit"
-            className="min-h-[56px] w-full rounded-lg bg-primary text-xs font-semibold uppercase tracking-[0.15em] text-primary-foreground transition-all hover:scale-[1.01] hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100"
+            className="min-h-[52px] w-full rounded-lg bg-primary text-sm font-semibold text-primary-foreground transition-colors hover:bg-[color-mix(in_oklab,var(--primary),black_12%)] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {loading ? <CelestialInlineLoader className="justify-center" label="Sending..." /> : 'Send Recovery Link'}
+            {loading ? <CelestialInlineLoader className="justify-center" label="Sending..." /> : 'Send recovery link'}
           </button>
         </form>
         <a
