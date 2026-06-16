@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
-import { BookMarked, Pencil, Plus, Trash2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { useEffect, useMemo, useState } from "react";
+import { BookMarked, Pencil, Plus, Trash2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -8,9 +9,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Skeleton } from '@/components/ui/skeleton'
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -18,107 +19,179 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
-import { Textarea } from '@/components/ui/textarea'
+} from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
 import {
   createSubject,
   deleteSubject,
   listSubjects,
   updateSubject,
-} from '../services/subjectApi'
-import type { SubjectItem, SubjectPayload } from '../services/subjectApi'
+} from "../services/subjectApi";
+import type { SubjectItem, SubjectPayload } from "../services/subjectApi";
 
 type SubjectForm = {
-  name: string
-  code: string
-  description: string
-  color: string
+  name: string;
+  code: string;
+  description: string;
+  color: string;
+};
+
+type SubjectColorTone = "blue" | "green" | "sky" | "purple" | "red";
+
+const subjectColorToneClasses: Record<SubjectColorTone, string> = {
+  blue: "border-blue-500/60 bg-white text-black dark:border-blue-300/60 dark:bg-white dark:text-black",
+  green:
+    "border-green-500/60 bg-white text-black dark:border-green-300/60 dark:bg-white dark:text-black",
+  sky: "border-sky-500/60 bg-white text-black dark:border-sky-300/60 dark:bg-white dark:text-black",
+  purple:
+    "border-purple-500/60 bg-white text-black dark:border-purple-300/60 dark:bg-white dark:text-black",
+  red: "border-red-500/60 bg-white text-black dark:border-red-300/60 dark:bg-white dark:text-black",
+};
+
+function hexToHue(color: string): number | null {
+  const normalized = color.trim().toLowerCase();
+
+  if (!normalized.startsWith("#")) return null;
+
+  const hex = normalized.slice(1);
+  const expanded =
+    hex.length === 3
+      ? hex
+          .split("")
+          .map((char) => `${char}${char}`)
+          .join("")
+      : hex;
+
+  if (!/^[0-9a-f]{6}$/.test(expanded)) return null;
+
+  const red = Number.parseInt(expanded.slice(0, 2), 16) / 255;
+  const green = Number.parseInt(expanded.slice(2, 4), 16) / 255;
+  const blue = Number.parseInt(expanded.slice(4, 6), 16) / 255;
+
+  const max = Math.max(red, green, blue);
+  const min = Math.min(red, green, blue);
+  const delta = max - min;
+
+  if (delta === 0) return 0;
+
+  let hue = 0;
+
+  if (max === red) {
+    hue = ((green - blue) / delta) % 6;
+  } else if (max === green) {
+    hue = (blue - red) / delta + 2;
+  } else {
+    hue = (red - green) / delta + 4;
+  }
+
+  return Math.round(hue * 60 + 360) % 360;
+}
+
+function getSubjectColorTone(color?: string): SubjectColorTone {
+  const hue = color ? hexToHue(color) : null;
+
+  if (hue === null) return "blue";
+  if (hue < 30 || hue >= 330) return "red";
+  if (hue < 90) return "green";
+  if (hue < 170) return "sky";
+  if (hue < 250) return "blue";
+  return "purple";
+}
+
+function getSubjectColorLabel(color?: string): string {
+  const tone = getSubjectColorTone(color);
+  return tone.charAt(0).toUpperCase() + tone.slice(1);
 }
 
 const emptyForm: SubjectForm = {
-  name: '',
-  code: '',
-  description: '',
-  color: '#ffd166',
-}
+  name: "",
+  code: "",
+  description: "",
+  color: "#ffd166",
+};
 
 function formatDate(value?: string): string {
-  if (!value) return 'Unknown'
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return 'Unknown'
+  if (!value) return "Unknown";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Unknown";
   return new Intl.DateTimeFormat(undefined, {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  }).format(date)
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(date);
 }
 
 function getErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : 'Something went wrong'
+  return error instanceof Error ? error.message : "Something went wrong";
 }
 
 export default function SubjectsPage() {
-  const [subjects, setSubjects] = useState<SubjectItem[]>([])
-  const [form, setForm] = useState<SubjectForm>(emptyForm)
-  const [editingSubject, setEditingSubject] = useState<SubjectItem | null>(null)
-  const [deletingSubject, setDeletingSubject] = useState<SubjectItem | null>(null)
-  const [isEditorOpen, setIsEditorOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isSaving, setIsSaving] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
+  const [subjects, setSubjects] = useState<SubjectItem[]>([]);
+  const [form, setForm] = useState<SubjectForm>(emptyForm);
+  const [editingSubject, setEditingSubject] = useState<SubjectItem | null>(
+    null,
+  );
+  const [deletingSubject, setDeletingSubject] = useState<SubjectItem | null>(
+    null,
+  );
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [feedback, setFeedback] = useState<{
-    tone: 'success' | 'error'
-    message: string
-  } | null>(null)
+    tone: "success" | "error";
+    message: string;
+  } | null>(null);
 
   const sortedSubjects = useMemo(
     () =>
       [...subjects].sort((a, b) =>
-        [a.code, a.name].filter(Boolean).join(' ').localeCompare(
-          [b.code, b.name].filter(Boolean).join(' '),
-        ),
+        [a.code, a.name]
+          .filter(Boolean)
+          .join(" ")
+          .localeCompare([b.code, b.name].filter(Boolean).join(" ")),
       ),
     [subjects],
-  )
+  );
 
   async function loadSubjects() {
-    setIsLoading(true)
-    setFeedback(null)
+    setIsLoading(true);
+    setFeedback(null);
     try {
-      setSubjects(await listSubjects())
+      setSubjects(await listSubjects());
     } catch (error) {
-      setFeedback({ tone: 'error', message: getErrorMessage(error) })
+      setFeedback({ tone: "error", message: getErrorMessage(error) });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 
   useEffect(() => {
-    void loadSubjects()
-  }, [])
+    void loadSubjects();
+  }, []);
 
   function openCreate() {
-    setEditingSubject(null)
-    setForm(emptyForm)
-    setIsEditorOpen(true)
+    setEditingSubject(null);
+    setForm(emptyForm);
+    setIsEditorOpen(true);
   }
 
   function openEdit(subject: SubjectItem) {
-    setEditingSubject(subject)
+    setEditingSubject(subject);
     setForm({
       name: subject.name,
-      code: subject.code ?? '',
-      description: subject.description ?? '',
-      color: subject.color ?? '#ffd166',
-    })
-    setIsEditorOpen(true)
+      code: subject.code ?? "",
+      description: subject.description ?? "",
+      color: subject.color ?? "#ffd166",
+    });
+    setIsEditorOpen(true);
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
+    event.preventDefault();
     if (!form.name.trim()) {
-      setFeedback({ tone: 'error', message: 'Subject name is required' })
-      return
+      setFeedback({ tone: "error", message: "Subject name is required" });
+      return;
     }
 
     const payload: SubjectPayload = {
@@ -126,47 +199,53 @@ export default function SubjectsPage() {
       code: form.code.trim() || undefined,
       description: form.description.trim() || undefined,
       color: form.color,
-    }
+    };
 
-    setIsSaving(true)
-    setFeedback(null)
+    setIsSaving(true);
+    setFeedback(null);
     try {
       if (editingSubject) {
-        const updated = await updateSubject(editingSubject._id, payload)
+        const updated = await updateSubject(editingSubject._id, payload);
         setSubjects((current) =>
           current.map((subject) =>
             subject._id === editingSubject._id ? updated : subject,
           ),
-        )
-        setFeedback({ tone: 'success', message: 'Subject updated successfully' })
+        );
+        setFeedback({
+          tone: "success",
+          message: "Subject updated successfully",
+        });
       } else {
-        const created = await createSubject(payload)
-        setSubjects((current) => [created, ...current])
-        setFeedback({ tone: 'success', message: 'Subject created successfully' })
+        const created = await createSubject(payload);
+        setSubjects((current) => [created, ...current]);
+        setFeedback({
+          tone: "success",
+          message: "Subject created successfully",
+        });
       }
-      setIsEditorOpen(false)
+      setIsEditorOpen(false);
     } catch (error) {
-      setFeedback({ tone: 'error', message: getErrorMessage(error) })
+      setFeedback({ tone: "error", message: getErrorMessage(error) });
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
   }
 
   async function confirmDelete() {
-    if (!deletingSubject) return
-    setIsDeleting(true)
-    setFeedback(null)
+    if (!deletingSubject) return;
+    setIsDeleting(true);
+    setFeedback(null);
     try {
-      await deleteSubject(deletingSubject._id)
+      await deleteSubject(deletingSubject._id);
       setSubjects((current) =>
         current.filter((subject) => subject._id !== deletingSubject._id),
-      )
-      setDeletingSubject(null)
-      setFeedback({ tone: 'success', message: 'Subject deleted successfully' })
+      );
+      setDeletingSubject(null);
+      setFeedback({ tone: "success", message: "Subject deleted successfully" });
     } catch (error) {
-      setFeedback({ tone: 'error', message: getErrorMessage(error) })
+      setFeedback({ tone: "error", message: getErrorMessage(error) });
     } finally {
-      setIsDeleting(false)
+      setIsDeleting(false);
     }
   }
 
@@ -189,14 +268,21 @@ export default function SubjectsPage() {
         </header>
 
         {feedback ? (
-          <div
-            className={`celestial-card tone-surface px-4 py-3 text-sm ${
-              feedback.tone === 'error' ? 'tone-coral' : 'tone-emerald'
-            }`}
-            role={feedback.tone === 'error' ? 'alert' : 'status'}
-          >
-            {feedback.message}
-          </div>
+          feedback.tone === "error" ? (
+            <div
+              className="celestial-card tone-surface tone-coral px-4 py-3 text-sm"
+              role="alert"
+            >
+              {feedback.message}
+            </div>
+          ) : (
+            <div
+              className="celestial-card tone-surface tone-emerald px-4 py-3 text-sm"
+              role="status"
+            >
+              {feedback.message}
+            </div>
+          )
         ) : null}
 
         <section className="celestial-card celestial-table tone-surface tone-sapphire overflow-x-auto">
@@ -215,28 +301,46 @@ export default function SubjectsPage() {
               {isLoading
                 ? Array.from({ length: 5 }).map((_, index) => (
                     <TableRow key={index}>
-                      <TableCell><Skeleton className="h-4 w-40" /></TableCell>
-                      <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                      <TableCell><Skeleton className="h-4 w-56" /></TableCell>
-                      <TableCell><Skeleton className="h-6 w-20" /></TableCell>
-                      <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                      <TableCell><Skeleton className="ml-auto h-8 w-20" /></TableCell>
+                      <TableCell>
+                        <Skeleton className="h-4 w-40" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-4 w-20" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-4 w-56" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-6 w-20" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-4 w-24" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="ml-auto h-8 w-20" />
+                      </TableCell>
                     </TableRow>
                   ))
                 : sortedSubjects.map((subject) => (
                     <TableRow key={subject._id}>
-                      <TableCell className="font-bold">{subject.name}</TableCell>
-                      <TableCell>{subject.code || 'None'}</TableCell>
+                      <TableCell className="font-bold">
+                        {subject.name}
+                      </TableCell>
+                      <TableCell>{subject.code || "None"}</TableCell>
                       <TableCell className="max-w-sm truncate">
-                        {subject.description || 'No description'}
+                        {subject.description || "No description"}
                       </TableCell>
                       <TableCell>
                         <span className="inline-flex items-center gap-2">
-                          <span
-                            className="size-5 border-2 border-foreground"
-                            style={{ backgroundColor: subject.color ?? '#ffd166' }}
-                          />
-                          {subject.color || 'Default'}
+                          <Badge
+                            className={
+                              subjectColorToneClasses[
+                                getSubjectColorTone(subject.color)
+                              ]
+                            }
+                          >
+                            {getSubjectColorLabel(subject.color)}
+                          </Badge>
                         </span>
                       </TableCell>
                       <TableCell>{formatDate(subject.createdAt)}</TableCell>
@@ -287,7 +391,9 @@ export default function SubjectsPage() {
         <DialogContent>
           <form onSubmit={handleSubmit}>
             <DialogHeader>
-              <DialogTitle>{editingSubject ? 'Edit subject' : 'Add subject'}</DialogTitle>
+              <DialogTitle>
+                {editingSubject ? "Edit subject" : "Add subject"}
+              </DialogTitle>
               <DialogDescription>
                 Organize documents by course, module, or study area.
               </DialogDescription>
@@ -298,7 +404,9 @@ export default function SubjectsPage() {
                 <Input
                   disabled={isSaving}
                   maxLength={120}
-                  onChange={(event) => setForm({ ...form, name: event.target.value })}
+                  onChange={(event) =>
+                    setForm({ ...form, name: event.target.value })
+                  }
                   value={form.name}
                 />
               </label>
@@ -307,7 +415,9 @@ export default function SubjectsPage() {
                 <Input
                   disabled={isSaving}
                   maxLength={40}
-                  onChange={(event) => setForm({ ...form, code: event.target.value })}
+                  onChange={(event) =>
+                    setForm({ ...form, code: event.target.value })
+                  }
                   value={form.code}
                 />
               </label>
@@ -328,13 +438,17 @@ export default function SubjectsPage() {
                   <Input
                     className="w-16 p-1"
                     disabled={isSaving}
-                    onChange={(event) => setForm({ ...form, color: event.target.value })}
+                    onChange={(event) =>
+                      setForm({ ...form, color: event.target.value })
+                    }
                     type="color"
                     value={form.color}
                   />
                   <Input
                     disabled={isSaving}
-                    onChange={(event) => setForm({ ...form, color: event.target.value })}
+                    onChange={(event) =>
+                      setForm({ ...form, color: event.target.value })
+                    }
                     value={form.color}
                   />
                 </div>
@@ -342,7 +456,7 @@ export default function SubjectsPage() {
             </div>
             <DialogFooter>
               <Button disabled={isSaving} type="submit">
-                {isSaving ? 'Saving...' : 'Save subject'}
+                {isSaving ? "Saving..." : "Save subject"}
               </Button>
             </DialogFooter>
           </form>
@@ -352,15 +466,15 @@ export default function SubjectsPage() {
       <Dialog
         open={Boolean(deletingSubject)}
         onOpenChange={(open) => {
-          if (!open && !isDeleting) setDeletingSubject(null)
+          if (!open && !isDeleting) setDeletingSubject(null);
         }}
       >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete subject?</DialogTitle>
             <DialogDescription>
-              Subjects linked to documents cannot be deleted. The backend will preserve
-              them and return an error.
+              Subjects linked to documents cannot be deleted. The backend will
+              preserve them and return an error.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -378,11 +492,11 @@ export default function SubjectsPage() {
               type="button"
               variant="destructive"
             >
-              {isDeleting ? 'Deleting...' : 'Delete'}
+              {isDeleting ? "Deleting..." : "Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </main>
-  )
+  );
 }
