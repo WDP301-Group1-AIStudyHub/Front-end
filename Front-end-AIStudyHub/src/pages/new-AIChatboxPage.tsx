@@ -22,6 +22,14 @@ import { useSearchParams } from "react-router-dom";
 
 import { Thread } from "@/components/assistant-ui/thread";
 import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { Sparkles } from "lucide-react";
 import { CelestialInlineLoader, CelestialLoader, LoadingState } from "../components/shared/CelestialLoading";
 import { ChatApiError, askChat, getChatHistoryById } from "../services/chatApi";
 import { listDocuments } from "../services/documentApi";
@@ -83,6 +91,19 @@ function getMessageText(message: ThreadMessage) {
 
 export default function NewAIChatboxPage() {
   const [searchParams] = useSearchParams();
+  const [isPromptOpen, setIsPromptOpen] = useState(false);
+
+  const handleSelectPrompt = (promptText: string) => {
+    const textarea = document.querySelector(".aui-composer-input") as HTMLTextAreaElement;
+    if (textarea) {
+      textarea.focus();
+      textarea.value = promptText;
+      const event = new Event("input", { bubbles: true });
+      textarea.dispatchEvent(event);
+    }
+    setIsPromptOpen(false);
+  };
+
   const historyId = searchParams.get("historyId") ?? undefined;
   const sessionIdsParam = searchParams.get("sessionIds") ?? undefined;
 
@@ -330,7 +351,7 @@ export default function NewAIChatboxPage() {
               onClick={() =>
                 setRagMode((prev) => (prev === "basic" ? "corrective" : "basic"))
               }
-              className="inline-flex items-center gap-2 px-3 py-2"
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl transition-all"
               title={ragMode === "corrective" ? "Click để chuyển về Basic (nhanh hơn)" : "Click để bật Corrective RAG (chính xác hơn)"}
             >
               {isThinking ? (
@@ -341,6 +362,15 @@ export default function NewAIChatboxPage() {
                 <Zap className="size-4" aria-hidden="true" />
               )}
               {ragMode === "corrective" ? "Corrective RAG" : "Basic RAG"}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsPromptOpen(true)}
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl transition-all hover:bg-muted"
+            >
+              <Sparkles className="size-4 text-primary" aria-hidden="true" />
+              <span>Prompt mẫu</span>
             </Button>
           </div>
         </div>
@@ -600,6 +630,35 @@ export default function NewAIChatboxPage() {
           </div>
         </aside>
       </div>
+      <Sheet open={isPromptOpen} onOpenChange={setIsPromptOpen}>
+        <SheetContent side="right" className="rounded-l-2xl border-l border-border/80">
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-2 text-primary">
+              <Sparkles className="size-5 text-primary" />
+              <span>Prompt mẫu học tập</span>
+            </SheetTitle>
+            <SheetDescription>
+              Chọn một câu lệnh mẫu dưới đây để điền nhanh vào khung chat và bắt đầu ôn tập.
+            </SheetDescription>
+          </SheetHeader>
+          <div className="mt-6 space-y-4">
+            {quickPrompts.map((item) => (
+              <button
+                key={item.title}
+                onClick={() => handleSelectPrompt(item.prompt)}
+                className="w-full text-left p-4 rounded-2xl border border-border/60 bg-muted/20 hover:bg-muted/50 hover:border-primary/45 transition-all group"
+              >
+                <h4 className="text-xs font-bold text-foreground group-hover:text-primary transition-colors">
+                  {item.title}
+                </h4>
+                <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+                  {item.label}
+                </p>
+              </button>
+            ))}
+          </div>
+        </SheetContent>
+      </Sheet>
     </main>
   );
 }

@@ -89,6 +89,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const SEARCH_DEBOUNCE_MS = 350;
+const DEFAULT_SUBJECT_COLOR = "#64748b";
 
 type Feedback = {
   tone: "success" | "error" | "info";
@@ -609,8 +610,57 @@ export default function NewLibraryPage() {
   const [subjects, setSubjects] = useState<SubjectItem[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadForm, setUploadForm] = useState<DocumentFormState>(emptyForm);
-  const [editForm, setEditForm] = useState<DocumentFormState>(emptyForm);
+  const editForm = useState<DocumentFormState>(emptyForm)[0];
+  const setEditForm = useState<DocumentFormState>(emptyForm)[1];
   const didLoadRef = useRef(false);
+
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+
+  const toggleSelectOne = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === sortedDocuments.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(sortedDocuments.map((d) => d.id));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    setIsBulkDeleting(true);
+    setFeedback({ tone: "info", message: `Deleting ${selectedIds.length} selected document(s)...` });
+    try {
+      await Promise.all(selectedIds.map((id) => deleteDocument(id)));
+      setDocuments((current) => current.filter((item) => !selectedIds.includes(item.id)));
+      setSelectedIds([]);
+      setFeedback({ tone: "success", message: "Selected documents deleted successfully." });
+    } catch {
+      setFeedback({ tone: "error", message: "Error deleting some documents. Please refresh." });
+    } finally {
+      setIsBulkDeleting(false);
+    }
+  };
+
+  const handleBulkDownload = () => {
+    if (selectedIds.length === 0) return;
+    selectedIds.forEach((id) => {
+      const doc = documents.find((d) => d.id === id);
+      if (doc && doc.fileUrl) {
+        const a = document.createElement("a");
+        a.href = doc.fileUrl;
+        a.download = doc.fileName;
+        a.target = "_blank";
+        a.click();
+      }
+    });
+    setFeedback({ tone: "success", message: `Downloads triggered for ${selectedIds.length} file(s).` });
+  };
 
   const [uploadTouched, setUploadTouched] = useState<Record<string, boolean>>({});
   const [editTouched, setEditTouched] = useState<Record<string, boolean>>({});
@@ -644,6 +694,11 @@ export default function NewLibraryPage() {
   }, [uploads]);
 
   const showSearchMode = searchQuery.trim() || subjectFilter.trim();
+
+  const subjectById = useMemo(
+    () => new Map(subjects.map((subject) => [subject._id, subject])),
+    [subjects],
+  );
 
   const urlParams = new URLSearchParams(window.location.search);
 
@@ -837,6 +892,28 @@ export default function NewLibraryPage() {
     }
   }
 
+  function getDocumentSubjectMeta(document: DocumentItem) {
+    const populatedSubject =
+      document.subject && typeof document.subject === "object"
+        ? document.subject
+        : null;
+    const matchedSubject = document.subjectId
+      ? subjectById.get(document.subjectId)
+      : undefined;
+    const subjectName =
+      populatedSubject?.name ??
+      matchedSubject?.name ??
+      (typeof document.subject === "string" ? document.subject : "Unsorted");
+    const subjectCode = populatedSubject?.code ?? matchedSubject?.code;
+    const subjectColor =
+      populatedSubject?.color ?? matchedSubject?.color ?? DEFAULT_SUBJECT_COLOR;
+
+    return {
+      color: subjectColor,
+      label: [subjectCode, subjectName].filter(Boolean).join(" ") || "Unsorted",
+    };
+  }
+
   function openEdit(document: DocumentItem) {
     setEditingDocument(document);
     setEditForm({
@@ -977,10 +1054,18 @@ export default function NewLibraryPage() {
             </div>
           )}
 
-          <div className="celestial-card celestial-table tone-surface tone-sapphire overflow-x-auto overflow-y-hidden">
+          <div className="celestial-card celestial-table tone-surface tone-sapphire overflow-x-auto overflow-y-hidden relative">
             <Table className="min-w-[820px]">
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-12 px-4 text-center">
+                    <input
+                      type="checkbox"
+                      className="rounded border-border text-primary focus:ring-primary size-4 accent-primary cursor-pointer"
+                      checked={sortedDocuments.length > 0 && selectedIds.length === sortedDocuments.length}
+                      onChange={toggleSelectAll}
+                    />
+                  </TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Subject</TableHead>
                   <TableHead>Size</TableHead>
@@ -992,6 +1077,9 @@ export default function NewLibraryPage() {
                 {isLoading
                   ? Array.from({ length: 5 }).map((_, index) => (
                       <TableRow key={index}>
+                        <TableCell className="w-12 px-4 text-center">
+                          <Skeleton className="size-4 rounded mx-auto" />
+                        </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-3">
                             <Skeleton className="size-8" />
@@ -1016,27 +1104,50 @@ export default function NewLibraryPage() {
                       </TableRow>
                     ))
                   : sortedDocuments.map((document) => (
-                      <TableRow key={document.id}>
+                      <TableRow key={document.id} className={selectedIds.includes(document.id) ? "bg-[#ECEFE7]/35" : ""}>
+                        <TableCell className="w-12 px-4 text-center">
+                          <input
+                            type="checkbox"
+                            className="rounded border-border text-primary focus:ring-primary size-4 accent-primary cursor-pointer"
+                            checked={selectedIds.includes(document.id)}
+                            onChange={() => toggleSelectOne(document.id)}
+                          />
+                        </TableCell>
                         <TableCell>
                           <button
-                            className="flex min-w-0 items-center gap-3 text-left"
+                            className="flex min-w-0 items-center gap-3 text-left group"
                             onClick={() => openFile(document)}
                             type="button"
                           >
-                            <div className="admin-icon-badge admin-tone-blue flex size-9 shrink-0 items-center justify-center rounded-lg">
+                            <div className="admin-icon-badge admin-tone-blue flex size-9 shrink-0 items-center justify-center rounded-lg transition-transform group-hover:scale-[1.02]">
                               <FileText aria-hidden="true" />
                             </div>
                             <div className="min-w-0">
-                              <div className="truncate text-sm font-medium">
+                              <div className="truncate text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
                                 {document.fileName}
                               </div>
                             </div>
                           </button>
                         </TableCell>
                         <TableCell>
-                          <span className="status-badge status-info normal-case">
-                            {(typeof document.subject === "object" ? document.subject?.name : document.subject) || "Unsorted"}
-                          </span>
+                          {(() => {
+                            const subjectMeta = getDocumentSubjectMeta(document);
+                            return (
+                              <span
+                                className="inline-flex max-w-[14rem] items-center gap-2 rounded-full border px-2.5 py-0.5 text-xs font-semibold normal-case text-foreground"
+                                style={{
+                                  backgroundColor: `color-mix(in srgb, ${subjectMeta.color} 14%, transparent)`,
+                                  borderColor: `color-mix(in srgb, ${subjectMeta.color} 55%, transparent)`,
+                                }}
+                              >
+                                <span
+                                  className="size-2 shrink-0 rounded-full"
+                                  style={{ backgroundColor: subjectMeta.color }}
+                                />
+                                <span className="truncate">{subjectMeta.label}</span>
+                              </span>
+                            );
+                          })()}
                         </TableCell>
                         <TableCell>
                           <span className="text-sm text-muted-foreground">
@@ -1061,11 +1172,12 @@ export default function NewLibraryPage() {
                                 variant="ghost"
                                 size="icon-sm"
                                 aria-label={`More options for ${document.title}`}
+                                className="rounded-lg"
                               >
                                 <MoreHorizontal aria-hidden="true" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-44">
+                            <DropdownMenuContent align="end" className="w-44 rounded-xl">
                               <DropdownMenuItem
                                 onSelect={() => openDetails(document)}
                               >
@@ -1212,6 +1324,25 @@ export default function NewLibraryPage() {
           </form>
         </SheetContent>
       </Sheet>
+      {selectedIds.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-card border border-border/80 rounded-2xl shadow-xl px-5 py-3 flex items-center gap-4 text-xs font-semibold">
+          <span className="text-muted-foreground">
+            Selected <span className="text-primary font-bold">{selectedIds.length}</span> item(s)
+          </span>
+          <div className="h-4 w-px bg-border" />
+          <Button size="sm" variant="outline" className="rounded-xl flex items-center gap-1.5" onClick={handleBulkDownload}>
+            <Download className="size-3.5" />
+            Download
+          </Button>
+          <Button size="sm" variant="destructive" className="rounded-xl flex items-center gap-1.5" disabled={isBulkDeleting} onClick={handleBulkDelete}>
+            <Trash2 className="size-3.5" />
+            {isBulkDeleting ? "Deleting..." : "Delete"}
+          </Button>
+          <Button size="sm" variant="ghost" className="rounded-xl" onClick={() => setSelectedIds([])}>
+            Cancel
+          </Button>
+        </div>
+      )}
     </main>
   );
 }

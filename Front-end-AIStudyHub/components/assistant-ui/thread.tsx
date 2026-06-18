@@ -274,7 +274,7 @@ const AssistantMessage: FC = () => {
     >
       <div
         data-slot="aui_assistant-message-content"
-        className="wrap-break-word px-2 text-foreground leading-relaxed"
+        className="wrap-break-word rounded-2xl rounded-tl-none bg-muted/40 border border-border/80 px-4 py-3 text-foreground leading-relaxed shadow-xs"
       >
         <MessagePrimitive.GroupedParts
           groupBy={(part) => {
@@ -395,7 +395,7 @@ const UserMessage: FC = () => {
       <UserMessageAttachments />
 
       <div className="aui-user-message-content-wrapper relative col-start-2 min-w-0">
-        <div className="aui-user-message-content wrap-break-word peer rounded-2xl bg-muted px-4 py-2.5 text-foreground empty:hidden">
+        <div className="aui-user-message-content wrap-break-word peer rounded-2xl rounded-tr-none bg-primary px-4 py-2.5 text-primary-foreground shadow-sm empty:hidden">
           <MessagePrimitive.Parts />
         </div>
         <div className="aui-user-action-bar-wrapper absolute start-0 top-1/2 -translate-x-full -translate-y-1/2 pe-2 peer-empty:hidden rtl:translate-x-full">

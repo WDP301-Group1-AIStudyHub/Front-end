@@ -1,15 +1,16 @@
-import { useEffect, useMemo, useState } from 'react'
-import { BookMarked, Pencil, Plus, Trash2 } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { BookMarked, Palette, Pencil, Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import { Separator } from '@/components/ui/separator'
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   Table,
@@ -20,13 +21,11 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Textarea } from '@/components/ui/textarea'
-import {
-  createSubject,
-  deleteSubject,
-  listSubjects,
-  updateSubject,
-} from '../services/subjectApi'
-import type { SubjectItem, SubjectPayload } from '../services/subjectApi'
+import { EmptyState } from '../components/management/EmptyState'
+import { useSubjects } from '../hooks/useSubjects'
+import { useToast } from '../hooks/useToast'
+import type { Subject } from '../types/subject'
+import { formatDate } from '../utils/formatters'
 
 type SubjectForm = {
   name: string
@@ -36,135 +35,167 @@ type SubjectForm = {
 }
 
 const emptyForm: SubjectForm = {
-  name: '',
   code: '',
+  color: '#38bdf8',
   description: '',
-  color: '#ffd166',
+  name: '',
 }
 
-function formatDate(value?: string): string {
-  if (!value) return 'Unknown'
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return 'Unknown'
-  return new Intl.DateTimeFormat(undefined, {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  }).format(date)
-}
-
-function getErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : 'Something went wrong'
+function SubjectFormFields({
+  disabled,
+  form,
+  onChange,
+}: {
+  disabled: boolean
+  form: SubjectForm
+  onChange: (form: SubjectForm) => void
+}) {
+  return (
+    <div className="flex flex-col gap-4">
+      <label className="flex flex-col gap-2 text-sm font-medium">
+        Name
+        <Input
+          disabled={disabled}
+          maxLength={120}
+          onChange={(event) => onChange({ ...form, name: event.target.value })}
+          placeholder="Software Engineering"
+          required
+          value={form.name}
+        />
+      </label>
+      <label className="flex flex-col gap-2 text-sm font-medium">
+        Code
+        <Input
+          disabled={disabled}
+          maxLength={32}
+          onChange={(event) => onChange({ ...form, code: event.target.value })}
+          placeholder="SE101"
+          value={form.code}
+        />
+      </label>
+      <label className="flex flex-col gap-2 text-sm font-medium">
+        Description
+        <Textarea
+          disabled={disabled}
+          maxLength={600}
+          onChange={(event) => onChange({ ...form, description: event.target.value })}
+          placeholder="Course notes, assignments, and reference material"
+          value={form.description}
+        />
+      </label>
+      <label className="flex flex-col gap-2 text-sm font-medium">
+        Color
+        <div className="flex items-center gap-3">
+          <Input
+            aria-label="Subject color"
+            className="h-10 w-16 p-1"
+            disabled={disabled}
+            onChange={(event) => onChange({ ...form, color: event.target.value })}
+            type="color"
+            value={form.color}
+          />
+          <Input
+            disabled={disabled}
+            onChange={(event) => onChange({ ...form, color: event.target.value })}
+            value={form.color}
+          />
+        </div>
+      </label>
+    </div>
+  )
 }
 
 export default function SubjectsPage() {
-  const [subjects, setSubjects] = useState<SubjectItem[]>([])
+  const { addSubject, error, isLoading, removeSubject, saveSubject, subjects } = useSubjects()
+  const { showToast } = useToast()
   const [form, setForm] = useState<SubjectForm>(emptyForm)
-  const [editingSubject, setEditingSubject] = useState<SubjectItem | null>(null)
-  const [deletingSubject, setDeletingSubject] = useState<SubjectItem | null>(null)
-  const [isEditorOpen, setIsEditorOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
+  const [editingSubject, setEditingSubject] = useState<Subject | null>(null)
+  const [deletingSubject, setDeletingSubject] = useState<Subject | null>(null)
+  const [isSheetOpen, setIsSheetOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
-  const [feedback, setFeedback] = useState<{
-    tone: 'success' | 'error'
-    message: string
-  } | null>(null)
 
   const sortedSubjects = useMemo(
     () =>
-      [...subjects].sort((a, b) =>
-        [a.code, a.name].filter(Boolean).join(' ').localeCompare(
-          [b.code, b.name].filter(Boolean).join(' '),
-        ),
+      [...subjects].sort(
+        (a, b) =>
+          new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime(),
       ),
     [subjects],
   )
 
-  async function loadSubjects() {
-    setIsLoading(true)
-    setFeedback(null)
-    try {
-      setSubjects(await listSubjects())
-    } catch (error) {
-      setFeedback({ tone: 'error', message: getErrorMessage(error) })
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    void loadSubjects()
-  }, [])
-
   function openCreate() {
     setEditingSubject(null)
     setForm(emptyForm)
-    setIsEditorOpen(true)
+    setIsSheetOpen(true)
   }
 
-  function openEdit(subject: SubjectItem) {
+  function openEdit(subject: Subject) {
     setEditingSubject(subject)
     setForm({
-      name: subject.name,
       code: subject.code ?? '',
+      color: subject.color ?? '#38bdf8',
       description: subject.description ?? '',
-      color: subject.color ?? '#ffd166',
+      name: subject.name,
     })
-    setIsEditorOpen(true)
+    setIsSheetOpen(true)
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
+
     if (!form.name.trim()) {
-      setFeedback({ tone: 'error', message: 'Subject name is required' })
+      showToast({ tone: 'warning', message: 'Subject name is required' })
       return
     }
 
-    const payload: SubjectPayload = {
-      name: form.name.trim(),
-      code: form.code.trim() || undefined,
-      description: form.description.trim() || undefined,
-      color: form.color,
-    }
-
     setIsSaving(true)
-    setFeedback(null)
+
     try {
-      if (editingSubject) {
-        const updated = await updateSubject(editingSubject._id, payload)
-        setSubjects((current) =>
-          current.map((subject) =>
-            subject._id === editingSubject._id ? updated : subject,
-          ),
-        )
-        setFeedback({ tone: 'success', message: 'Subject updated successfully' })
-      } else {
-        const created = await createSubject(payload)
-        setSubjects((current) => [created, ...current])
-        setFeedback({ tone: 'success', message: 'Subject created successfully' })
+      const payload = {
+        code: form.code.trim() || undefined,
+        color: form.color,
+        description: form.description.trim() || undefined,
+        name: form.name.trim(),
       }
-      setIsEditorOpen(false)
-    } catch (error) {
-      setFeedback({ tone: 'error', message: getErrorMessage(error) })
+
+      if (editingSubject) {
+        await saveSubject(editingSubject._id, payload)
+        showToast({ tone: 'success', message: 'Subject updated successfully' })
+      } else {
+        await addSubject(payload)
+        showToast({ tone: 'success', message: 'Subject created successfully' })
+      }
+
+      setIsSheetOpen(false)
+      setEditingSubject(null)
+      setForm(emptyForm)
+    } catch (caughtError) {
+      showToast({
+        tone: 'error',
+        message: caughtError instanceof Error ? caughtError.message : 'Unable to save subject',
+      })
     } finally {
       setIsSaving(false)
     }
   }
 
   async function confirmDelete() {
-    if (!deletingSubject) return
+    if (!deletingSubject) {
+      return
+    }
+
     setIsDeleting(true)
-    setFeedback(null)
+
     try {
-      await deleteSubject(deletingSubject._id)
-      setSubjects((current) =>
-        current.filter((subject) => subject._id !== deletingSubject._id),
-      )
+      await removeSubject(deletingSubject._id)
+      showToast({ tone: 'success', message: 'Subject deleted successfully' })
       setDeletingSubject(null)
-      setFeedback({ tone: 'success', message: 'Subject deleted successfully' })
-    } catch (error) {
-      setFeedback({ tone: 'error', message: getErrorMessage(error) })
+    } catch (caughtError) {
+      showToast({
+        tone: 'error',
+        message: caughtError instanceof Error ? caughtError.message : 'Unable to delete subject',
+      })
     } finally {
       setIsDeleting(false)
     }
@@ -172,42 +203,37 @@ export default function SubjectsPage() {
 
   return (
     <main className="celestial-page flex min-h-svh w-full min-w-0 flex-col overflow-y-auto text-foreground">
-      <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-5 py-6 sm:px-8 lg:px-10">
-        <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">
+      <div className="mx-auto flex w-full min-w-0 max-w-7xl flex-1 flex-col gap-8 px-5 py-6 sm:px-8 lg:px-10">
+        <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
               Study workspace
             </p>
-            <h1 className="celestial-title mt-2 text-3xl font-black tracking-tight md:text-5xl">
+            <h1 className="celestial-title mt-2 text-3xl font-semibold tracking-tight md:text-5xl">
               Subjects
             </h1>
           </div>
-          <Button onClick={openCreate} type="button">
+          <Button className="self-start lg:self-auto" onClick={openCreate} type="button">
             <Plus data-icon="inline-start" aria-hidden="true" />
-            Add subject
+            Add Subject
           </Button>
         </header>
 
-        {feedback ? (
-          <div
-            className={`celestial-card tone-surface px-4 py-3 text-sm ${
-              feedback.tone === 'error' ? 'tone-coral' : 'tone-emerald'
-            }`}
-            role={feedback.tone === 'error' ? 'alert' : 'status'}
-          >
-            {feedback.message}
+        {error ? (
+          <div className="celestial-card tone-surface tone-coral px-4 py-3 text-sm text-destructive">
+            {error}
           </div>
         ) : null}
 
-        <section className="celestial-card celestial-table tone-surface tone-sapphire overflow-x-auto">
-          <Table className="min-w-[760px]">
+        <section className="celestial-card celestial-table tone-surface tone-sapphire overflow-hidden">
+          <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Code</TableHead>
+                <TableHead>Subject Name</TableHead>
+                <TableHead>Subject Code</TableHead>
                 <TableHead>Description</TableHead>
                 <TableHead>Color</TableHead>
-                <TableHead>Created</TableHead>
+                <TableHead>Created Date</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -215,26 +241,34 @@ export default function SubjectsPage() {
               {isLoading
                 ? Array.from({ length: 5 }).map((_, index) => (
                     <TableRow key={index}>
-                      <TableCell><Skeleton className="h-4 w-40" /></TableCell>
+                      <TableCell><Skeleton className="h-4 w-48" /></TableCell>
                       <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                      <TableCell><Skeleton className="h-4 w-56" /></TableCell>
-                      <TableCell><Skeleton className="h-6 w-20" /></TableCell>
+                      <TableCell><Skeleton className="h-4 w-64" /></TableCell>
+                      <TableCell><Skeleton className="h-6 w-16" /></TableCell>
                       <TableCell><Skeleton className="h-4 w-24" /></TableCell>
                       <TableCell><Skeleton className="ml-auto h-8 w-20" /></TableCell>
                     </TableRow>
                   ))
                 : sortedSubjects.map((subject) => (
                     <TableRow key={subject._id}>
-                      <TableCell className="font-bold">{subject.name}</TableCell>
+                      <TableCell>
+                        <div className="flex min-w-0 items-center gap-3">
+                          <span
+                            className="size-3 shrink-0 rounded-full"
+                            style={{ backgroundColor: subject.color ?? '#38bdf8' }}
+                          />
+                          <span className="truncate font-medium">{subject.name}</span>
+                        </div>
+                      </TableCell>
                       <TableCell>{subject.code || 'None'}</TableCell>
-                      <TableCell className="max-w-sm truncate">
+                      <TableCell className="max-w-md truncate text-muted-foreground">
                         {subject.description || 'No description'}
                       </TableCell>
                       <TableCell>
-                        <span className="inline-flex items-center gap-2">
+                        <span className="inline-flex items-center gap-2 text-sm text-muted-foreground">
                           <span
-                            className="size-5 border-2 border-foreground"
-                            style={{ backgroundColor: subject.color ?? '#ffd166' }}
+                            className="size-5 rounded border border-border"
+                            style={{ backgroundColor: subject.color ?? '#38bdf8' }}
                           />
                           {subject.color || 'Default'}
                         </span>
@@ -247,7 +281,7 @@ export default function SubjectsPage() {
                             onClick={() => openEdit(subject)}
                             size="icon-sm"
                             type="button"
-                            variant="secondary"
+                            variant="ghost"
                           >
                             <Pencil aria-hidden="true" />
                           </Button>
@@ -268,121 +302,67 @@ export default function SubjectsPage() {
           </Table>
 
           {!isLoading && sortedSubjects.length === 0 ? (
-            <div className="flex min-h-72 flex-col items-center justify-center gap-3 p-8 text-center">
-              <BookMarked className="size-9" aria-hidden="true" />
-              <h2 className="text-xl font-black">No subjects yet</h2>
-              <p className="max-w-md text-sm text-muted-foreground">
-                Create a subject to organize documents and improve search.
-              </p>
-              <Button onClick={openCreate}>
-                <Plus data-icon="inline-start" aria-hidden="true" />
-                Add subject
-              </Button>
-            </div>
+            <EmptyState
+              action={<Button onClick={openCreate}><Plus data-icon="inline-start" />Add Subject</Button>}
+              description="Create subjects before uploading documents so every file can be classified."
+              icon={<BookMarked className="size-8" aria-hidden="true" />}
+              title="No subjects yet"
+            />
           ) : null}
         </section>
       </div>
 
-      <Dialog open={isEditorOpen} onOpenChange={setIsEditorOpen}>
-        <DialogContent>
-          <form onSubmit={handleSubmit}>
-            <DialogHeader>
-              <DialogTitle>{editingSubject ? 'Edit subject' : 'Add subject'}</DialogTitle>
-              <DialogDescription>
+      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+        <SheetContent>
+          <form className="flex min-h-0 flex-1 flex-col" onSubmit={handleSubmit}>
+            <SheetHeader>
+              <SheetTitle>{editingSubject ? 'Edit subject' : 'Add subject'}</SheetTitle>
+              <SheetDescription>
                 Organize documents by course, module, or study area.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-5">
-              <label className="grid gap-2 text-sm font-bold">
-                Name
-                <Input
-                  disabled={isSaving}
-                  maxLength={120}
-                  onChange={(event) => setForm({ ...form, name: event.target.value })}
-                  value={form.name}
-                />
-              </label>
-              <label className="grid gap-2 text-sm font-bold">
-                Code
-                <Input
-                  disabled={isSaving}
-                  maxLength={40}
-                  onChange={(event) => setForm({ ...form, code: event.target.value })}
-                  value={form.code}
-                />
-              </label>
-              <label className="grid gap-2 text-sm font-bold">
-                Description
-                <Textarea
-                  disabled={isSaving}
-                  maxLength={1000}
-                  onChange={(event) =>
-                    setForm({ ...form, description: event.target.value })
-                  }
-                  value={form.description}
-                />
-              </label>
-              <label className="grid gap-2 text-sm font-bold">
-                Color
-                <div className="flex gap-3">
-                  <Input
-                    className="w-16 p-1"
-                    disabled={isSaving}
-                    onChange={(event) => setForm({ ...form, color: event.target.value })}
-                    type="color"
-                    value={form.color}
-                  />
-                  <Input
-                    disabled={isSaving}
-                    onChange={(event) => setForm({ ...form, color: event.target.value })}
-                    value={form.color}
-                  />
-                </div>
-              </label>
+              </SheetDescription>
+            </SheetHeader>
+            <Separator />
+            <div className="flex-1 overflow-y-auto p-4">
+              <SubjectFormFields disabled={isSaving} form={form} onChange={setForm} />
             </div>
-            <DialogFooter>
+            <SheetFooter>
               <Button disabled={isSaving} type="submit">
-                {isSaving ? 'Saving...' : 'Save subject'}
+                <Palette data-icon="inline-start" aria-hidden="true" />
+                {isSaving ? 'Saving...' : 'Save Subject'}
               </Button>
-            </DialogFooter>
+            </SheetFooter>
           </form>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
 
-      <Dialog
-        open={Boolean(deletingSubject)}
-        onOpenChange={(open) => {
-          if (!open && !isDeleting) setDeletingSubject(null)
-        }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete subject?</DialogTitle>
-            <DialogDescription>
-              Subjects linked to documents cannot be deleted. The backend will preserve
-              them and return an error.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              disabled={isDeleting}
-              onClick={() => setDeletingSubject(null)}
-              type="button"
-              variant="secondary"
-            >
-              Cancel
-            </Button>
-            <Button
-              disabled={isDeleting}
-              onClick={() => void confirmDelete()}
-              type="button"
-              variant="destructive"
-            >
-              {isDeleting ? 'Deleting...' : 'Delete'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {deletingSubject ? (
+        <div className="fixed inset-0 z-[60] grid place-items-center bg-black/30 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-lg border border-border bg-popover p-5 text-popover-foreground shadow-xl">
+            <h2 className="text-lg font-semibold">Delete subject?</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              This will permanently delete {deletingSubject.name}. Documents linked to this subject may lose their category.
+            </p>
+            <div className="mt-5 flex justify-end gap-2">
+              <Button
+                disabled={isDeleting}
+                onClick={() => setDeletingSubject(null)}
+                type="button"
+                variant="secondary"
+              >
+                Cancel
+              </Button>
+              <Button
+                disabled={isDeleting}
+                onClick={() => void confirmDelete()}
+                type="button"
+                variant="destructive"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </main>
   )
 }

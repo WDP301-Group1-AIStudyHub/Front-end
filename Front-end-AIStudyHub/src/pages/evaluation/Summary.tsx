@@ -272,48 +272,102 @@ function KpiCard({
 function MetricBars({ summary }: { summary: NormalizedSummary }) {
   return (
     <Panel className="p-4 md:p-5">
-      <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-lg font-semibold">Average score per metric</h2>
-        <div className="flex gap-3 text-xs font-semibold text-muted-foreground">
-          <span className="inline-flex items-center gap-1">
-            <span className="size-2 rounded-full bg-primary" />
-            Basic
+      <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <h2 className="text-lg font-bold tracking-tight">Average score per metric</h2>
+        <div className="flex gap-4 text-xs font-semibold text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="size-3 rounded bg-[#ECEFE7] border border-[#D9DDD3]" />
+            Basic RAG
           </span>
-          <span className="inline-flex items-center gap-1">
-            <span className="size-2 rounded-full bg-primary" />
-            Corrective
+          <span className="inline-flex items-center gap-1.5">
+            <span className="size-3 rounded bg-[#3B5247]" />
+            Corrective RAG
           </span>
         </div>
       </div>
 
-      <div className="grid gap-4">
-        {summary.metrics.map((metric) => (
-          <div key={metric.key}>
-            <div className="mb-2 grid grid-cols-[92px_44px_1fr_44px] items-center gap-3 text-sm">
-              <span className="font-medium">{metric.label}</span>
-              <span className="text-right text-xs font-semibold text-primary">
-                {metric.basic.toFixed(2)}
-              </span>
-              <div className="grid gap-1">
-                <div className="h-2 overflow-hidden rounded-full bg-muted">
-                  <div
-                    className="h-full rounded-full bg-primary"
-                    style={{ width: `${metric.basic * 100}%` }}
-                  />
-                </div>
-                <div className="h-2 overflow-hidden rounded-full bg-muted">
-                  <div
-                    className="h-full rounded-full bg-primary"
-                    style={{ width: `${metric.corrective * 100}%` }}
-                  />
-                </div>
-              </div>
-              <span className="text-xs font-semibold text-primary">
-                {metric.corrective.toFixed(2)}
-              </span>
-            </div>
-          </div>
-        ))}
+      {/* SVG Dual Column Chart */}
+      <div className="w-full overflow-x-auto overflow-y-hidden mt-2">
+        <svg className="w-full min-w-[440px] h-52 md:h-60" viewBox="0 0 500 220" xmlns="http://www.w3.org/2000/svg">
+          {/* Grid lines */}
+          <line x1="40" y1="30" x2="480" y2="30" stroke="var(--border)" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.5" />
+          <line x1="40" y1="80" x2="480" y2="80" stroke="var(--border)" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.5" />
+          <line x1="40" y1="130" x2="480" y2="130" stroke="var(--border)" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.5" />
+          <line x1="40" y1="180" x2="480" y2="180" stroke="var(--border)" strokeWidth="0.8" opacity="0.8" />
+
+          {/* Y-Axis Labels */}
+          <text x="32" y="34" className="text-[10px] fill-muted-foreground font-semibold" textAnchor="end">1.0</text>
+          <text x="32" y="84" className="text-[10px] fill-muted-foreground font-semibold" textAnchor="end">0.7</text>
+          <text x="32" y="134" className="text-[10px] fill-muted-foreground font-semibold" textAnchor="end">0.4</text>
+          <text x="32" y="184" className="text-[10px] fill-muted-foreground font-semibold" textAnchor="end">0.0</text>
+
+          {/* Render dual bars for each metric */}
+          {summary.metrics.map((metric, idx) => {
+            const groupWidth = 105;
+            const startX = 55 + idx * groupWidth;
+            
+            // Map score (0.0 to 1.0) to height (0 to 150)
+            const basicHeight = Math.max(metric.basic * 150, 4);
+            const correctiveHeight = Math.max(metric.corrective * 150, 4);
+
+            return (
+              <g key={metric.key} className="group cursor-pointer">
+                {/* Background Group Highlight */}
+                <rect
+                  x={startX - 10}
+                  y="10"
+                  width="68"
+                  height="170"
+                  className="fill-transparent group-hover:fill-muted/20 rounded-lg transition-colors"
+                  rx="6"
+                />
+
+                {/* Basic Bar (Left column) */}
+                <rect
+                  x={startX}
+                  y={180 - basicHeight}
+                  width="20"
+                  height={basicHeight}
+                  rx="4"
+                  className="fill-[#ECEFE7] stroke-[#D9DDD3] stroke-1 hover:brightness-[0.98] transition-all duration-300"
+                />
+                
+                {/* Corrective Bar (Right column) */}
+                <rect
+                  x={startX + 26}
+                  y={180 - correctiveHeight}
+                  width="20"
+                  height={correctiveHeight}
+                  rx="4"
+                  className="fill-[#3B5247] hover:brightness-[1.05] transition-all duration-300"
+                />
+
+                {/* X-Axis Metric Name */}
+                <text 
+                  x={startX + 23} 
+                  y="204" 
+                  className="text-[10px] font-bold fill-foreground"
+                  textAnchor="middle"
+                >
+                  {metric.label}
+                </text>
+
+                {/* Values Tooltip on Hover */}
+                <g className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                  <rect x={startX - 12} y={Math.min(180 - basicHeight, 180 - correctiveHeight) - 25} width="72" height="18" rx="4" className="fill-foreground" />
+                  <text 
+                    x={startX + 24} 
+                    y={Math.min(180 - basicHeight, 180 - correctiveHeight) - 13} 
+                    className="text-[9px] fill-background font-bold"
+                    textAnchor="middle"
+                  >
+                    B: {metric.basic.toFixed(2)} | C: {metric.corrective.toFixed(2)}
+                  </text>
+                </g>
+              </g>
+            );
+          })}
+        </svg>
       </div>
     </Panel>
   );
