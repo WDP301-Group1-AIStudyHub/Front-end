@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Chào mừng - Blood Donation Support System</title>
+</head>
+<body style="margin: 0; padding: 0; background: #f0f4f8; font-family: 'Segoe UI', sans-serif; color: #2d3748;">
+<div style="max-width: 600px; margin: 40px auto; background: #fff; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); overflow: hidden;">
+
+    <!-- Header -->
+    <div style="background: linear-gradient(135deg, #3182ce, #2b6cb0); padding: 30px 20px; text-align: center;">
+        <h1 style="margin: 0; color: #fff; font-size: 26px;">Blood Donation Support System</h1>
+        <p style="color: #e3f2fd; font-size: 15px;">Chào mừng bạn đến với cộng đồng hiến máu</p>
+    </div>
+
+    <!-- Main content -->
+    <div style="padding: 30px 25px; text-align: center;">
+        <h2 style="color: #2b6cb0;">Xin chào [[${name}]],</h2>
+        <p style="font-size: 16px; margin-bottom: 20px;">
+            Chào mừng bạn đến với hệ thống hỗ trợ hiến máu! Chúng tôi rất vinh dự khi bạn tham gia vào cộng đồng những người sẵn sàng cứu giúp sự sống.
+        </p>
+
+        <p style="font-size: 14px; margin-bottom: 30px;">
+            Bạn có thể cập nhật thông tin cá nhân, đăng ký hiến máu, và theo dõi lịch sử hiến máu của mình thông qua hệ thống.
+        </p>
+
+        <!-- Button -->
+        <a th:href="${link}"
+           style="padding: 12px 24px; background-color: #38a169; color: white; border-radius: 6px; text-decoration: none; font-weight: bold;">
+            Kích hoạt tài khoản
+        </a>
+
+        <!-- Info box -->
+        <div style="background: #ebf8ff; padding: 15px 20px; border-left: 4px solid #3182ce; border-radius: 8px; margin-top: 30px; font-size: 14px;">
+            Nếu bạn có bất kỳ câu hỏi nào, đừng ngần ngại liên hệ với chúng tôi qua email hoặc hotline bên dưới.
+        </div>
+    </div>
+
+    <!-- Contact Info -->
+    <div style="margin: 30px 25px; background: #2b6cb0; padding: 20px; border-radius: 10px; color: white;">
+        <h3 style="margin-top: 0;">Liên Hệ</h3>
+        <p>123 Đường Trung Tâm Máu</p>
+        <p>Thành phố Hồ Chí Minh, Việt Nam</p>
+        <p>Điện thoại: (123) 456-7890</p>
+        <p>Email: infor@dongmauviet.com</p>
+    </div>
+
+    <!-- Footer -->
+    <div style="background: #f7fafc; padding: 20px; text-align: center; font-size: 13px; color: #718096;">
+        <p style="margin: 0;">Cảm ơn bạn đã đồng hành cùng <strong>Blood Donation Support</strong> ❤️</p>
+        <p style="margin: 10px 0 0 0;">
+            <a href="#" style="color: #a0aec0; text-decoration: underline;">Hủy đăng ký</a> |
+            <a href="#" style="color: #a0aec0; text-decoration: underline;">Chính sách bảo mật</a> |
+            <a href="#" style="color: #a0aec0; text-decoration: underline;">Điều khoản</a>
+        </p>
+        <p style="margin: 10px 0 0 0; color: #cbd5e0;">© 2025 Blood Donation Support System. All rights reserved.</p>
+    </div>
+</div>
+</body>
+</html>

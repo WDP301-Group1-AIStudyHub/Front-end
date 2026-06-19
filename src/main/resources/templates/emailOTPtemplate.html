@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>OTP - Blood Donation Support System</title>
+</head>
+<body style="margin: 0; padding: 0; background: #f0f4f8; font-family: 'Segoe UI', sans-serif; color: #2d3748;">
+<div style="max-width: 600px; margin: 40px auto; background: #fff; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); overflow: hidden;">
+
+  <!-- Header -->
+  <div style="background: linear-gradient(135deg, #e53e3e, #c53030); padding: 30px 20px; text-align: center;">
+    <h1 style="margin: 0; color: #fff; font-size: 26px;">Blood Donation Support System</h1>
+    <p style="color: #ffe5e5; font-size: 15px;">Mã OTP xác thực tài khoản</p>
+  </div>
+
+  <!-- Main content -->
+  <div style="padding: 30px 25px; text-align: center;">
+    <h2 style="color: #e53e3e;">Xin chào [[${name}]],</h2>
+    <p style="font-size: 16px; margin-bottom: 20px;">
+      Bạn hoặc ai đó vừa yêu cầu mã OTP để xác thực hành động trên hệ thống hỗ trợ hiến máu.
+    </p>
+
+    <!-- OTP Code Box -->
+    <div style="font-size: 28px; font-weight: bold; background: #edf2f7; padding: 20px; border-radius: 12px; display: inline-block; letter-spacing: 4px; color: #2d3748; margin: 20px 0;">
+      [[${otp}]]
+    </div>
+
+    <p style="font-size: 14px; margin-bottom: 30px;">Mã này sẽ hết hạn sau <strong>[[${expired}]] phút</strong>.</p>
+
+    <!-- Button (optional, for confirming action) -->
+    <a th:href="${link}" style="display: inline-block; padding: 14px 28px; background: #e53e3e; color: white; text-decoration: none; font-weight: 600; border-radius: 50px;">
+      Xác nhận ngay
+    </a>
+
+    <!-- Security Notice -->
+    <div style="background: #fff5f5; padding: 15px 20px; border-left: 4px solid #e53e3e; border-radius: 8px; margin-top: 30px; font-size: 14px;">
+      <strong>Lưu ý:</strong> Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email hoặc thay đổi mật khẩu ngay lập tức.
+    </div>
+  </div>
+
+  <!-- Contact Info -->
+  <div style="margin: 30px 25px; background: #c53030; padding: 20px; border-radius: 10px; color: white;">
+    <h3 style="margin-top: 0;">Liên Hệ</h3>
+    <p>123 Đường Trung Tâm Máu</p>
+    <p>Thành phố Hồ Chí Minh, Việt Nam</p>
+    <p>Điện thoại: (123) 456-7890</p>
+    <p>Email: infor@dongmauviet.com</p>
+  </div>
+
+  <!-- Footer -->
+  <div style="background: #f7fafc; padding: 20px; text-align: center; font-size: 13px; color: #718096;">
+    <p style="margin: 0;">Cảm ơn bạn đã đồng hành cùng <strong>Blood Donation Support</strong> ❤️</p>
+    <p style="margin: 10px 0 0 0;">
+      <a href="#" style="color: #a0aec0; text-decoration: underline;">Hủy đăng ký</a> |
+      <a href="#" style="color: #a0aec0; text-decoration: underline;">Chính sách bảo mật</a> |
+      <a href="#" style="color: #a0aec0; text-decoration: underline;">Điều khoản</a>
+    </p>
+    <p style="margin: 10px 0 0 0; color: #cbd5e0;">© 2025 Blood Donation Support System. All rights reserved.</p>
+  </div>
+</div>
+</body>
+</html>

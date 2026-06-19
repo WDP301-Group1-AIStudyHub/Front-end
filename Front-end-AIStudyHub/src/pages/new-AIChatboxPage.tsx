@@ -22,6 +22,14 @@ import { useSearchParams } from "react-router-dom";
 
 import { Thread } from "@/components/assistant-ui/thread";
 import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { Sparkles } from "lucide-react";
 import { CelestialInlineLoader, CelestialLoader, LoadingState } from "../components/shared/CelestialLoading";
 import { ChatApiError, askChat, getChatHistoryById } from "../services/chatApi";
 import { listDocuments } from "../services/documentApi";
@@ -32,7 +40,7 @@ import type { DocumentItem } from "../types/document";
 type ChatThreadProps = {
   adapter: ChatModelAdapter;
   initialMessages: readonly ThreadMessageLike[];
-  selectedDoc?: { fileName: string; subject?: string };
+  selectedDoc?: { fileName: string; subject?: string; subjectColor?: string };
 };
 
 function ChatThread({ adapter, initialMessages, selectedDoc }: ChatThreadProps) {
@@ -83,6 +91,19 @@ function getMessageText(message: ThreadMessage) {
 
 export default function NewAIChatboxPage() {
   const [searchParams] = useSearchParams();
+  const [isPromptOpen, setIsPromptOpen] = useState(false);
+
+  const handleSelectPrompt = (promptText: string) => {
+    const textarea = document.querySelector(".aui-composer-input") as HTMLTextAreaElement;
+    if (textarea) {
+      textarea.focus();
+      textarea.value = promptText;
+      const event = new Event("input", { bubbles: true });
+      textarea.dispatchEvent(event);
+    }
+    setIsPromptOpen(false);
+  };
+
   const historyId = searchParams.get("historyId") ?? undefined;
   const sessionIdsParam = searchParams.get("sessionIds") ?? undefined;
 
@@ -175,13 +196,12 @@ export default function NewAIChatboxPage() {
     listDocuments()
       .then((docs) => {
         setDocuments(docs);
-        // Pre-open tất cả kỳ và môn học
-        const sems = new Set(docs.map((d) => (d.title || "Chưa phân loại").trim().toUpperCase()));
+        const sems = new Set(docs.map((d) => (d.title || "Unsorted").trim().toUpperCase()));
         setOpenSemesters(sems);
         const subjs = new Set<string>();
         for (const doc of docs) {
-          const sem = (doc.title || "Chưa phân loại").trim().toUpperCase();
-          const subj = (typeof doc.subject === "object" ? doc.subject?.name : doc.subject) || "Không có môn";
+          const sem = (doc.title || "Unsorted").trim().toUpperCase();
+          const subj = (typeof doc.subject === "object" ? doc.subject?.name : doc.subject) || "No subject";
           subjs.add(`${sem}::${subj}`);
         }
         setOpenSubjects(subjs);
@@ -190,13 +210,11 @@ export default function NewAIChatboxPage() {
       .finally(() => setLoadingDocs(false));
   }, []);
 
-  // Group documents: kỳ (title) → môn học (subject) → tài liệu[]
-  // Normalize title về UPPERCASE để tránh tách kỳ do khác hoa/thường
   const groupedDocs = useMemo(() => {
     const map: Record<string, Record<string, DocumentItem[]>> = {};
     for (const doc of documents) {
-      const sem = (doc.title || "Chưa phân loại").trim().toUpperCase();
-      const subj = (typeof doc.subject === "object" ? doc.subject?.name : doc.subject) || "Không có môn";
+      const sem = (doc.title || "Unsorted").trim().toUpperCase();
+      const subj = (typeof doc.subject === "object" ? doc.subject?.name : doc.subject) || "No subject";
       if (!map[sem]) map[sem] = {};
       if (!map[sem][subj]) map[sem][subj] = [];
       map[sem][subj].push(doc);
@@ -222,7 +240,7 @@ export default function NewAIChatboxPage() {
     });
   };
 
-  // Real adapter — gọi POST /api/chat/ask với mode do user chọn
+  // Real adapter for POST /api/chat/ask with the selected mode.
   const realAdapter = useMemo<ChatModelAdapter>(
     () => ({
       async run({ messages, abortSignal }) {
@@ -236,26 +254,12 @@ export default function NewAIChatboxPage() {
         const docSubject = selectedDocSubjectRef.current;
         const mode = ragModeRef.current;
 
-        // Guard: BE requires all 4 fields — documentId & subject must be present
-        if (!docId) {
-          setIsThinking(false);
-          return {
-            content: [
-              {
-                type: "text",
-                text: "⚠️ Vui lòng **chọn một tài liệu** từ panel bên phải trước khi đặt câu hỏi.",
-              },
-            ],
-          };
-        }
-
         const payload = {
           question,
-          documentId: docId,
-          subject: docSubject ?? "",
+          documentId: docId || undefined,
+          subject: docSubject || undefined,
           mode,
         };
-        console.log("[ChatAPI] Request payload:", JSON.stringify(payload, null, 2));
 
         try {
           const result = await askChat(payload, abortSignal);
@@ -264,10 +268,8 @@ export default function NewAIChatboxPage() {
         } catch (err) {
           if (err instanceof DOMException && err.name === "AbortError") throw err;
           if (err instanceof ChatApiError && err.status >= 500) {
-            // Chỉ retry với basic khi đang dùng corrective (bởi corrective gọi Groq 4-6 lần)
             if (mode === "corrective") {
               const fallbackPayload = { ...payload, mode: "basic" as const };
-              console.log("[ChatAPI] Fallback payload:", JSON.stringify(fallbackPayload, null, 2));
               try {
                 const fallback = await askChat(fallbackPayload, abortSignal);
                 onResponseRef.current?.(fallback.sources, fallback.evaluation);
@@ -276,18 +278,17 @@ export default function NewAIChatboxPage() {
                 if (retryErr instanceof DOMException && retryErr.name === "AbortError") throw retryErr;
               }
             }
-            // Server quá tải hoặc chưa khởi động — gợi ý thử lại
             return {
               content: [
                 {
                   type: "text",
-                  text: "⚠️ Server đang bận hoặc chưa khởi động (Render free tier). Vui lòng **gửi lại tin nhắn sau 10-15 giây**.",
+                  text: "The server is busy or still waking up. Please send the message again in 10-15 seconds.",
                 },
               ],
             };
           }
           const msg = err instanceof Error ? err.message : "Failed to get answer";
-          return { content: [{ type: "text", text: `⚠️ ${msg}` }] };
+          return { content: [{ type: "text", text: `Warning: ${msg}` }] };
         } finally {
           setIsThinking(false);
         }
@@ -299,18 +300,18 @@ export default function NewAIChatboxPage() {
   const selectedDoc = documents.find((d) => d.id === selectedDocId);
 
   return (
-    <main className="celestial-page flex h-svh min-h-0 flex-col overflow-hidden p-3 text-foreground sm:p-5">
-      <header className="celestial-card tone-surface tone-violet border-border/80 px-5 py-4 backdrop-blur sm:px-8">
+    <main className="botanical-page flex h-svh min-h-0 flex-col overflow-hidden p-3 pb-24 text-foreground sm:p-5 sm:pb-24 lg:pb-5">
+      <header className="botanical-card border-border/80 px-5 py-4 sm:px-8">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-3">
             <div>
-              <h1 className="celestial-title text-xl font-semibold tracking-normal">
+              <h1 className="moonlit-title text-xl font-semibold tracking-normal">
                 AI Study Chat
               </h1>
               <p className="text-sm text-muted-foreground">
                 {ragMode === "corrective"
-                  ? "Corrective RAG · Groq · Pinecone"
-                  : "Basic RAG · Groq · Pinecone"}
+                  ? "Corrective RAG - Groq - Pinecone"
+                  : "Basic RAG - Groq - Pinecone"}
               </p>
             </div>
           </div>
@@ -322,7 +323,7 @@ export default function NewAIChatboxPage() {
               className="inline-flex items-center gap-2 px-3 py-2"
             >
               <Library className="size-4 text-foreground" aria-hidden="true" />
-              {selectedDoc ? (typeof selectedDoc.subject === "object" ? selectedDoc.subject?.name : selectedDoc.subject) ?? selectedDoc.title : "Tất cả tài liệu"}
+              {selectedDoc ? (typeof selectedDoc.subject === "object" ? selectedDoc.subject?.name : selectedDoc.subject) ?? selectedDoc.title : "All documents"}
             </Button>
             <Button
               variant={ragMode === "corrective" ? "default" : "outline"}
@@ -330,8 +331,8 @@ export default function NewAIChatboxPage() {
               onClick={() =>
                 setRagMode((prev) => (prev === "basic" ? "corrective" : "basic"))
               }
-              className="inline-flex items-center gap-2 px-3 py-2"
-              title={ragMode === "corrective" ? "Click để chuyển về Basic (nhanh hơn)" : "Click để bật Corrective RAG (chính xác hơn)"}
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl transition-all"
+              title={ragMode === "corrective" ? "Switch back to Basic RAG" : "Turn on Corrective RAG"}
             >
               {isThinking ? (
                 <CelestialInlineLoader label="Thinking..." />
@@ -342,14 +343,23 @@ export default function NewAIChatboxPage() {
               )}
               {ragMode === "corrective" ? "Corrective RAG" : "Basic RAG"}
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsPromptOpen(true)}
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl transition-all hover:bg-muted"
+            >
+              <Sparkles className="size-4 text-primary" aria-hidden="true" />
+              <span>Prompt seeds</span>
+            </Button>
           </div>
         </div>
       </header>
 
-      <div className="celestial-panel mt-4 grid min-h-0 flex-1 grid-cols-1 overflow-hidden lg:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="botanical-bento mt-4 grid min-h-0 flex-1 grid-cols-1 overflow-hidden lg:grid-cols-[minmax(0,1fr)_340px]">
         <section className="min-h-0 bg-transparent">
           {loadingHistory ? (
-            <LoadingState className="m-5 h-[calc(100%-2.5rem)]" label="Loading chat history..." tone="violet" />
+            <LoadingState className="m-5 h-[calc(100%-2.5rem)]" label="Loading chat history..." tone="mist" />
           ) : (
             <ChatThread
               key={sessionIdsParam ?? historyId ?? "new"}
@@ -363,6 +373,10 @@ export default function NewAIChatboxPage() {
                         typeof selectedDoc.subject === "object"
                           ? selectedDoc.subject?.name
                           : selectedDoc.subject,
+                      subjectColor:
+                        typeof selectedDoc.subject === "object"
+                          ? selectedDoc.subject?.color
+                          : undefined,
                     }
                   : undefined
               }
@@ -373,7 +387,7 @@ export default function NewAIChatboxPage() {
         <aside className="hidden min-h-0 border-l border-border/80 bg-card/45 p-5 lg:block">
           <div className="flex h-full flex-col gap-5 overflow-y-auto">
             {/* Document context selector */}
-            <section className="celestial-card tone-surface tone-sapphire p-4">
+            <section className="moonlit-card tone-surface tone-sapphire p-4">
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="text-sm font-medium text-card-foreground">
                   Study Context
@@ -401,10 +415,10 @@ export default function NewAIChatboxPage() {
                         : "border-border/70 bg-background/35 text-muted-foreground hover:border-primary/35 hover:text-foreground"
                     }`}
                   >
-                    Tất cả tài liệu
+                    All documents
                   </button>
 
-                  {/* Kỳ học → Môn học → Tài liệu */}
+                  {/* Semester to subject to document */}
                   {Object.entries(groupedDocs).map(([sem, subjects]) => {
                     const semOpen = openSemesters.has(sem);
                     const totalDocs = Object.values(subjects).flat().length;
@@ -413,10 +427,10 @@ export default function NewAIChatboxPage() {
                         key={sem}
                         className="overflow-hidden rounded-lg border border-border/60 bg-background/25"
                       >
-                        {/* Header kỳ */}
+                        {/* Semester header */}
                         <button
                           onClick={() => toggleSemester(sem)}
-                          className="flex w-full items-center gap-2 bg-[#f5f7ff] px-3 py-2 text-left transition-colors hover:bg-muted/70"
+                          className="flex w-full items-center gap-2 bg-muted px-3 py-2 text-left transition-colors hover:bg-muted/70"
                         >
                           <GraduationCap className="size-3.5 shrink-0 text-primary" />
                           <span className="flex-1 truncate text-xs font-semibold text-card-foreground">
@@ -432,7 +446,7 @@ export default function NewAIChatboxPage() {
                           />
                         </button>
 
-                        {/* Môn học */}
+                        {/* Subjects */}
                         {semOpen && (
                           <div className="space-y-px bg-background/20 px-2 py-1.5">
                             {Object.entries(subjects).map(([subj, docs]) => {
@@ -440,7 +454,7 @@ export default function NewAIChatboxPage() {
                               const subjOpen = openSubjects.has(subjKey);
                               return (
                                 <div key={subjKey}>
-                                  {/* Header môn học */}
+                                  {/* Subject header */}
                                   <button
                                     onClick={() => toggleSubject(subjKey)}
                                     className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-muted/50"
@@ -459,7 +473,7 @@ export default function NewAIChatboxPage() {
                                     />
                                   </button>
 
-                                  {/* Danh sách tài liệu */}
+                                  {/* Document list */}
                                   {subjOpen && (
                                     <div className="mb-1 ml-3 space-y-0.5 border-l border-border/40 pl-2">
                                       {docs.map((doc) => (
@@ -501,7 +515,7 @@ export default function NewAIChatboxPage() {
 
             {/* Sources returned by the last response */}
             {lastSources.length > 0 && (
-              <section className="celestial-card tone-surface tone-cyan p-4">
+              <section className="moonlit-card tone-surface tone-cyan p-4">
                 <div className="mb-3 flex items-center gap-2 text-sm font-medium text-card-foreground">
                   <Search className="size-4 text-foreground" aria-hidden="true" />
                   Retrieved sources
@@ -517,7 +531,9 @@ export default function NewAIChatboxPage() {
                           {source.title}
                         </span>
                         <span className="shrink-0 text-[10px] text-muted-foreground">
-                          {Math.round(source.relevanceScore * 100)}%
+                          {typeof source.relevanceScore === "number"
+                            ? `${Math.round(source.relevanceScore * 100)}%`
+                            : "Source"}
                         </span>
                       </div>
                       <p className="mt-1 line-clamp-2 text-muted-foreground">
@@ -531,7 +547,7 @@ export default function NewAIChatboxPage() {
 
             {/* RAG evaluation metrics */}
             {lastEvaluation && (
-              <section className="celestial-card tone-surface tone-gold p-4">
+              <section className="moonlit-card tone-surface tone-gold p-4">
                 <div className="flex items-center gap-2 text-sm font-medium text-card-foreground">
                   <Zap className="size-4 text-foreground" aria-hidden="true" />
                   RAG evaluation
@@ -580,7 +596,7 @@ export default function NewAIChatboxPage() {
 
             {/* How-to hint shown before any response */}
             {!lastEvaluation && (
-              <section className="celestial-card tone-surface tone-emerald p-4">
+              <section className="moonlit-card tone-surface tone-emerald p-4">
                 <div className="flex items-center gap-2 text-sm font-medium text-card-foreground">
                   <BookOpen
                     className="size-4 text-foreground"
@@ -589,7 +605,7 @@ export default function NewAIChatboxPage() {
                   How to use
                 </div>
                 <ol className="mt-3 space-y-2 text-sm leading-6 text-muted-foreground">
-                  <li>1. Select a document context above (optional).</li>
+                  <li>1. Select a document for narrow answers, or use all documents.</li>
                   <li>2. Ask a question about your study material.</li>
                   <li>
                     3. The AI uses Corrective RAG to answer from your docs.
@@ -600,6 +616,35 @@ export default function NewAIChatboxPage() {
           </div>
         </aside>
       </div>
+      <Sheet open={isPromptOpen} onOpenChange={setIsPromptOpen}>
+        <SheetContent side="right" className="rounded-l-2xl border-l border-border/80">
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-2 text-primary">
+              <Sparkles className="size-5 text-primary" />
+              <span>Study prompt seeds</span>
+            </SheetTitle>
+            <SheetDescription>
+              Pick a starter prompt to fill the composer and begin a focused review session.
+            </SheetDescription>
+          </SheetHeader>
+          <div className="mt-6 space-y-4">
+            {quickPrompts.map((item) => (
+              <button
+                key={item.title}
+                onClick={() => handleSelectPrompt(item.prompt)}
+                className="w-full text-left p-4 rounded-2xl border border-border/60 bg-muted/20 hover:bg-muted/50 hover:border-primary/45 transition-all group"
+              >
+                <h4 className="text-xs font-bold text-foreground group-hover:text-primary transition-colors">
+                  {item.title}
+                </h4>
+                <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+                  {item.label}
+                </p>
+              </button>
+            ))}
+          </div>
+        </SheetContent>
+      </Sheet>
     </main>
   );
 }

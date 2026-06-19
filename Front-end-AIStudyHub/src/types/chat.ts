@@ -3,7 +3,7 @@ export interface ChatSource {
   title: string
   chunkIndex: number
   contentPreview: string
-  relevanceScore: number
+  relevanceScore?: number
 }
 
 export interface ChatEvaluation {
