@@ -40,8 +40,8 @@ export default function ForgotPasswordPage() {
         title={<>Need access<br />again?</>}
         variant="lost"
       />
-      <section className="celestial-card relative min-h-[430px] overflow-hidden p-12">
-        <h2 className="celestial-title m-0 mb-4 text-[32px] leading-[1.2]">Recovery</h2>
+      <section className="moonlit-card relative min-h-[430px] overflow-hidden p-12">
+        <h2 className="moonlit-title m-0 mb-4 text-[32px] leading-[1.2]">Recovery</h2>
         <p className="mb-9 max-w-[330px] text-sm leading-[1.6] text-muted-foreground">Enter your email to receive a secure reset link.</p>
         <form className="grid gap-5" onSubmit={handleSubmit}>
           <label className="grid gap-2" htmlFor="recovery-email">

@@ -62,6 +62,7 @@ export interface UploadDocumentPayload {
   title: string
   description?: string
   subject?: string
+  subjectId?: string
 }
 
 export interface UpdateDocumentPayload {

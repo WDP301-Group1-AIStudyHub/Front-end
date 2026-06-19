@@ -19,6 +19,7 @@ import {
 import { ToolFallback } from "@/components/assistant-ui/tool-fallback";
 import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
 import { TextShimmerWave } from "@/src/components/shared/TextShimmerWave";
+import { normalizeSubjectColor } from "@/src/utils/subjectColor";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -54,6 +55,7 @@ import type { FC } from "react";
 type SelectedDocInfo = {
   fileName: string;
   subject?: string | { _id: string; name: string; description?: string; color?: string; code?: string };
+  subjectColor?: string;
 };
 
 export const Thread: FC<{ selectedDoc?: SelectedDocInfo }> = ({ selectedDoc }) => {
@@ -99,7 +101,7 @@ export const Thread: FC<{ selectedDoc?: SelectedDocInfo }> = ({ selectedDoc }) =
                   baseColor="var(--foreground)"
                   shimmerColor="var(--foreground)"
                 >
-                  Đang suy nghĩ...
+                  Thinking...
                 </TextShimmerWave>
               </div>
             </AuiIf>
@@ -168,7 +170,7 @@ const ThreadSuggestionItem: FC = () => {
       <SuggestionPrimitive.Trigger send asChild>
         <Button
           variant="ghost"
-          className="aui-thread-welcome-suggestion h-auto w-full @md:flex-col flex-wrap items-start justify-start gap-1 rounded-3xl border border-border bg-background px-4 py-3 text-start text-sm transition-colors hover:bg-muted"
+            className="aui-thread-welcome-suggestion h-auto w-full @md:flex-col flex-wrap items-start justify-start gap-1 rounded-[20px] border border-border bg-card px-4 py-3 text-start text-sm transition-colors hover:bg-muted"
         >
           <SuggestionPrimitive.Title className="aui-thread-welcome-suggestion-text-1 font-medium" />
           <SuggestionPrimitive.Description className="aui-thread-welcome-suggestion-text-2 text-muted-foreground empty:hidden truncate max-w-full" />
@@ -179,6 +181,18 @@ const ThreadSuggestionItem: FC = () => {
 };
 
 const Composer: FC<{ selectedDoc?: SelectedDocInfo }> = ({ selectedDoc }) => {
+  const subjectName =
+    selectedDoc && typeof selectedDoc.subject === "object"
+      ? selectedDoc.subject?.name
+      : selectedDoc?.subject;
+  const subjectColor = selectedDoc
+    ? normalizeSubjectColor(
+        typeof selectedDoc.subject === "object"
+          ? selectedDoc.subject?.color
+          : selectedDoc.subjectColor,
+      )
+    : undefined;
+
   return (
     <ComposerPrimitive.Root className="aui-composer-root relative flex w-full flex-col">
       <ComposerPrimitive.AttachmentDropzone asChild>
@@ -188,15 +202,22 @@ const Composer: FC<{ selectedDoc?: SelectedDocInfo }> = ({ selectedDoc }) => {
         >
           <ComposerAttachments />
           {selectedDoc && (
-            <div className="flex items-center gap-1.5 rounded-lg border border-[color-mix(in_oklab,var(--accent-violet,#a78bfa)_35%,transparent)] bg-[color-mix(in_oklab,var(--accent-violet,#a78bfa)_10%,transparent)] px-2.5 py-1.5">
-              <FileTextIcon className="size-3 shrink-0 text-[var(--accent-violet,#a78bfa)]" />
-              <span className="min-w-0 flex-1 truncate text-xs font-medium text-[var(--accent-violet,#c4b5fd)]">
-                {(() => {
-                  const subjectName = typeof selectedDoc.subject === "object" ? selectedDoc.subject?.name : selectedDoc.subject;
-                  return subjectName ? `${subjectName} · ` : "";
-                })()}{selectedDoc.fileName}
+            <div
+              className="subject-meta-pill"
+              style={
+                subjectColor
+                  ? {
+                      "--subject-color": subjectColor,
+                    } as React.CSSProperties
+                  : undefined
+              }
+            >
+              <FileTextIcon className="size-3 shrink-0" />
+              <span className="min-w-0 flex-1 truncate text-xs font-semibold">
+                {subjectName ? `${subjectName} - ` : ""}
+                {selectedDoc.fileName}
               </span>
-              <XIcon className="size-3 shrink-0 text-muted-foreground opacity-50" />
+              <XIcon className="size-3 shrink-0 opacity-60" />
             </div>
           )}
           <ComposerPrimitive.Input

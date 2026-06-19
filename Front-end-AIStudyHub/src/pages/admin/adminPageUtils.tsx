@@ -30,12 +30,12 @@ export function AdminPageHeader({
   title: string
 }) {
   return (
-    <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+    <header className="botanical-page-header flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
       <div>
-        <p className="text-sm font-semibold text-primary">
+        <p className="botanical-kicker">
           {eyebrow}
         </p>
-        <h1 className="celestial-title mt-2 text-3xl md:text-5xl">{title}</h1>
+        <h1 className="moonlit-title mt-2 text-3xl md:text-5xl">{title}</h1>
         <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">{description}</p>
       </div>
       {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
@@ -51,11 +51,11 @@ export function AdminStatCard({
 }: {
   icon: ReactNode
   label: string
-  tone?: 'blue' | 'coral' | 'gold' | 'teal' | 'violet'
+  tone?: 'blue' | 'coral' | 'gold' | 'teal' | 'mist'
   value: string
 }) {
   return (
-    <article className={cn('celestial-card p-5', `tone-${tone === 'blue' ? 'sapphire' : tone}`)}>
+    <article className={cn('botanical-bento p-5', `tone-${tone === 'blue' ? 'sapphire' : tone}`)}>
       <div className={cn('admin-icon-badge', `admin-tone-${tone}`)}>{icon}</div>
       <p className="mt-5 text-sm font-medium text-muted-foreground">
         {label}

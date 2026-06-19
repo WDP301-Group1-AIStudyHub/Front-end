@@ -219,6 +219,7 @@ export async function uploadDocument({
   description,
   file,
   subject,
+  subjectId,
   title,
 }: UploadDocumentPayload): Promise<DocumentItem> {
   const formData = new FormData()
@@ -231,6 +232,10 @@ export async function uploadDocument({
 
   if (subject?.trim()) {
     formData.set('subject', subject.trim())
+  }
+
+  if (subjectId?.trim()) {
+    formData.set('subjectId', subjectId.trim())
   }
 
   const response = await request<DocumentItem>('/api/documents/upload', {

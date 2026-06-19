@@ -273,7 +273,7 @@ function Panel({
   children: ReactNode;
   className?: string;
 }) {
-  return <section className={`celestial-panel ${className}`}>{children}</section>;
+  return <section className={`moonlit-panel ${className}`}>{children}</section>;
 }
 
 function ModeColumn({
@@ -296,7 +296,7 @@ function ModeColumn({
             {mode}
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
-            {formatMs(result.durationMs)} · {chunkCount} chunks
+            {formatMs(result.durationMs)} - {chunkCount} chunks
           </p>
         </div>
         <p className="text-2xl font-semibold tone-text">
@@ -380,8 +380,8 @@ function ChunkList({ chunks }: { chunks: BenchmarkRetrievedChunk[] }) {
               key={`${chunk.documentTitle}-${chunk.chunkIndex}-${index}`}
             >
               <p className="font-semibold text-foreground">
-                chunk #{chunk.chunkIndex ?? index + 1} · {chunk.documentTitle || "source"}{" "}
-                {chunk.page ? `· p.${chunk.page}` : ""} · {percent(chunk.relevanceScore)}
+                chunk #{chunk.chunkIndex ?? index + 1} - {chunk.documentTitle || "source"}{" "}
+                {chunk.page ? `- p.${chunk.page}` : ""} - {percent(chunk.relevanceScore)}
               </p>
               {chunk.contentPreview && <p className="mt-1 line-clamp-2">{chunk.contentPreview}</p>}
             </div>
@@ -498,7 +498,7 @@ export default function RunBenchmark() {
       .filter((key) => result.corrective.scores[key] > result.basic.scores[key])
       .map((key) => metricLabels[key]);
 
-    return `${delta} overall${stronger.length ? ` · stronger on ${stronger.join(", ")}` : ""}`;
+    return `${delta} overall${stronger.length ? ` - stronger on ${stronger.join(", ")}` : ""}`;
   }, [result]);
 
   function exportJson() {
@@ -515,7 +515,7 @@ export default function RunBenchmark() {
   }
 
   return (
-    <main className="celestial-page min-h-svh overflow-y-auto px-4 py-5 sm:px-6 lg:px-8">
+    <main className="botanical-page min-h-svh overflow-y-auto px-4 py-5 sm:px-6 lg:px-8">
       <div className="mx-auto flex w-full max-w-[1280px] flex-col gap-5">
         <header className="flex flex-col gap-4 border-b border-border/60 pb-5 xl:flex-row xl:items-end xl:justify-between">
           <div className="min-w-0">
@@ -528,11 +528,11 @@ export default function RunBenchmark() {
                 Run #{result?.id || questionId || "pending"}
               </span>
               <span className="ml-2 rounded-full border border-border/70 px-2 py-1 text-[10px] uppercase tracking-[0.14em]">
-                v0.4 · dev
+                v0.4 - dev
               </span>
             </div>
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-              RUN #{result?.id || questionId} · {formatDate(result?.createdAt)} · {formatMs(result?.durationMs)} total
+              RUN #{result?.id || questionId} - {formatDate(result?.createdAt)} - {formatMs(result?.durationMs)} total
             </p>
             <h1 className="mt-2 line-clamp-2 text-2xl font-semibold tracking-tight md:text-3xl">
               {result?.question || "Running benchmark..."}
@@ -540,7 +540,7 @@ export default function RunBenchmark() {
             <p className="mt-2 text-sm text-muted-foreground">
               {[result?.subject, result?.difficulty, result?.documentTitle]
                 .filter(Boolean)
-                .join(" · ") || "Benchmark result detail"}
+                .join(" - ") || "Benchmark result detail"}
             </p>
           </div>
 

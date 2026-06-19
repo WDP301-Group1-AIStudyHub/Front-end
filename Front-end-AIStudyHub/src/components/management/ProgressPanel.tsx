@@ -1,4 +1,4 @@
-import { Loader2 } from 'lucide-react'
+﻿import { Loader2 } from 'lucide-react'
 import type { UploadSession } from '../../types/document'
 import { getUploadStageLabel, StatusBadge } from './StatusBadge'
 
@@ -13,7 +13,7 @@ export function ProgressPanel({
   const status = session?.status ?? 'PENDING'
 
   return (
-    <div className="celestial-card tone-surface tone-cyan flex flex-col gap-3 p-4">
+    <div className="moonlit-card tone-surface tone-cyan flex flex-col gap-3 p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-sm font-medium">
           <Loader2 className="size-4 animate-spin" aria-hidden="true" />

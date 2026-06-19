@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { BookMarked, Pencil, Plus, Trash2 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -28,6 +27,10 @@ import {
   updateSubject,
 } from "../services/subjectApi";
 import type { SubjectItem, SubjectPayload } from "../services/subjectApi";
+import {
+  DEFAULT_SUBJECT_COLOR,
+  normalizeSubjectColor,
+} from "../utils/subjectColor";
 
 type SubjectForm = {
   name: string;
@@ -36,78 +39,11 @@ type SubjectForm = {
   color: string;
 };
 
-type SubjectColorTone = "blue" | "green" | "sky" | "purple" | "red";
-
-const subjectColorToneClasses: Record<SubjectColorTone, string> = {
-  blue: "border-blue-500/60 bg-white text-black dark:border-blue-300/60 dark:bg-white dark:text-black",
-  green:
-    "border-green-500/60 bg-white text-black dark:border-green-300/60 dark:bg-white dark:text-black",
-  sky: "border-sky-500/60 bg-white text-black dark:border-sky-300/60 dark:bg-white dark:text-black",
-  purple:
-    "border-purple-500/60 bg-white text-black dark:border-purple-300/60 dark:bg-white dark:text-black",
-  red: "border-red-500/60 bg-white text-black dark:border-red-300/60 dark:bg-white dark:text-black",
-};
-
-function hexToHue(color: string): number | null {
-  const normalized = color.trim().toLowerCase();
-
-  if (!normalized.startsWith("#")) return null;
-
-  const hex = normalized.slice(1);
-  const expanded =
-    hex.length === 3
-      ? hex
-          .split("")
-          .map((char) => `${char}${char}`)
-          .join("")
-      : hex;
-
-  if (!/^[0-9a-f]{6}$/.test(expanded)) return null;
-
-  const red = Number.parseInt(expanded.slice(0, 2), 16) / 255;
-  const green = Number.parseInt(expanded.slice(2, 4), 16) / 255;
-  const blue = Number.parseInt(expanded.slice(4, 6), 16) / 255;
-
-  const max = Math.max(red, green, blue);
-  const min = Math.min(red, green, blue);
-  const delta = max - min;
-
-  if (delta === 0) return 0;
-
-  let hue: number;
-
-  if (max === red) {
-    hue = ((green - blue) / delta) % 6;
-  } else if (max === green) {
-    hue = (blue - red) / delta + 2;
-  } else {
-    hue = (red - green) / delta + 4;
-  }
-
-  return Math.round(hue * 60 + 360) % 360;
-}
-
-function getSubjectColorTone(color?: string): SubjectColorTone {
-  const hue = color ? hexToHue(color) : null;
-
-  if (hue === null) return "blue";
-  if (hue < 30 || hue >= 330) return "red";
-  if (hue < 90) return "green";
-  if (hue < 170) return "sky";
-  if (hue < 250) return "blue";
-  return "purple";
-}
-
-function getSubjectColorLabel(color?: string): string {
-  const tone = getSubjectColorTone(color);
-  return tone.charAt(0).toUpperCase() + tone.slice(1);
-}
-
 const emptyForm: SubjectForm = {
   name: "",
   code: "",
   description: "",
-  color: "#ffd166",
+  color: DEFAULT_SUBJECT_COLOR,
 };
 
 function formatDate(value?: string): string {
@@ -182,7 +118,7 @@ export default function SubjectsPage() {
       name: subject.name,
       code: subject.code ?? "",
       description: subject.description ?? "",
-      color: subject.color ?? "#ffd166",
+      color: normalizeSubjectColor(subject.color),
     });
     setIsEditorOpen(true);
   }
@@ -198,7 +134,7 @@ export default function SubjectsPage() {
       name: form.name.trim(),
       code: form.code.trim() || undefined,
       description: form.description.trim() || undefined,
-      color: form.color,
+      color: normalizeSubjectColor(form.color),
     };
 
     setIsSaving(true);
@@ -249,17 +185,21 @@ export default function SubjectsPage() {
     }
   }
 
+  const previewColor = normalizeSubjectColor(form.color);
+  const previewCode = form.code.trim() || "CODE";
+
   return (
-    <main className="celestial-page flex min-h-svh w-full min-w-0 flex-col overflow-y-auto text-foreground">
+    <main className="botanical-page flex min-h-svh w-full min-w-0 flex-col overflow-y-auto text-foreground">
       <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-5 py-6 sm:px-8 lg:px-10">
         <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">
-              Study workspace
-            </p>
-            <h1 className="celestial-title mt-2 text-3xl font-black tracking-tight md:text-5xl">
+            <p className="botanical-kicker">Study workspace</p>
+            <h1 className="moonlit-title mt-2 text-3xl font-black tracking-tight md:text-5xl">
               Subjects
             </h1>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
+              Give every course a clear color so documents and chat context stay easy to scan.
+            </p>
           </div>
           <Button onClick={openCreate} type="button">
             <Plus data-icon="inline-start" aria-hidden="true" />
@@ -270,14 +210,14 @@ export default function SubjectsPage() {
         {feedback ? (
           feedback.tone === "error" ? (
             <div
-              className="celestial-card tone-surface tone-coral px-4 py-3 text-sm"
+              className="moonlit-card tone-surface tone-coral px-4 py-3 text-sm"
               role="alert"
             >
               {feedback.message}
             </div>
           ) : (
             <div
-              className="celestial-card tone-surface tone-emerald px-4 py-3 text-sm"
+              className="moonlit-card tone-surface tone-emerald px-4 py-3 text-sm"
               role="status"
             >
               {feedback.message}
@@ -285,14 +225,13 @@ export default function SubjectsPage() {
           )
         ) : null}
 
-        <section className="celestial-card celestial-table tone-surface tone-sapphire overflow-x-auto">
-          <Table className="min-w-[760px]">
+        <section className="moonlit-card moonlit-table tone-surface tone-sapphire overflow-x-auto">
+          <Table className="min-w-[680px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Code</TableHead>
                 <TableHead>Description</TableHead>
-                <TableHead>Color</TableHead>
                 <TableHead>Created</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -311,9 +250,6 @@ export default function SubjectsPage() {
                         <Skeleton className="h-4 w-56" />
                       </TableCell>
                       <TableCell>
-                        <Skeleton className="h-6 w-20" />
-                      </TableCell>
-                      <TableCell>
                         <Skeleton className="h-4 w-24" />
                       </TableCell>
                       <TableCell>
@@ -321,53 +257,56 @@ export default function SubjectsPage() {
                       </TableCell>
                     </TableRow>
                   ))
-                : sortedSubjects.map((subject) => (
-                    <TableRow key={subject._id}>
-                      <TableCell className="font-bold">
-                        {subject.name}
-                      </TableCell>
-                      <TableCell>{subject.code || "None"}</TableCell>
-                      <TableCell className="max-w-sm truncate">
-                        {subject.description || "No description"}
-                      </TableCell>
-                      <TableCell>
-                        <span className="inline-flex items-center gap-2">
-                          <Badge
-                            className={
-                              subjectColorToneClasses[
-                                getSubjectColorTone(subject.color)
-                              ]
+                : sortedSubjects.map((subject) => {
+                    const subjectColor = normalizeSubjectColor(subject.color);
+
+                    return (
+                      <TableRow key={subject._id}>
+                        <TableCell className="font-bold">
+                          {subject.name}
+                        </TableCell>
+                        <TableCell>
+                          <span
+                            className="subject-code-pill"
+                            style={
+                              {
+                                "--subject-color": subjectColor,
+                              } as React.CSSProperties
                             }
+                            title={subjectColor}
                           >
-                            {getSubjectColorLabel(subject.color)}
-                          </Badge>
-                        </span>
-                      </TableCell>
-                      <TableCell>{formatDate(subject.createdAt)}</TableCell>
-                      <TableCell>
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            aria-label={`Edit ${subject.name}`}
-                            onClick={() => openEdit(subject)}
-                            size="icon-sm"
-                            type="button"
-                            variant="secondary"
-                          >
-                            <Pencil aria-hidden="true" />
-                          </Button>
-                          <Button
-                            aria-label={`Delete ${subject.name}`}
-                            onClick={() => setDeletingSubject(subject)}
-                            size="icon-sm"
-                            type="button"
-                            variant="destructive"
-                          >
-                            <Trash2 aria-hidden="true" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                            {subject.code || "No code"}
+                          </span>
+                        </TableCell>
+                        <TableCell className="max-w-sm truncate">
+                          {subject.description || "No description"}
+                        </TableCell>
+                        <TableCell>{formatDate(subject.createdAt)}</TableCell>
+                        <TableCell>
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              aria-label={`Edit ${subject.name}`}
+                              onClick={() => openEdit(subject)}
+                              size="icon-sm"
+                              type="button"
+                              variant="secondary"
+                            >
+                              <Pencil aria-hidden="true" />
+                            </Button>
+                            <Button
+                              aria-label={`Delete ${subject.name}`}
+                              onClick={() => setDeletingSubject(subject)}
+                              size="icon-sm"
+                              type="button"
+                              variant="destructive"
+                            >
+                              <Trash2 aria-hidden="true" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
             </TableBody>
           </Table>
 
@@ -442,7 +381,7 @@ export default function SubjectsPage() {
                       setForm({ ...form, color: event.target.value })
                     }
                     type="color"
-                    value={form.color}
+                    value={previewColor}
                   />
                   <Input
                     disabled={isSaving}
@@ -451,6 +390,21 @@ export default function SubjectsPage() {
                     }
                     value={form.color}
                   />
+                </div>
+                <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-muted/55 px-3 py-2">
+                  <span
+                    className="subject-code-pill"
+                    style={
+                      {
+                        "--subject-color": previewColor,
+                      } as React.CSSProperties
+                    }
+                  >
+                    {previewCode}
+                  </span>
+                  <span className="font-mono text-xs text-muted-foreground">
+                    {previewColor}
+                  </span>
                 </div>
               </label>
             </div>

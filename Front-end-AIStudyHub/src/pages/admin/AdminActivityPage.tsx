@@ -36,14 +36,14 @@ export default function AdminActivityPage() {
   }, [activities, query, severityFilter, typeFilter])
 
   return (
-    <main className="celestial-page min-h-svh overflow-y-auto p-5 md:p-8">
+    <main className="botanical-page min-h-svh overflow-y-auto p-5 md:p-8">
       <AdminPageHeader
         description="Monitor account events, document processing signals, and system health activities from the admin usecase."
         eyebrow="Admin activity"
         title="System Activity"
       />
 
-      <section className="celestial-card celestial-table tone-surface tone-coral mt-8 overflow-hidden">
+      <section className="botanical-bento moonlit-table tone-surface tone-coral mt-8 overflow-hidden">
         <div className="flex flex-col gap-3 border-b border-border/70 p-5 xl:flex-row xl:items-center xl:justify-between">
           <label className="relative max-w-lg flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -87,7 +87,7 @@ export default function AdminActivityPage() {
             </div>
           ) : filteredActivities.length === 0 ? (
             <div className="grid min-h-72 place-items-center p-8 text-center text-muted-foreground">
-              <div>
+              <div className="botanical-empty">
                 <Filter className="mx-auto mb-3 size-8" />
                 <p>No activity matches the current filters.</p>
               </div>

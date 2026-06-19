@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+﻿import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowUpFromLineIcon,
   BookOpenText,
@@ -90,6 +90,27 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const SEARCH_DEBOUNCE_MS = 350;
 const DEFAULT_SUBJECT_COLOR = "#64748b";
+const SUPPORTED_UPLOAD_MIME_TYPES = new Set([
+  "application/pdf",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "text/plain",
+  "text/markdown",
+]);
+const SUPPORTED_UPLOAD_EXTENSIONS = new Set([
+  ".pdf",
+  ".docx",
+  ".pptx",
+  ".xlsx",
+  ".txt",
+  ".md",
+]);
+const SUPPORTED_UPLOAD_ACCEPT = [
+  ...SUPPORTED_UPLOAD_MIME_TYPES,
+  ...SUPPORTED_UPLOAD_EXTENSIONS,
+].join(",");
+const SUPPORTED_UPLOAD_LABEL = "PDF, DOCX, PPTX, XLSX, TXT, or MD";
 
 type Feedback = {
   tone: "success" | "error" | "info";
@@ -220,6 +241,18 @@ function getErrorMessage(error: unknown): string {
   return "Something went wrong";
 }
 
+function getFileExtension(fileName: string): string {
+  const match = fileName.toLowerCase().match(/\.[^.]+$/);
+  return match?.[0] ?? "";
+}
+
+function isSupportedUploadFile(file: File): boolean {
+  return (
+    SUPPORTED_UPLOAD_MIME_TYPES.has(file.type) ||
+    SUPPORTED_UPLOAD_EXTENSIONS.has(getFileExtension(file.name))
+  );
+}
+
 function getUploadErrors(
   form: DocumentFormState,
   file: File | null,
@@ -231,11 +264,11 @@ function getUploadErrors(
 
   // File validation
   if (!file) {
-    errors.file = "PDF file is required";
-  } else if (file.type !== "application/pdf") {
-    errors.file = "Only PDF files are allowed";
+    errors.file = "Document file is required";
+  } else if (!isSupportedUploadFile(file)) {
+    errors.file = `Only ${SUPPORTED_UPLOAD_LABEL} files are allowed`;
   } else if (file.size > MAX_FILE_SIZE) {
-    errors.file = "PDF must be 10 MB or smaller";
+    errors.file = "Document must be 10 MB or smaller";
   } else {
     errors.file = null;
   }
@@ -330,9 +363,9 @@ function DocumentFields({
     <div className="flex flex-col gap-4">
       {mode === "upload" && (
         <label className="flex flex-col gap-2 text-sm font-medium">
-          PDF file
+          Document file
           <Input
-            accept="application/pdf"
+            accept={SUPPORTED_UPLOAD_ACCEPT}
             disabled={disabled}
             onChange={(event) => {
               onFileChange?.(event.target.files?.[0] ?? null);
@@ -347,7 +380,7 @@ function DocumentFields({
             <span className="text-xs text-muted-foreground">
               {fileInput
                 ? `${fileInput.name} · ${formatFileSize(fileInput.size)}`
-                : "PDF only, up to 10 MB"}
+                : `${SUPPORTED_UPLOAD_LABEL}, up to 10 MB`}
             </span>
           )}
         </label>
@@ -944,7 +977,7 @@ export default function NewLibraryPage() {
   }
 
   return (
-    <main className="celestial-page flex min-h-svh w-full min-w-0 flex-col overflow-y-auto text-foreground">
+    <main className="moonlit-page flex min-h-svh w-full min-w-0 flex-col overflow-y-auto text-foreground">
       <div className="mx-auto flex w-full min-w-0 max-w-7xl flex-1 flex-col gap-8 px-5 py-6 sm:px-8 lg:px-10">
         <header className="flex min-w-0 flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <InputGroup className="mx-auto max-w-md bg-card/70 backdrop-blur">
@@ -979,7 +1012,7 @@ export default function NewLibraryPage() {
           <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
             <div className="flex flex-col gap-5">
               <div className="flex items-center gap-2">
-                <h1 className="celestial-title text-3xl font-semibold tracking-tight md:text-5xl">
+                <h1 className="moonlit-title text-3xl font-semibold tracking-tight md:text-5xl">
                   Study documents
                 </h1>
                 <IconTooltip label="Document settings">
@@ -1020,7 +1053,7 @@ export default function NewLibraryPage() {
                 <DropdownMenuContent className="w-fit" align="end">
                   <DropdownMenuItem onSelect={() => setIsUploadOpen(true)}>
                     <FileIcon />
-                    PDF document
+                    Document file
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -1029,7 +1062,7 @@ export default function NewLibraryPage() {
 
           {feedback && (
             <div
-              className={`celestial-card tone-surface px-4 py-3 text-sm ${feedback.tone === "error" ? "tone-coral" : feedback.tone === "success" ? "tone-emerald" : "tone-sapphire"}`}
+              className={`moonlit-card tone-surface px-4 py-3 text-sm ${feedback.tone === "error" ? "tone-coral" : feedback.tone === "success" ? "tone-emerald" : "tone-sapphire"}`}
               role={feedback.tone === "error" ? "alert" : "status"}
             >
               <span
@@ -1045,7 +1078,7 @@ export default function NewLibraryPage() {
           )}
 
           {isUploading && (
-            <div className="celestial-card tone-surface tone-cyan flex flex-col gap-2 p-4">
+            <div className="moonlit-card tone-surface tone-cyan flex flex-col gap-2 p-4">
               <div className="flex items-center gap-2 text-sm font-medium">
                 <UploadCloud aria-hidden="true" />
                 Uploading, extracting text, and indexing for RAG
@@ -1054,7 +1087,7 @@ export default function NewLibraryPage() {
             </div>
           )}
 
-          <div className="celestial-card celestial-table tone-surface tone-sapphire overflow-x-auto overflow-y-hidden relative">
+          <div className="moonlit-card moonlit-table tone-surface tone-sapphire overflow-x-auto overflow-y-hidden relative">
             <Table className="min-w-[820px]">
               <TableHeader>
                 <TableRow>
@@ -1241,7 +1274,7 @@ export default function NewLibraryPage() {
                 </div>
                 <Button onClick={() => setIsUploadOpen(true)}>
                   <UploadCloud data-icon="inline-start" aria-hidden="true" />
-                  Upload PDF
+                  Upload document
                 </Button>
               </div>
             )}
@@ -1258,7 +1291,7 @@ export default function NewLibraryPage() {
             <DialogHeader>
               <DialogTitle>Upload document</DialogTitle>
               <DialogDescription>
-                PDFs are stored in Cloudinary, parsed, and indexed for AI chat.
+                Study documents are stored in Cloudinary, parsed, and indexed for AI chat.
               </DialogDescription>
             </DialogHeader>
             <Separator className="my-4" />
@@ -1279,7 +1312,7 @@ export default function NewLibraryPage() {
             <DialogFooter className="mt-6">
               <Button disabled={isUploading} type="submit" className="w-full sm:w-auto">
                 <UploadCloud data-icon="inline-start" aria-hidden="true" />
-                {isUploading ? <CelestialInlineLoader label="Uploading..." /> : "Upload PDF"}
+                {isUploading ? <CelestialInlineLoader label="Uploading..." /> : "Upload document"}
               </Button>
             </DialogFooter>
           </form>

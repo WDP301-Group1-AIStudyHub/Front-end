@@ -10,7 +10,7 @@ export default function BrandLogo({
 }) {
   return (
     <span className={cn('brand-logo', compact && 'brand-logo-compact', className)}>
-      <span className="brand-logo-mark animate-pulse" aria-hidden="true" style={{ animationDuration: '6s' }}>
+      <span className="brand-logo-mark" aria-hidden="true">
         <Leaf className="size-4 text-primary shrink-0" />
       </span>
       {!compact ? <span className="brand-logo-text">AI Study Hub</span> : null}

@@ -100,7 +100,7 @@ const toneColors: Record<string, string> = {
   coral: "bg-destructive/10",
   teal: "bg-card",
   gold: "bg-muted",
-  violet: "bg-muted",
+  mist: "bg-muted",
   emerald: "bg-card",
 };
 
@@ -117,10 +117,10 @@ function StatCard({
 }) {
   const bgClass = toneColors[tone] || "bg-card";
   return (
-    <article className={`celestial-card ${bgClass} border border-border text-foreground  p-4 hover:-translate-x-[2px] hover:-translate-y-[2px] hover: transition-all`}>
+    <article className={`botanical-bento ${bgClass} border border-border p-4 text-foreground transition-all`}>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[11px] font-black uppercase tracking-[0.16em] text-foreground/75">
+          <p className="text-[11px] font-black uppercase text-foreground/75">
             {label}
           </p>
           <p className="mt-3 text-2xl font-black tracking-tight text-foreground">{value}</p>
@@ -269,11 +269,12 @@ export default function EvaluationPage() {
   }, []);
 
   return (
-    <main className="celestial-page min-h-svh overflow-y-auto bg-card p-5 md:p-8 text-foreground">
+    <main className="botanical-page min-h-svh overflow-y-auto p-5 text-foreground md:p-8">
       <div className="mx-auto max-w-7xl space-y-8">
         <header className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
-            <h1 className="text-4xl font-black tracking-tight md:text-5xl text-foreground uppercase">
+            <p className="botanical-kicker">RAG research</p>
+            <h1 className="moonlit-title mt-2 text-4xl font-black md:text-5xl">
               Evaluation
             </h1>
             <p className="mt-2 text-sm font-bold text-muted-foreground">
@@ -286,14 +287,14 @@ export default function EvaluationPage() {
 
           <div className="flex flex-wrap gap-2">
             <Link
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 text-sm font-extrabold text-foreground  hover:bg-gray-100 active:translate-x-[1px] active:translate-y-[1px] active: transition-all"
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 text-sm font-bold text-foreground transition-all hover:bg-muted active:scale-[0.98]"
               to="/evaluation/summary"
             >
               <BarChart3 className="size-4" />
               Summary
             </Link>
             <Link
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-border bg-muted px-4 text-sm font-extrabold text-foreground  hover:bg-muted/90 active:translate-x-[1px] active:translate-y-[1px] active: transition-all"
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-primary bg-primary px-4 text-sm font-bold text-primary-foreground transition-all hover:bg-[color-mix(in_oklab,var(--primary),black_12%)] active:scale-[0.98]"
               to="/evaluation/new"
             >
               <Plus className="size-4" />
@@ -303,13 +304,13 @@ export default function EvaluationPage() {
         </header>
 
         {error && (
-          <div className="flex flex-col gap-3 rounded-lg border border-border bg-destructive/10 p-4 text-sm text-foreground sm:flex-row sm:items-center sm:justify-between ">
+          <div className="flex flex-col gap-3 rounded-[20px] border border-border bg-destructive/10 p-4 text-sm text-foreground sm:flex-row sm:items-center sm:justify-between">
             <span className="inline-flex items-center gap-2 font-bold">
               <AlertCircle className="size-4" />
               {error}
             </span>
             <button
-              className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-3 py-1 font-extrabold text-foreground  hover:bg-gray-100"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-3 py-1 font-bold text-foreground hover:bg-muted"
               onClick={loadBenchmarkData}
               type="button"
             >
@@ -347,7 +348,7 @@ export default function EvaluationPage() {
           <StatCard
             icon={<CheckCircle2 />}
             label="Faithfulness"
-            tone="violet"
+            tone="mist"
             value={signedPercent(summary.faithfulnessImprovement)}
           />
           <StatCard
@@ -358,15 +359,15 @@ export default function EvaluationPage() {
           />
         </section>
 
-        <section className="celestial-panel overflow-hidden border border-border bg-card  rounded-xl">
-          <div className="flex flex-col gap-4 border-b border-border p-4 bg-gray-55">
+        <section className="botanical-bento overflow-hidden border border-border bg-card">
+          <div className="flex flex-col gap-4 border-b border-border p-4">
             <div className="flex gap-2 overflow-x-auto pb-1">
               {tabs.map((tab) => (
                 <button
-                  className={`h-9 shrink-0 rounded-lg border border-border px-4 text-xs font-black uppercase tracking-wider transition  ${
+                  className={`h-9 shrink-0 rounded-full border border-border px-4 text-xs font-bold uppercase transition ${
                     activeTab === tab.key
-                      ? "bg-muted text-foreground"
-                      : "bg-card text-foreground hover:bg-gray-100"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-card text-foreground hover:bg-muted"
                   }`}
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
@@ -381,14 +382,14 @@ export default function EvaluationPage() {
               <label className="relative block">
                 <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-foreground" />
                 <input
-                  className="h-10 w-full rounded-lg border border-border bg-card pl-9 pr-3 text-sm font-bold text-foreground outline-none  focus:"
+                  className="h-10 w-full rounded-xl border border-border bg-card pl-9 pr-3 text-sm font-bold text-foreground outline-none"
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder="Search benchmark questions..."
                   value={query}
                 />
               </label>
               <select
-                className="h-10 rounded-lg border border-border bg-card px-3 text-sm font-bold text-foreground outline-none "
+                className="h-10 rounded-xl border border-border bg-card px-3 text-sm font-bold text-foreground outline-none"
                 onChange={(event) =>
                   setDifficultyFilter(
                     event.target.value as "all" | BenchmarkDifficulty,
@@ -402,7 +403,7 @@ export default function EvaluationPage() {
                 <option value="hard">Hard</option>
               </select>
               <select
-                className="h-10 rounded-lg border border-border bg-card px-3 text-sm font-bold text-foreground outline-none "
+                className="h-10 rounded-xl border border-border bg-card px-3 text-sm font-bold text-foreground outline-none"
                 onChange={(event) => setSubjectFilter(event.target.value)}
                 value={subjectFilter}
               >
@@ -422,7 +423,7 @@ export default function EvaluationPage() {
             </div>
           ) : filteredQuestions.length === 0 ? (
             <div className="grid min-h-64 place-items-center p-8 text-center bg-card">
-              <div>
+              <div className="botanical-empty">
                 <FileText className="mx-auto size-9 text-foreground" />
                 <h2 className="mt-3 text-lg font-black uppercase text-foreground">
                   No benchmark questions found
@@ -433,17 +434,17 @@ export default function EvaluationPage() {
               </div>
             </div>
           ) : (
-            <div className="grid gap-4 p-4 md:grid-cols-2 xl:grid-cols-3 bg-card">
+            <div className="grid gap-4 bg-card p-4 md:grid-cols-2 xl:grid-cols-3">
               {filteredQuestions.map((question) => {
                 return (
                   <article
-                    className="celestial-card bg-card border border-border text-foreground  relative flex min-h-[230px] flex-col p-5 hover:-translate-x-[2px] hover:-translate-y-[2px] hover: transition-all"
+                    className="botanical-card relative flex min-h-[230px] flex-col border border-border bg-card p-5 text-foreground transition-all"
                     key={question.id}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <span
-                          className={`inline-flex rounded-lg px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ${difficultyStyles[question.difficulty]}`}
+                          className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-black uppercase ${difficultyStyles[question.difficulty]}`}
                         >
                           {question.difficulty}
                         </span>
@@ -454,7 +455,7 @@ export default function EvaluationPage() {
                       <button
                         aria-label="Question actions"
                         aria-expanded={openMenuQuestionId === question.id}
-                        className="grid size-8 shrink-0 place-items-center rounded-lg border border-border bg-card text-foreground  hover:bg-gray-100"
+                        className="grid size-8 shrink-0 place-items-center rounded-xl border border-border bg-card text-foreground hover:bg-muted"
                         onClick={() =>
                           setOpenMenuQuestionId((currentId) =>
                             currentId === question.id ? null : question.id,
@@ -465,7 +466,7 @@ export default function EvaluationPage() {
                         <MoreHorizontal className="size-4" />
                       </button>
                       {openMenuQuestionId === question.id && (
-                        <div className="absolute right-4 top-12 z-20 w-44 rounded-lg border border-border bg-card p-1 ">
+                        <div className="absolute right-4 top-12 z-20 w-44 rounded-xl border border-border bg-card p-1 shadow-xl">
                           <button
                             className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-extrabold text-destructive transition hover:bg-destructive/10 disabled:opacity-60"
                             disabled={deletingQuestionId === question.id}
@@ -482,7 +483,7 @@ export default function EvaluationPage() {
                       )}
                     </div>
 
-                    <h2 className="mt-3 line-clamp-3 min-h-[4.5rem] text-base font-extrabold leading-6 text-foreground uppercase">
+                    <h2 className="mt-3 line-clamp-3 min-h-[4.5rem] text-base font-extrabold leading-6 text-foreground">
                       {question.question}
                     </h2>
 
@@ -499,7 +500,7 @@ export default function EvaluationPage() {
                       <div className="min-w-0 text-foreground/60">
                       </div>
                       <Link
-                        className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-lg border border-border bg-card text-foreground  px-3 text-xs font-extrabold hover:bg-gray-100 active:translate-x-[1px] active:translate-y-[1px] active:"
+                        className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-xl border border-border bg-card px-3 text-xs font-extrabold text-foreground hover:bg-muted active:scale-[0.98]"
                         to={`/evaluation/run/${question.id}`}
                       >
                         <RefreshCw className="size-4" />
@@ -518,7 +519,7 @@ export default function EvaluationPage() {
             <div
               aria-labelledby="delete-benchmark-question-title"
               aria-modal="true"
-              className="w-full max-w-md rounded-xl border border-border bg-card p-5 "
+              className="w-full max-w-md rounded-[20px] border border-border bg-card p-5 shadow-xl"
               role="dialog"
             >
               <div className="flex items-start gap-3">
@@ -527,7 +528,7 @@ export default function EvaluationPage() {
                 </div>
                 <div className="min-w-0">
                   <h2
-                    className="text-lg font-black text-foreground uppercase"
+                    className="text-lg font-black text-foreground"
                     id="delete-benchmark-question-title"
                   >
                     Delete question?
@@ -542,7 +543,7 @@ export default function EvaluationPage() {
 
               <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                 <button
-                  className="inline-flex h-10 items-center justify-center rounded-lg border border-border bg-card px-4 text-sm font-extrabold text-foreground  hover:bg-gray-100"
+                  className="inline-flex h-10 items-center justify-center rounded-xl border border-border bg-card px-4 text-sm font-extrabold text-foreground hover:bg-muted"
                   disabled={deletingQuestionId === confirmDeleteQuestion.id}
                   onClick={() => setConfirmDeleteQuestion(null)}
                   type="button"
@@ -550,7 +551,7 @@ export default function EvaluationPage() {
                   Cancel
                 </button>
                 <button
-                  className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-border bg-destructive/10 px-4 text-sm font-extrabold text-foreground  hover:bg-destructive/10/90"
+                  className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-border bg-destructive/10 px-4 text-sm font-extrabold text-destructive hover:bg-destructive/15"
                   disabled={deletingQuestionId === confirmDeleteQuestion.id}
                   onClick={handleDeleteQuestion}
                   type="button"

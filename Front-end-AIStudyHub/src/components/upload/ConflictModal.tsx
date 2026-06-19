@@ -1,4 +1,4 @@
-import { useUploadStore } from "../../store/useUploadStore";
+﻿import { useUploadStore } from "../../store/useUploadStore";
 import { AlertTriangle, FileText, Files } from "lucide-react";
 
 export default function ConflictModal() {
@@ -17,7 +17,7 @@ export default function ConflictModal() {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/70 p-4 animate-fade-in">
-      <div className="celestial-card flex w-full max-w-md flex-col gap-5 p-6 text-card-foreground">
+      <div className="moonlit-card flex w-full max-w-md flex-col gap-5 p-6 text-card-foreground">
         <div className="flex items-center gap-3">
           <div className="admin-icon-badge admin-tone-gold flex size-12 shrink-0 items-center justify-center rounded-xl">
             <AlertTriangle className="size-6" aria-hidden="true" />

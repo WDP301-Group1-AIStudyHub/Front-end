@@ -129,20 +129,39 @@ export default function DashboardPage() {
     }
   }
 
-  // Study statistics mocked weekly chart data
-  const chartData = [
-    { day: 'M', value: docs.length ? Math.min(docs.length * 10, 60) : 25, active: false },
-    { day: 'T', value: docs.length ? Math.min(docs.length * 15, 80) : 40, active: false },
-    { day: 'W', value: docs.length ? Math.min(docs.length * 8, 55) : 30, active: false },
-    { day: 'T', value: docs.length ? Math.min(docs.length * 20, 95) : 65, active: true },
-    { day: 'F', value: docs.length ? Math.min(docs.length * 12, 70) : 45, active: false },
-    { day: 'S', value: 15, active: false },
-    { day: 'S', value: 20, active: false }
-  ]
+  const chartData = useMemo(() => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const days = Array.from({ length: 7 }, (_, index) => {
+      const date = new Date(today)
+      date.setDate(today.getDate() - (6 - index))
+      return {
+        active: index === 6,
+        count: 0,
+        day: new Intl.DateTimeFormat(undefined, { weekday: 'short' }).format(date).slice(0, 1),
+        key: date.toISOString().slice(0, 10),
+      }
+    })
+
+    for (const doc of docs) {
+      const createdAt = new Date(doc.createdAt)
+      if (Number.isNaN(createdAt.getTime())) continue
+      createdAt.setHours(0, 0, 0, 0)
+      const key = createdAt.toISOString().slice(0, 10)
+      const day = days.find((item) => item.key === key)
+      if (day) day.count += 1
+    }
+
+    const maxCount = Math.max(...days.map((day) => day.count), 1)
+    return days.map((day) => ({
+      ...day,
+      value: day.count === 0 ? 4 : Math.max((day.count / maxCount) * 100, 18),
+    }))
+  }, [docs])
 
   return (
     <main 
-      className="celestial-page min-h-svh overflow-y-auto p-5 text-foreground md:p-8"
+      className="botanical-page min-h-svh overflow-y-auto p-5 text-foreground md:p-8"
       onDragEnter={handleDrag}
     >
       {/* Absolute Drag & Drop overlay */}
@@ -157,8 +176,8 @@ export default function DashboardPage() {
             onDrop={handleDrop}
             className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-md p-6"
           >
-            <div className="w-full max-w-lg rounded-3xl border-2 border-dashed border-primary/50 bg-card p-12 text-center shadow-xl flex flex-col items-center justify-center gap-4">
-              <div className="size-16 rounded-full bg-primary/10 flex items-center justify-center text-primary animate-bounce">
+            <div className="botanical-dropzone flex w-full max-w-lg flex-col items-center justify-center gap-4 p-12 text-center shadow-xl">
+              <div className="flex size-16 items-center justify-center rounded-full bg-primary/10 text-primary">
                 <UploadCloud className="size-8" />
               </div>
               <h3 className="text-xl font-bold">Drop your study source here</h3>
@@ -170,15 +189,12 @@ export default function DashboardPage() {
 
       <header className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <p className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
-            <span className="size-2 rounded-full bg-primary" />
-            Nature-Inspired Workspace
-          </p>
-          <h1 className="celestial-title mt-2 text-3xl leading-tight md:text-5xl">
+          <p className="botanical-kicker">Garden workspace</p>
+          <h1 className="moonlit-title mt-2 text-3xl leading-tight md:text-5xl">
             Dashboard
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            Manage your library, ask questions against documents, and review evaluation signals in a distraction-free organic workspace.
+            Manage your library, ask questions against documents, and review evaluation signals in a bright botanical workspace.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -197,7 +213,7 @@ export default function DashboardPage() {
       {/* Bento Grid Layout */}
       <section className="mt-8 grid gap-5 xl:grid-cols-12">
         {/* Storage card with organic leaf slider */}
-        <article className="celestial-card p-6 xl:col-span-4 flex flex-col justify-between">
+        <article className="botanical-bento flex flex-col justify-between p-6 xl:col-span-4">
           <div className="flex items-start justify-between gap-4">
             <span className="admin-icon-badge">
               <Database className="size-4" />
@@ -238,7 +254,7 @@ export default function DashboardPage() {
         </article>
 
         {/* AI Assistant box */}
-        <article className="celestial-card p-6 xl:col-span-5 flex flex-col justify-between">
+        <article className="botanical-bento flex flex-col justify-between p-6 xl:col-span-5">
           <div className="flex items-center gap-2 text-xs font-bold text-primary">
             <Sparkles className="size-4" aria-hidden="true" />
             AI Assistant
@@ -257,10 +273,10 @@ export default function DashboardPage() {
         </article>
 
         {/* Study Progress SVG Chart */}
-        <article className="celestial-card p-6 xl:col-span-3 flex flex-col justify-between">
+        <article className="botanical-bento flex flex-col justify-between p-6 xl:col-span-3">
           <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground">
             <span>Study Activity</span>
-            <span className="text-primary font-bold">Weekly Flow</span>
+            <span className="text-primary font-bold">7-day library</span>
           </div>
 
           {/* Spring-animated SVG Chart */}
@@ -281,7 +297,7 @@ export default function DashboardPage() {
                 
                 {/* Micro tooltip */}
                 <span className="absolute -top-6 scale-0 group-hover:scale-100 bg-foreground text-background text-[9px] font-bold px-1.5 py-0.5 rounded-md transition-transform pointer-events-none">
-                  {bar.value}h
+                  {bar.count} docs
                 </span>
               </div>
             ))}
@@ -292,7 +308,7 @@ export default function DashboardPage() {
       {/* Main Section */}
       <section className="mt-6 grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
         {/* Recent Documents */}
-        <article className="celestial-card overflow-hidden p-0">
+        <article className="botanical-bento overflow-hidden p-0">
           <div className="flex items-center justify-between border-b border-border/80 p-5">
             <div className="flex items-center gap-3">
               <Archive className="size-4 text-primary" aria-hidden="true" />
@@ -317,7 +333,11 @@ export default function DashboardPage() {
                 </div>
               ))
             ) : recentDocs.length === 0 ? (
-              <p className="p-6 text-sm text-muted-foreground text-center">No documents yet. Drag & drop files onto this page to upload.</p>
+              <div className="botanical-empty m-5">
+                <Archive className="size-9 text-primary" aria-hidden="true" />
+                <p className="text-sm font-semibold">No documents yet</p>
+                <p className="max-w-md text-sm text-muted-foreground">Drag and drop files onto this page to upload.</p>
+              </div>
             ) : (
               recentDocs.map((doc) => (
                 <Link
@@ -350,7 +370,7 @@ export default function DashboardPage() {
           <div 
             onDragOver={handleDrag}
             onDrop={handleDrop}
-            className="celestial-card flex items-center justify-between gap-5 p-5 border-dashed border-2 border-primary/30 hover:border-primary/60 transition-colors cursor-pointer group"
+            className="botanical-dropzone group flex cursor-pointer items-center justify-between gap-5 p-5 transition-colors hover:border-primary"
           >
             <div>
               <h2 className="font-bold tracking-tight text-foreground text-sm">Quick Drop Upload</h2>
@@ -362,7 +382,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Subject clusters list */}
-          <article className="celestial-card p-5">
+          <article className="botanical-bento p-5">
             <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Subject clusters</span>
             <div className="mt-5 space-y-2">
               {loading ? (
@@ -391,7 +411,7 @@ export default function DashboardPage() {
       </section>
 
       {/* Footer statistics bar */}
-      <section className="celestial-card mt-6 flex flex-col gap-4 p-5 lg:flex-row lg:items-center lg:justify-between bg-card/65 backdrop-blur-xs">
+      <section className="botanical-card mt-6 flex flex-col gap-4 p-5 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex min-w-0 items-center gap-3">
           <span className="size-2 rounded-full bg-primary shrink-0" />
           <p className="text-xs text-muted-foreground leading-relaxed">
@@ -404,8 +424,8 @@ export default function DashboardPage() {
         </div>
         <div className="grid grid-cols-2 gap-8 text-xs shrink-0">
           <div>
-            <p className="text-[10px] text-muted-foreground font-semibold">Uptime</p>
-            <p className="mt-1 font-bold text-foreground">99.98%</p>
+            <p className="text-[10px] text-muted-foreground font-semibold">Indexed docs</p>
+            <p className="mt-1 font-bold text-foreground">{docs.filter((doc) => (doc.totalChunks ?? 0) > 0).length}</p>
           </div>
           <div>
             <p className="text-[10px] text-muted-foreground font-semibold">Workspace</p>

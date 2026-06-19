@@ -236,7 +236,7 @@ function Panel({
   className?: string;
 }) {
   return (
-    <section className={`celestial-panel ${className}`}>{children}</section>
+    <section className={`moonlit-panel ${className}`}>{children}</section>
   );
 }
 
@@ -254,7 +254,7 @@ function KpiCard({
   value: string;
 }) {
   return (
-    <article className={`celestial-card tone-surface tone-${tone} p-4`}>
+    <article className={`moonlit-card tone-surface tone-${tone} p-4`}>
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
@@ -598,7 +598,7 @@ export default function Summary() {
   }
 
   return (
-    <main className="celestial-page min-h-svh overflow-y-auto px-4 py-5 sm:px-6 lg:px-8">
+    <main className="botanical-page min-h-svh overflow-y-auto px-4 py-5 sm:px-6 lg:px-8">
       <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-5">
         <header className="flex flex-col gap-4 border-b border-border/60 pb-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
@@ -609,10 +609,10 @@ export default function Summary() {
               <span>/</span>
               <span className="text-foreground">Summary</span>
               <span className="ml-2 rounded-full border border-border/70 px-2 py-1 text-[10px] uppercase tracking-[0.14em]">
-                v0.4 · dev
+                v0.4 - dev
               </span>
             </div>
-            <h1 className="celestial-title text-3xl font-semibold tracking-tight md:text-4xl">
+            <h1 className="moonlit-title text-3xl font-semibold tracking-tight md:text-4xl">
               Benchmark Summary
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">

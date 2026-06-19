@@ -25,11 +25,11 @@ export function NavMain({
           {item.isActive && (
             <motion.div
               layoutId="active-indicator"
-              className="absolute left-[-2px] top-1.5 bottom-1.5 w-1 rounded-r-md bg-primary z-20"
+              className="absolute bottom-2 left-1 top-2 z-20 w-1 rounded-full bg-primary"
               transition={{ type: "spring", stiffness: 350, damping: 30 }}
             />
           )}
-          <SidebarMenuButton asChild isActive={item.isActive} className="transition-all active:scale-[0.98]">
+          <SidebarMenuButton asChild isActive={item.isActive} className="pl-4 transition-all active:scale-[0.98]">
             <Link to={item.url}>
               {item.icon}
               <span>{item.title}</span>

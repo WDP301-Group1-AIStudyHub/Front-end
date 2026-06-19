@@ -50,7 +50,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     name: storedUser?.fullName || "John Doe",
   }
 
-  // Real chat history — grouped into sessions
+  // Real chat history grouped into sessions.
   const [chatSessions, setChatSessions] = React.useState<ChatSessionItem[]>([])
 
   React.useEffect(() => {
@@ -153,8 +153,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   return (
     <Sidebar className="border-r-0" {...props}>
-      <SidebarHeader>
-        <div className="flex items-center justify-between gap-2 px-2 py-2">
+      <SidebarHeader className="gap-4 p-3">
+        <div className="flex items-center justify-between gap-2 rounded-[18px] border border-sidebar-border bg-card/60 px-3 py-3">
           <Link className="min-w-0" to="/dashboard">
             <BrandLogo />
           </Link>
