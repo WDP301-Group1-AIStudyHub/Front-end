@@ -1,5 +1,6 @@
-﻿import { useUploadStore } from "../../store/useUploadStore";
+import { useUploadStore } from "../../store/useUploadStore";
 import { AlertTriangle, FileText, Files } from "lucide-react";
+import { getFileIconColorClass } from "../../utils/formatters";
 
 export default function ConflictModal() {
   const stagedConflicts = useUploadStore((state) => state.stagedConflicts);
@@ -29,7 +30,7 @@ export default function ConflictModal() {
         </div>
 
         <div className="flex items-center gap-3 rounded-lg border border-border/60 bg-muted/30 p-3">
-          <FileText className="size-5 text-muted-foreground shrink-0" />
+          <FileText className={`size-5 shrink-0 ${getFileIconColorClass(payload.file.name)}`} />
           <span className="min-w-0 flex-1 truncate text-sm font-medium">
             {payload.file.name}
           </span>

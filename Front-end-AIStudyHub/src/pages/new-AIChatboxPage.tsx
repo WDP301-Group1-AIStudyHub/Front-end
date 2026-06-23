@@ -1,12 +1,9 @@
 import {
   AssistantRuntimeProvider,
-  Suggestions,
-  useAui,
   useLocalRuntime,
 } from "@assistant-ui/react";
 import type { ChatModelAdapter, ThreadMessage, ThreadMessageLike } from "@assistant-ui/react";
 import {
-  BookMarked,
   BookOpen,
   Brain,
   ChevronDown,
@@ -22,64 +19,37 @@ import { useSearchParams } from "react-router-dom";
 
 import { Thread } from "@/components/assistant-ui/thread";
 import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import { Sparkles } from "lucide-react";
 import { CelestialInlineLoader, CelestialLoader, LoadingState } from "../components/shared/CelestialLoading";
 import { ChatApiError, askChat, getChatHistoryById } from "../services/chatApi";
 import { listDocuments } from "../services/documentApi";
-import type { ChatEvaluation, ChatSource } from "../types/chat";
+import { getFileBadgeClass } from "../utils/formatters";
+import { normalizeSubjectColor } from "../utils/subjectColor";
+import type { AskChatPayload, ChatEvaluation, ChatSource } from "../types/chat";
 import type { DocumentItem } from "../types/document";
 
 // ── Inner component: owns the runtime so key-remount works correctly ──────────
 type ChatThreadProps = {
   adapter: ChatModelAdapter;
   initialMessages: readonly ThreadMessageLike[];
-  selectedDoc?: { fileName: string; subject?: string; subjectColor?: string };
+  onClearSelectedDoc?: () => void;
+  selectedDoc?: {
+    fileName: string;
+    subject?: string;
+    subjectColor?: string;
+    semester?: string;
+  };
 };
 
-function ChatThread({ adapter, initialMessages, selectedDoc }: ChatThreadProps) {
-  const suggestionsAui = useAui(
-    { suggestions: Suggestions(quickPrompts) },
-    { parent: null },
-  );
+function ChatThread({ adapter, initialMessages, onClearSelectedDoc, selectedDoc }: ChatThreadProps) {
   const runtime = useLocalRuntime(adapter, { initialMessages });
   return (
-    <AssistantRuntimeProvider runtime={runtime} aui={suggestionsAui}>
-      <Thread selectedDoc={selectedDoc} />
+    <AssistantRuntimeProvider runtime={runtime}>
+      <Thread onClearSelectedDoc={onClearSelectedDoc} selectedDoc={selectedDoc} />
     </AssistantRuntimeProvider>
   );
 }
 
 // ── Main page ─────────────────────────────────────────────────────────────────
-
-const quickPrompts = [
-  {
-    title: "Summarize sources",
-    label: "Turn selected readings into concise exam notes.",
-    prompt: "Summarize my selected sources into exam notes.",
-  },
-  {
-    title: "Build a study plan",
-    label: "Create a focused schedule for this week's review.",
-    prompt: "Create a study plan for neural networks this week.",
-  },
-  {
-    title: "Explain with citations",
-    label: "Break down a topic using examples and source references.",
-    prompt: "Explain this topic with examples and citations.",
-  },
-  {
-    title: "Generate quiz questions",
-    label: "Practice with questions from my research library.",
-    prompt: "Generate quiz questions from my research library.",
-  },
-];
 
 function getMessageText(message: ThreadMessage) {
   return message.content
@@ -89,20 +59,29 @@ function getMessageText(message: ThreadMessage) {
     .trim();
 }
 
+function getDocumentSubject(doc?: DocumentItem) {
+  return doc && typeof doc.subject === "object" ? doc.subject : null;
+}
+
+function getDocumentSubjectName(doc?: DocumentItem) {
+  return getDocumentSubject(doc)?.name || (typeof doc?.subject === "string" ? doc.subject : undefined);
+}
+
+function getDocumentSubjectId(doc?: DocumentItem) {
+  return getDocumentSubject(doc)?._id || doc?.subjectId;
+}
+
+function getDocumentSemester(doc?: DocumentItem) {
+  return getDocumentSubject(doc)?.semester?.trim() || "No semester";
+}
+
+function getDocumentSubjectKey(doc: DocumentItem) {
+  return getDocumentSubjectId(doc) || getDocumentSubjectName(doc) || "No subject";
+}
+
 export default function NewAIChatboxPage() {
   const [searchParams] = useSearchParams();
-  const [isPromptOpen, setIsPromptOpen] = useState(false);
 
-  const handleSelectPrompt = (promptText: string) => {
-    const textarea = document.querySelector(".aui-composer-input") as HTMLTextAreaElement;
-    if (textarea) {
-      textarea.focus();
-      textarea.value = promptText;
-      const event = new Event("input", { bubbles: true });
-      textarea.dispatchEvent(event);
-    }
-    setIsPromptOpen(false);
-  };
 
   const historyId = searchParams.get("historyId") ?? undefined;
   const sessionIdsParam = searchParams.get("sessionIds") ?? undefined;
@@ -120,15 +99,15 @@ export default function NewAIChatboxPage() {
 
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [loadingDocs, setLoadingDocs] = useState(true);
-  const [selectedDocId, setSelectedDocId] = useState<string | undefined>(
-    undefined,
-  );
+  const [selectedDocIds, setSelectedDocIds] = useState<string[]>([]);
   const [lastSources, setLastSources] = useState<ChatSource[]>([]);
   const [lastEvaluation, setLastEvaluation] =
     useState<ChatEvaluation | null>(null);
   const [isThinking, setIsThinking] = useState(false);
   const [openSemesters, setOpenSemesters] = useState<Set<string>>(new Set());
   const [openSubjects, setOpenSubjects] = useState<Set<string>>(new Set());
+  const [contextPanelWidth, setContextPanelWidth] = useState(340);
+  const [isResizingContext, setIsResizingContext] = useState(false);
   const [ragMode, setRagMode] = useState<"basic" | "corrective">("basic");
 
   // History loading
@@ -149,7 +128,8 @@ export default function NewAIChatboxPage() {
         );
         // Restore context from the most recent item
         const last = sorted[sorted.length - 1];
-        if (last.documentId) setSelectedDocId(last.documentId);
+        if (last.documentIds?.length) setSelectedDocIds(last.documentIds);
+        else if (last.documentId) setSelectedDocIds([last.documentId]);
         if (last.mode === "basic" || last.mode === "corrective") setRagMode(last.mode);
         if (last.sources?.length) setLastSources(last.sources);
         if (last.evaluation) setLastEvaluation(last.evaluation);
@@ -166,7 +146,8 @@ export default function NewAIChatboxPage() {
   }, [sessionIds]);
 
   // Refs so the stable adapter closure can read latest state
-  const selectedDocRef = useRef<string | undefined>(undefined);
+  const selectedDocIdsRef = useRef<string[]>([]);
+  const selectedSubjectIdRef = useRef<string | undefined>(undefined);
   const selectedDocSubjectRef = useRef<string | undefined>(undefined);
   const ragModeRef = useRef<"basic" | "corrective">("basic");
   const onResponseRef = useRef<
@@ -178,10 +159,34 @@ export default function NewAIChatboxPage() {
   }, [ragMode]);
 
   useEffect(() => {
-    selectedDocRef.current = selectedDocId;
-    const doc = documents.find((d) => d.id === selectedDocId);
-    selectedDocSubjectRef.current = (typeof doc?.subject === "object" ? doc?.subject?.name : doc?.subject) ?? undefined;
-  }, [selectedDocId, documents]);
+    if (!isResizingContext) return;
+
+    const handleMouseMove = (event: MouseEvent) => {
+      const nextWidth = window.innerWidth - event.clientX - 20;
+      setContextPanelWidth(Math.min(Math.max(nextWidth, 280), 520));
+    };
+
+    const handleMouseUp = () => setIsResizingContext(false);
+
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+
+    return () => {
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isResizingContext]);
+
+  useEffect(() => {
+    selectedDocIdsRef.current = selectedDocIds;
+    const firstDoc = documents.find((d) => d.id === selectedDocIds[0]);
+    selectedSubjectIdRef.current = getDocumentSubjectId(firstDoc);
+    selectedDocSubjectRef.current = getDocumentSubjectName(firstDoc);
+  }, [selectedDocIds, documents]);
 
   // Keep response callback up-to-date without recreating the adapter
   useEffect(() => {
@@ -196,28 +201,58 @@ export default function NewAIChatboxPage() {
     listDocuments()
       .then((docs) => {
         setDocuments(docs);
-        const sems = new Set(docs.map((d) => (d.title || "Unsorted").trim().toUpperCase()));
-        setOpenSemesters(sems);
         const subjs = new Set<string>();
+        const sems = new Set<string>();
         for (const doc of docs) {
-          const sem = (doc.title || "Unsorted").trim().toUpperCase();
-          const subj = (typeof doc.subject === "object" ? doc.subject?.name : doc.subject) || "No subject";
-          subjs.add(`${sem}::${subj}`);
+          const subjKey = `${getDocumentSemester(doc)}::${getDocumentSubjectKey(doc)}`;
+          const semName = getDocumentSemester(doc);
+          subjs.add(subjKey);
+          sems.add(semName);
         }
         setOpenSubjects(subjs);
+        setOpenSemesters(sems);
       })
       .catch(() => setDocuments([]))
       .finally(() => setLoadingDocs(false));
   }, []);
 
-  const groupedDocs = useMemo(() => {
-    const map: Record<string, Record<string, DocumentItem[]>> = {};
+  const groupedDocsBySemester = useMemo(() => {
+    const map: Record<
+      string,
+      {
+        semesterName: string;
+        subjects: Record<
+          string,
+          {
+            subjectName: string;
+            subjectColor: string;
+            docs: DocumentItem[];
+          }
+        >;
+      }
+    > = {};
+
     for (const doc of documents) {
-      const sem = (doc.title || "Unsorted").trim().toUpperCase();
-      const subj = (typeof doc.subject === "object" ? doc.subject?.name : doc.subject) || "No subject";
-      if (!map[sem]) map[sem] = {};
-      if (!map[sem][subj]) map[sem][subj] = [];
-      map[sem][subj].push(doc);
+      const subjName = getDocumentSubjectName(doc) || "No subject";
+      const subjKey = getDocumentSubjectKey(doc);
+      const semesterName = getDocumentSemester(doc);
+      const rawColor = getDocumentSubject(doc)?.color;
+      const subjColor = normalizeSubjectColor(rawColor);
+
+      if (!map[semesterName]) {
+        map[semesterName] = {
+          semesterName,
+          subjects: {},
+        };
+      }
+      if (!map[semesterName].subjects[subjKey]) {
+        map[semesterName].subjects[subjKey] = {
+          subjectName: subjName,
+          subjectColor: subjColor,
+          docs: [],
+        };
+      }
+      map[semesterName].subjects[subjKey].docs.push(doc);
     }
     return map;
   }, [documents]);
@@ -240,31 +275,77 @@ export default function NewAIChatboxPage() {
     });
   };
 
+  const selectedDocs = useMemo(
+    () =>
+      selectedDocIds
+        .map((id) => documents.find((doc) => doc.id === id))
+        .filter((doc): doc is DocumentItem => Boolean(doc)),
+    [documents, selectedDocIds],
+  );
+
+  const selectedSubjectKey = selectedDocs[0]
+    ? getDocumentSubjectKey(selectedDocs[0])
+    : undefined;
+
+  const toggleDocumentSelection = (doc: DocumentItem) => {
+    const docSubjectKey = getDocumentSubjectKey(doc);
+    setSelectedDocIds((current) => {
+      const selectedFromSameSubject =
+        current.length === 0 ||
+        documents
+          .filter((item) => current.includes(item.id))
+          .every((item) => getDocumentSubjectKey(item) === docSubjectKey);
+
+      if (!selectedFromSameSubject) {
+        return [doc.id];
+      }
+
+      return current.includes(doc.id)
+        ? current.filter((id) => id !== doc.id)
+        : [...current, doc.id];
+    });
+  };
+
+  const toggleSubjectSelection = (docs: DocumentItem[]) => {
+    const ids = docs.map((doc) => doc.id);
+    const allSelected = ids.every((id) => selectedDocIds.includes(id));
+    setSelectedDocIds(allSelected ? [] : ids);
+  };
+
   // Real adapter for POST /api/chat/ask with the selected mode.
   const realAdapter = useMemo<ChatModelAdapter>(
     () => ({
-      async run({ messages, abortSignal }) {
+      async *run({ messages, abortSignal }) {
         const lastMsg = [...messages]
           .reverse()
           .find((m) => m.role === "user");
         const question = lastMsg ? getMessageText(lastMsg) : "";
 
         setIsThinking(true);
-        const docId = selectedDocRef.current;
+        const docIds = selectedDocIdsRef.current;
+        const subjectId = selectedSubjectIdRef.current;
         const docSubject = selectedDocSubjectRef.current;
         const mode = ragModeRef.current;
 
-        const payload = {
+        const payload: AskChatPayload = {
           question,
-          documentId: docId || undefined,
           subject: docSubject || undefined,
+          subjectId: subjectId || undefined,
+          scope: docIds.length === 0 ? "library_all" : docIds.length === 1 ? "single_document" : "document_set",
           mode,
         };
 
+        if (docIds.length === 1) {
+          payload.documentId = docIds[0];
+        } else if (docIds.length > 1) {
+          payload.documentIds = docIds;
+        }
+
+        let finalAnswer = "";
         try {
           const result = await askChat(payload, abortSignal);
           onResponseRef.current?.(result.sources, result.evaluation);
-          return { content: [{ type: "text", text: result.answer }] };
+          finalAnswer = result.answer;
         } catch (err) {
           if (err instanceof DOMException && err.name === "AbortError") throw err;
           if (err instanceof ChatApiError && err.status >= 500) {
@@ -273,31 +354,56 @@ export default function NewAIChatboxPage() {
               try {
                 const fallback = await askChat(fallbackPayload, abortSignal);
                 onResponseRef.current?.(fallback.sources, fallback.evaluation);
-                return { content: [{ type: "text", text: fallback.answer }] };
+                finalAnswer = fallback.answer;
               } catch (retryErr) {
                 if (retryErr instanceof DOMException && retryErr.name === "AbortError") throw retryErr;
+                finalAnswer = "The server is busy or still waking up. Please send the message again in 10-15 seconds.";
               }
+            } else {
+              finalAnswer = "The server is busy or still waking up. Please send the message again in 10-15 seconds.";
             }
-            return {
-              content: [
-                {
-                  type: "text",
-                  text: "The server is busy or still waking up. Please send the message again in 10-15 seconds.",
-                },
-              ],
-            };
+          } else {
+            const msg = err instanceof Error ? err.message : "Failed to get answer";
+            finalAnswer = `Warning: ${msg}`;
           }
-          const msg = err instanceof Error ? err.message : "Failed to get answer";
-          return { content: [{ type: "text", text: `Warning: ${msg}` }] };
         } finally {
           setIsThinking(false);
+        }
+
+        // Stream the text to simulate typewriter running text typing effect
+        let currentText = "";
+        const chunkSize = 4;
+        const delayMs = 12;
+        for (let i = 0; i < finalAnswer.length; i += chunkSize) {
+          if (abortSignal?.aborted) break;
+          currentText += finalAnswer.slice(i, i + chunkSize);
+          yield {
+            content: [{ type: "text" as const, text: currentText }]
+          };
+          await new Promise((resolve) => setTimeout(resolve, delayMs));
         }
       },
     }),
     [],
   );
 
-  const selectedDoc = documents.find((d) => d.id === selectedDocId);
+  const selectedContext = selectedDocs[0]
+    ? {
+        fileName:
+          selectedDocs.length === 1
+            ? selectedDocs[0].fileName
+            : `${selectedDocs.length} documents selected`,
+        subject: getDocumentSubjectName(selectedDocs[0]),
+        subjectColor: getDocumentSubject(selectedDocs[0])?.color,
+        semester: getDocumentSemester(selectedDocs[0]),
+      }
+    : undefined;
+
+  const selectedContextLabel = selectedContext
+    ? selectedDocs.length === 1
+      ? selectedContext.subject || selectedContext.fileName
+      : `${selectedDocs.length} docs - ${selectedContext.subject || "Selected subject"}`
+    : "All documents";
 
   return (
     <main className="botanical-page flex h-svh min-h-0 flex-col overflow-hidden p-3 pb-24 text-foreground sm:p-5 sm:pb-24 lg:pb-5">
@@ -323,7 +429,7 @@ export default function NewAIChatboxPage() {
               className="inline-flex items-center gap-2 px-3 py-2"
             >
               <Library className="size-4 text-foreground" aria-hidden="true" />
-              {selectedDoc ? (typeof selectedDoc.subject === "object" ? selectedDoc.subject?.name : selectedDoc.subject) ?? selectedDoc.title : "All documents"}
+              {selectedContextLabel}
             </Button>
             <Button
               variant={ragMode === "corrective" ? "default" : "outline"}
@@ -343,20 +449,18 @@ export default function NewAIChatboxPage() {
               )}
               {ragMode === "corrective" ? "Corrective RAG" : "Basic RAG"}
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsPromptOpen(true)}
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl transition-all hover:bg-muted"
-            >
-              <Sparkles className="size-4 text-primary" aria-hidden="true" />
-              <span>Prompt seeds</span>
-            </Button>
           </div>
         </div>
       </header>
 
-      <div className="botanical-bento mt-4 grid min-h-0 flex-1 grid-cols-1 overflow-hidden lg:grid-cols-[minmax(0,1fr)_340px]">
+      <div
+        className="botanical-bento mt-4 grid min-h-0 flex-1 grid-cols-1 overflow-hidden lg:grid-cols-[minmax(0,1fr)_8px_var(--context-panel-width)]"
+        style={
+          {
+            "--context-panel-width": `${contextPanelWidth}px`,
+          } as React.CSSProperties
+        }
+      >
         <section className="min-h-0 bg-transparent">
           {loadingHistory ? (
             <LoadingState className="m-5 h-[calc(100%-2.5rem)]" label="Loading chat history..." tone="mist" />
@@ -365,24 +469,20 @@ export default function NewAIChatboxPage() {
               key={sessionIdsParam ?? historyId ?? "new"}
               adapter={realAdapter}
               initialMessages={historyMessages}
-              selectedDoc={
-                selectedDoc
-                  ? {
-                      fileName: selectedDoc.fileName,
-                      subject:
-                        typeof selectedDoc.subject === "object"
-                          ? selectedDoc.subject?.name
-                          : selectedDoc.subject,
-                      subjectColor:
-                        typeof selectedDoc.subject === "object"
-                          ? selectedDoc.subject?.color
-                          : undefined,
-                    }
-                  : undefined
-              }
+              onClearSelectedDoc={() => setSelectedDocIds([])}
+              selectedDoc={selectedContext}
             />
           )}
         </section>
+
+        <div
+          aria-label="Resize study context panel"
+          className={`hidden cursor-col-resize border-l border-r border-border/50 bg-border/30 transition-colors hover:bg-primary/30 lg:block ${
+            isResizingContext ? "bg-primary/35" : ""
+          }`}
+          onMouseDown={() => setIsResizingContext(true)}
+          role="separator"
+        />
 
         <aside className="hidden min-h-0 border-l border-border/80 bg-card/45 p-5 lg:block">
           <div className="flex h-full flex-col gap-5 overflow-y-auto">
@@ -408,9 +508,9 @@ export default function NewAIChatboxPage() {
                 <div className="space-y-1.5">
                   {/* "All documents" option */}
                   <button
-                    onClick={() => setSelectedDocId(undefined)}
+                    onClick={() => setSelectedDocIds([])}
                     className={`w-full rounded-lg border px-3 py-2 text-left text-xs transition-colors ${
-                      selectedDocId === undefined
+                      selectedDocIds.length === 0
                         ? "border-primary/60 bg-primary/15 text-primary font-medium "
                         : "border-border/70 bg-background/35 text-muted-foreground hover:border-primary/35 hover:text-foreground"
                     }`}
@@ -418,26 +518,29 @@ export default function NewAIChatboxPage() {
                     All documents
                   </button>
 
-                  {/* Semester to subject to document */}
-                  {Object.entries(groupedDocs).map(([sem, subjects]) => {
-                    const semOpen = openSemesters.has(sem);
-                    const totalDocs = Object.values(subjects).flat().length;
+                  {/* Semester to Subject to Document */}
+                  {Object.entries(groupedDocsBySemester).map(([semesterName, semesterGroup]) => {
+                    const semOpen = openSemesters.has(semesterName);
+                    const totalDocs = Object.values(semesterGroup.subjects).reduce(
+                      (count, subject) => count + subject.docs.length,
+                      0,
+                    );
                     return (
                       <div
-                        key={sem}
-                        className="overflow-hidden rounded-lg border border-border/60 bg-background/25"
+                        key={semesterName}
+                        className="overflow-hidden rounded-lg border transition-colors duration-200"
                       >
                         {/* Semester header */}
                         <button
-                          onClick={() => toggleSemester(sem)}
-                          className="flex w-full items-center gap-2 bg-muted px-3 py-2 text-left transition-colors hover:bg-muted/70"
+                          onClick={() => toggleSemester(semesterName)}
+                          className="flex w-full items-center gap-2 px-3 py-2 text-left transition-colors hover:bg-black/5"
                         >
-                          <GraduationCap className="size-3.5 shrink-0 text-primary" />
+                          <GraduationCap className="size-3.5 shrink-0 text-muted-foreground" />
                           <span className="flex-1 truncate text-xs font-semibold text-card-foreground">
-                            {sem}
+                            {semesterGroup.semesterName}
                           </span>
-                          <span className="shrink-0 rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] font-medium text-primary">
-                            {totalDocs}
+                          <span className="shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-[9px] font-medium text-muted-foreground">
+                            {totalDocs} docs
                           </span>
                           <ChevronDown
                             className={`size-3 shrink-0 text-muted-foreground transition-transform duration-200 ${
@@ -446,59 +549,114 @@ export default function NewAIChatboxPage() {
                           />
                         </button>
 
-                        {/* Subjects */}
+                        {/* Subjects inside this Semester */}
                         {semOpen && (
-                          <div className="space-y-px bg-background/20 px-2 py-1.5">
-                            {Object.entries(subjects).map(([subj, docs]) => {
-                              const subjKey = `${sem}::${subj}`;
-                              const subjOpen = openSubjects.has(subjKey);
+                          <div className="space-y-1 bg-background/20 px-2 py-1.5 border-t">
+                            {Object.entries(semesterGroup.subjects).map(([subjectKey, subjectGroup]) => {
+                              const subjectOpenKey = `${semesterName}::${subjectKey}`;
+                              const subjectOpen = openSubjects.has(subjectOpenKey);
+                              const { docs, subjectColor, subjectName } = subjectGroup;
+                              const allSubjectDocsSelected = docs.every((doc) => selectedDocIds.includes(doc.id));
+                              const subjectIsActive = selectedSubjectKey === subjectKey;
                               return (
-                                <div key={subjKey}>
-                                  {/* Subject header */}
-                                  <button
-                                    onClick={() => toggleSubject(subjKey)}
-                                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-muted/50"
+                                <div
+                                  key={subjectOpenKey}
+                                  className="overflow-hidden rounded-md border"
+                                  style={{
+                                    borderColor: `color-mix(in srgb, ${subjectColor} 35%, transparent)`,
+                                    backgroundColor: `color-mix(in srgb, ${subjectColor} 5%, transparent)`,
+                                  }}
+                                >
+                                  <div
+                                    className="flex w-full items-center gap-2 px-2 py-1.5"
                                   >
-                                    <BookMarked className="size-3 shrink-0 text-muted-foreground" />
-                                    <span className="flex-1 truncate text-[11px] font-medium text-card-foreground">
-                                      {subj}
-                                    </span>
-                                    <span className="shrink-0 text-[9px] text-muted-foreground">
-                                      {docs.length}
-                                    </span>
+                                    <button
+                                      onClick={() => toggleSubject(subjectOpenKey)}
+                                      className="flex min-w-0 flex-1 items-center gap-2 text-left"
+                                    >
+                                      <BookOpen className="size-3.5 shrink-0" style={{ color: subjectColor }} />
+                                      <span className="min-w-0 flex-1 truncate text-[11px] font-semibold text-card-foreground">
+                                        {subjectName}
+                                      </span>
+                                      <span className="shrink-0 text-[9px] text-muted-foreground">
+                                        {docs.length}
+                                      </span>
+                                    </button>
+                                    <label
+                                      className={`inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-md border px-1.5 py-0.5 text-[9px] font-medium transition-colors ${
+                                        allSubjectDocsSelected && subjectIsActive
+                                          ? "border-primary/60 bg-primary/15 text-primary"
+                                          : "border-border/70 bg-background/50 text-muted-foreground hover:border-primary/35 hover:text-foreground"
+                                      }`}
+                                    >
+                                      <input
+                                        aria-label={`Select all documents in ${subjectName}`}
+                                        checked={allSubjectDocsSelected && subjectIsActive}
+                                        className="size-3 rounded border-border"
+                                        onChange={() => toggleSubjectSelection(docs)}
+                                        style={{ accentColor: subjectColor }}
+                                        type="checkbox"
+                                      />
+                                      All
+                                    </label>
                                     <ChevronDown
                                       className={`size-3 shrink-0 text-muted-foreground transition-transform duration-200 ${
-                                        subjOpen ? "rotate-0" : "-rotate-90"
+                                        subjectOpen ? "rotate-0" : "-rotate-90"
                                       }`}
                                     />
-                                  </button>
+                                  </div>
 
                                   {/* Document list */}
-                                  {subjOpen && (
+                                  {subjectOpen && (
                                     <div className="mb-1 ml-3 space-y-0.5 border-l border-border/40 pl-2">
-                                      {docs.map((doc) => (
-                                        <button
-                                          key={doc.id}
-                                          onClick={() =>
-                                            setSelectedDocId((prev) =>
-                                              prev === doc.id ? undefined : doc.id,
-                                            )
-                                          }
-                                          className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors ${
-                                            selectedDocId === doc.id
-                                              ? "bg-primary/15 text-primary "
-                                              : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
-                                          }`}
-                                        >
-                                          <FileText className="size-3 shrink-0 text-current" />
-                                          <span className="min-w-0 flex-1 truncate text-[11px]">
-                                            {doc.fileName}
-                                          </span>
-                                          {selectedDocId === doc.id && (
-                                            <div className="ml-auto size-1.5 shrink-0 rounded-full bg-primary" />
-                                          )}
-                                        </button>
-                                      ))}
+                                      {docs.map((doc) => {
+                                        const isSelected = selectedDocIds.includes(doc.id);
+                                        return (
+                                          <label
+                                            key={doc.id}
+                                            className={`flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors border-l-2 ${
+                                              isSelected
+                                                ? "font-medium"
+                                                : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+                                            }`}
+                                            style={
+                                              isSelected
+                                                ? {
+                                                    backgroundColor: `color-mix(in srgb, ${subjectColor} 14%, transparent)`,
+                                                    color: subjectColor,
+                                                    borderLeftColor: subjectColor,
+                                                  }
+                                                : {
+                                                    borderLeftColor: "transparent",
+                                                  }
+                                            }
+                                          >
+                                            <input
+                                              aria-label={`Use ${doc.fileName} as AI source`}
+                                              checked={isSelected}
+                                              className="size-3.5 shrink-0 rounded border-border"
+                                              onChange={() => toggleDocumentSelection(doc)}
+                                              style={{ accentColor: subjectColor }}
+                                              type="checkbox"
+                                            />
+                                            <span
+                                              className={`admin-icon-badge ${getFileBadgeClass(doc.fileName)} flex size-6 shrink-0 items-center justify-center rounded-md`}
+                                              style={{ minHeight: "1.5rem", minWidth: "1.5rem" }}
+                                            >
+                                              <FileText className="size-3" aria-hidden="true" />
+                                            </span>
+                                            <span className="min-w-0 flex-1 truncate text-[11px]">
+                                              {doc.fileName}
+                                            </span>
+                                            {isSelected && (
+                                              <div
+                                                className="ml-auto size-1.5 shrink-0 rounded-full"
+                                                style={{ backgroundColor: subjectColor }}
+                                              />
+                                            )}
+                                          </label>
+                                        );
+                                      })}
                                     </div>
                                   )}
                                 </div>
@@ -616,35 +774,6 @@ export default function NewAIChatboxPage() {
           </div>
         </aside>
       </div>
-      <Sheet open={isPromptOpen} onOpenChange={setIsPromptOpen}>
-        <SheetContent side="right" className="rounded-l-2xl border-l border-border/80">
-          <SheetHeader>
-            <SheetTitle className="flex items-center gap-2 text-primary">
-              <Sparkles className="size-5 text-primary" />
-              <span>Study prompt seeds</span>
-            </SheetTitle>
-            <SheetDescription>
-              Pick a starter prompt to fill the composer and begin a focused review session.
-            </SheetDescription>
-          </SheetHeader>
-          <div className="mt-6 space-y-4">
-            {quickPrompts.map((item) => (
-              <button
-                key={item.title}
-                onClick={() => handleSelectPrompt(item.prompt)}
-                className="w-full text-left p-4 rounded-2xl border border-border/60 bg-muted/20 hover:bg-muted/50 hover:border-primary/45 transition-all group"
-              >
-                <h4 className="text-xs font-bold text-foreground group-hover:text-primary transition-colors">
-                  {item.title}
-                </h4>
-                <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-                  {item.label}
-                </p>
-              </button>
-            ))}
-          </div>
-        </SheetContent>
-      </Sheet>
     </main>
   );
 }

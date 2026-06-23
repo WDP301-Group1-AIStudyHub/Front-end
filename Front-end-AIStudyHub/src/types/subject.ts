@@ -4,6 +4,7 @@ export interface Subject {
   description?: string
   color?: string
   code?: string
+  semester?: string
   createdAt?: string
 }
 
@@ -12,4 +13,5 @@ export interface SubjectPayload {
   code?: string
   description?: string
   color?: string
+  semester?: string
 }

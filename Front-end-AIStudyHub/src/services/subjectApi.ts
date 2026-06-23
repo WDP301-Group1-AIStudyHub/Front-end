@@ -11,6 +11,7 @@ export interface SubjectItem {
   code?: string
   description?: string
   color?: string
+  semester?: string
   createdAt?: string
   updatedAt?: string
 }
@@ -20,6 +21,7 @@ export interface SubjectPayload {
   code?: string
   description?: string
   color?: string
+  semester?: string
 }
 
 interface ApiResponse<T> {

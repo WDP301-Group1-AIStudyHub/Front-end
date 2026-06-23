@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowUpFromLineIcon,
   BookOpenText,
@@ -86,6 +86,7 @@ import { useUploadStore } from "../store/useUploadStore";
 import type { DocumentItem } from "../types/document";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getFileBadgeClass } from "../utils/formatters";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const SEARCH_DEBOUNCE_MS = 350;
@@ -1152,7 +1153,7 @@ export default function NewLibraryPage() {
                             onClick={() => openFile(document)}
                             type="button"
                           >
-                            <div className="admin-icon-badge admin-tone-blue flex size-9 shrink-0 items-center justify-center rounded-lg transition-transform group-hover:scale-[1.02]">
+                            <div className={`admin-icon-badge ${getFileBadgeClass(document.fileName)} flex size-9 shrink-0 items-center justify-center rounded-lg transition-transform group-hover:scale-[1.02]`}>
                               <FileText aria-hidden="true" />
                             </div>
                             <div className="min-w-0">

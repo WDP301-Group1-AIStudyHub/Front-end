@@ -4,6 +4,7 @@ export interface DocumentSubject {
   description?: string
   color?: string
   code?: string
+  semester?: string
 }
 
 export interface DocumentItem {

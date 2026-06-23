@@ -131,6 +131,7 @@ function normalizeSubject(value: unknown): DocumentSubject | null {
     code: subject.code,
     color: subject.color,
     description: subject.description,
+    semester: subject.semester,
   }
 }
 
