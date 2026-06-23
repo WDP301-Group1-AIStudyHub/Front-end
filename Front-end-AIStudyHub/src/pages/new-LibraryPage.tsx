@@ -459,7 +459,14 @@ function DocumentPreviewPage({
     ? getPreviewTitle(document.fileName || document.title)
     : getPreviewTitle(previewParam);
   const fileType = getPreviewFileType(document?.fileName || previewParam);
-  const viewerSrc = document?.fileUrl ?? "";
+  const viewerSrc = (() => {
+    if (!document?.fileUrl) return "";
+    const ext = fileType.toLowerCase();
+    if (["pptx", "ppt", "docx", "doc", "xlsx", "xls"].includes(ext)) {
+      return `https://docs.google.com/viewer?url=${encodeURIComponent(document.fileUrl)}&embedded=true`;
+    }
+    return document.fileUrl;
+  })();
 
   function closePreview() {
     navigate("/library", { replace: true });
