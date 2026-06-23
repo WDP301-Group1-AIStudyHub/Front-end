@@ -1,4 +1,4 @@
-﻿@import "tailwindcss";
+@import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/inter";
@@ -387,6 +387,36 @@ html[data-theme="dark"] {
     border-radius: 0.7rem !important;
     background: var(--tone-bg, var(--muted)) !important;
     color: var(--tone-accent, var(--primary)) !important;
+  }
+
+  .file-pdf-badge {
+    --tone-bg: #FEE2E2 !important;
+    --tone-border: #FCA5A5 !important;
+    --tone-accent: #EF4444 !important;
+  }
+  
+  .file-docx-badge {
+    --tone-bg: #DBEAFE !important;
+    --tone-border: #BFDBFE !important;
+    --tone-accent: #3B82F6 !important;
+  }
+  
+  .file-xlsx-badge {
+    --tone-bg: #D1FAE5 !important;
+    --tone-border: #A7F3D0 !important;
+    --tone-accent: #10B981 !important;
+  }
+
+  .file-pptx-badge {
+    --tone-bg: #FFEDD5 !important;
+    --tone-border: #FED7AA !important;
+    --tone-accent: #F97316 !important;
+  }
+
+  .file-txt-badge {
+    --tone-bg: #F3F4F6 !important;
+    --tone-border: #E5E7EB !important;
+    --tone-accent: #4B5563 !important;
   }
 
   .admin-tone-blue,
@@ -1079,6 +1109,25 @@ html[data-theme="dark"] {
     border-color: var(--border) !important;
     background: var(--paper) !important;
     box-shadow: 0 12px 34px rgb(72 106 77 / 0.11);
+  }
+
+  .aui-composer-input,
+  .aui-composer-input textarea,
+  .aui-composer-input input,
+  [data-slot="aui_composer-shell"] textarea,
+  [data-slot="aui_composer-shell"] input,
+  .aui-composer-input:focus,
+  .aui-composer-input textarea:focus,
+  .aui-composer-input input:focus,
+  [data-slot="aui_composer-shell"] textarea:focus,
+  [data-slot="aui_composer-shell"] input:focus {
+    border: none !important;
+    border-width: 0 !important;
+    border-style: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    background-color: transparent !important;
   }
 
   .tracking-tight,

@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo, useState } from "react";
-import { BookMarked, Pencil, Plus, Trash2 } from "lucide-react";
+import { BookMarked, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -35,6 +35,7 @@ import {
 type SubjectForm = {
   name: string;
   code: string;
+  semester: string;
   description: string;
   color: string;
 };
@@ -42,6 +43,7 @@ type SubjectForm = {
 const emptyForm: SubjectForm = {
   name: "",
   code: "",
+  semester: "",
   description: "",
   color: DEFAULT_SUBJECT_COLOR,
 };
@@ -74,21 +76,58 @@ export default function SubjectsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [semesterFilter, setSemesterFilter] = useState("");
   const [feedback, setFeedback] = useState<{
     tone: "success" | "error";
     message: string;
   } | null>(null);
 
+  const semesters = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          subjects
+            .map((subject) => subject.semester?.trim())
+            .filter((semester): semester is string => Boolean(semester)),
+        ),
+      ).sort((a, b) => a.localeCompare(b)),
+    [subjects],
+  );
+
+  const filteredSubjects = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+
+    return subjects.filter((subject) => {
+      const matchesSemester =
+        !semesterFilter || subject.semester?.trim() === semesterFilter;
+
+      if (!matchesSemester) return false;
+      if (!normalizedQuery) return true;
+
+      return [
+        subject.name,
+        subject.code,
+        subject.semester,
+        subject.description,
+      ]
+        .filter(Boolean)
+        .some((value) => value!.toLowerCase().includes(normalizedQuery));
+    });
+  }, [searchQuery, semesterFilter, subjects]);
+
   const sortedSubjects = useMemo(
     () =>
-      [...subjects].sort((a, b) =>
+      [...filteredSubjects].sort((a, b) =>
         [a.code, a.name]
           .filter(Boolean)
           .join(" ")
           .localeCompare([b.code, b.name].filter(Boolean).join(" ")),
       ),
-    [subjects],
+    [filteredSubjects],
   );
+
+  const hasActiveFilters = Boolean(searchQuery.trim() || semesterFilter);
 
   async function loadSubjects() {
     setIsLoading(true);
@@ -117,6 +156,7 @@ export default function SubjectsPage() {
     setForm({
       name: subject.name,
       code: subject.code ?? "",
+      semester: subject.semester ?? "",
       description: subject.description ?? "",
       color: normalizeSubjectColor(subject.color),
     });
@@ -133,6 +173,7 @@ export default function SubjectsPage() {
     const payload: SubjectPayload = {
       name: form.name.trim(),
       code: form.code.trim() || undefined,
+      semester: form.semester.trim() || undefined,
       description: form.description.trim() || undefined,
       color: normalizeSubjectColor(form.color),
     };
@@ -225,12 +266,53 @@ export default function SubjectsPage() {
           )
         ) : null}
 
+        <section className="moonlit-card tone-surface tone-sapphire p-4">
+          <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_220px_auto] md:items-center">
+            <label className="relative block">
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                aria-label="Search subjects"
+                className="pl-9"
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="Search name, code, semester, description"
+                value={searchQuery}
+              />
+            </label>
+            <select
+              aria-label="Filter by semester"
+              className="h-10 rounded-md border border-border bg-background px-3 text-sm text-foreground outline-none transition-colors focus:border-ring"
+              onChange={(event) => setSemesterFilter(event.target.value)}
+              value={semesterFilter}
+            >
+              <option value="">All semesters</option>
+              {semesters.map((semester) => (
+                <option key={semester} value={semester}>
+                  {semester}
+                </option>
+              ))}
+            </select>
+            <Button
+              disabled={!hasActiveFilters}
+              onClick={() => {
+                setSearchQuery("");
+                setSemesterFilter("");
+              }}
+              type="button"
+              variant="secondary"
+            >
+              <X data-icon="inline-start" aria-hidden="true" />
+              Clear
+            </Button>
+          </div>
+        </section>
+
         <section className="moonlit-card moonlit-table tone-surface tone-sapphire overflow-x-auto">
-          <Table className="min-w-[680px]">
+          <Table className="min-w-[760px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Code</TableHead>
+                <TableHead>Semester</TableHead>
                 <TableHead>Description</TableHead>
                 <TableHead>Created</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -245,6 +327,9 @@ export default function SubjectsPage() {
                       </TableCell>
                       <TableCell>
                         <Skeleton className="h-4 w-20" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-4 w-24" />
                       </TableCell>
                       <TableCell>
                         <Skeleton className="h-4 w-56" />
@@ -277,6 +362,9 @@ export default function SubjectsPage() {
                           >
                             {subject.code || "No code"}
                           </span>
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {subject.semester || "No semester"}
                         </TableCell>
                         <TableCell className="max-w-sm truncate">
                           {subject.description || "No description"}
@@ -313,14 +401,32 @@ export default function SubjectsPage() {
           {!isLoading && sortedSubjects.length === 0 ? (
             <div className="flex min-h-72 flex-col items-center justify-center gap-3 p-8 text-center">
               <BookMarked className="size-9" aria-hidden="true" />
-              <h2 className="text-xl font-black">No subjects yet</h2>
+              <h2 className="text-xl font-black">
+                {hasActiveFilters ? "No subjects found" : "No subjects yet"}
+              </h2>
               <p className="max-w-md text-sm text-muted-foreground">
-                Create a subject to organize documents and improve search.
+                {hasActiveFilters
+                  ? "Try a different search term or semester filter."
+                  : "Create a subject to organize documents and improve search."}
               </p>
-              <Button onClick={openCreate}>
-                <Plus data-icon="inline-start" aria-hidden="true" />
-                Add subject
-              </Button>
+              {hasActiveFilters ? (
+                <Button
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSemesterFilter("");
+                  }}
+                  type="button"
+                  variant="secondary"
+                >
+                  <X data-icon="inline-start" aria-hidden="true" />
+                  Clear filters
+                </Button>
+              ) : (
+                <Button onClick={openCreate}>
+                  <Plus data-icon="inline-start" aria-hidden="true" />
+                  Add subject
+                </Button>
+              )}
             </div>
           ) : null}
         </section>
@@ -358,6 +464,18 @@ export default function SubjectsPage() {
                     setForm({ ...form, code: event.target.value })
                   }
                   value={form.code}
+                />
+              </label>
+              <label className="grid gap-2 text-sm font-bold">
+                Semester
+                <Input
+                  disabled={isSaving}
+                  maxLength={80}
+                  onChange={(event) =>
+                    setForm({ ...form, semester: event.target.value })
+                  }
+                  placeholder="Fall 2026"
+                  value={form.semester}
                 />
               </label>
               <label className="grid gap-2 text-sm font-bold">

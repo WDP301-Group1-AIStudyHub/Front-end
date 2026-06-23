@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { CelestialInlineLoader } from '../components/shared/CelestialLoading'
 import { listDocuments } from '../services/documentApi'
+import { getFileBadgeClass } from '../utils/formatters'
 import { useUploadStore } from '../store/useUploadStore'
 import type { DocumentItem } from '../types/document'
 
@@ -346,7 +347,7 @@ export default function DashboardPage() {
                   to="/library"
                 >
                   <div className="flex min-w-0 items-center gap-3">
-                    <span className="admin-icon-badge size-10">
+                    <span className={`admin-icon-badge size-10 ${getFileBadgeClass(doc.fileName)}`}>
                       <FileText className="size-4" />
                     </span>
                     <div className="min-w-0">
