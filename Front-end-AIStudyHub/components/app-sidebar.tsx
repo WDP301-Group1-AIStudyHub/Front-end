@@ -18,7 +18,6 @@ import { useNavigate, useLocation, Link } from "react-router-dom"
 import { NavMain } from "@/components/nav-main"
 import { NavChats } from "@/components/nav-chats"
 import { NavUser } from "@/components/nav-user"
-import { groupBySession } from "@/src/lib/groupChatHistory"
 import {
   Sidebar,
   SidebarContent,
@@ -29,7 +28,7 @@ import {
 import BrandLogo from "@/src/components/shared/BrandLogo"
 import { logout } from "@/src/services/authApi"
 import { getStoredUser } from "@/src/services/authStorage"
-import { deleteChatHistory, getChatHistory } from "@/src/services/chatApi"
+import { deleteChatThread, listChatThreads } from "@/src/services/chatApi"
 
 export interface ChatSessionItem {
   id: string
@@ -51,33 +50,38 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     name: storedUser?.fullName || "John Doe",
   }
 
-  // Real chat history grouped into sessions.
+  // Real chat threads from the backend.
   const [chatSessions, setChatSessions] = React.useState<ChatSessionItem[]>([])
 
   React.useEffect(() => {
     if (isAdmin) return
-    getChatHistory()
-      .then((items) =>
+    const loadThreads = () => {
+      listChatThreads()
+        .then((threads) =>
         setChatSessions(
-          groupBySession(items).map((g) => ({
-            id: g.id,
-            name: g.name,
-            url: `/aichatbox?sessionIds=${g.itemIds.join(",")}`,
+          threads.map((thread) => ({
+            id: thread.id,
+            name: thread.title,
+            url: `/aichatbox?threadId=${thread.id}`,
             emoji: "",
-            dateLabel: g.dateLabel,
-            itemIds: g.itemIds,
+            dateLabel: new Date(thread.lastMessageAt).toLocaleDateString(),
+            itemIds: [thread.id],
           })),
-        ),
+        )
       )
-      .catch(() => setChatSessions([]))
+        .catch(() => setChatSessions([]))
+    }
+
+    loadThreads()
+    window.addEventListener("chat-threads:refresh", loadThreads)
+    return () => window.removeEventListener("chat-threads:refresh", loadThreads)
   }, [isAdmin])
 
   const handleDeleteChat = async (sessionId: string) => {
     const session = chatSessions.find((s) => s.id === sessionId)
     if (!session) return
-    const itemIds = session.itemIds
     try {
-      await Promise.all(itemIds.map((id) => deleteChatHistory(id)))
+      await deleteChatThread(session.id)
       setChatSessions((prev) => prev.filter((s) => s.id !== sessionId))
     } catch {
       // silently ignore

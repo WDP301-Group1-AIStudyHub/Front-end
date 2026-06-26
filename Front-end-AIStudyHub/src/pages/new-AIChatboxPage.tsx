@@ -15,12 +15,12 @@ import {
   Zap,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { Thread } from "@/components/assistant-ui/thread";
 import { Button } from "@/components/ui/button";
 import { CelestialInlineLoader, CelestialLoader, LoadingState } from "../components/shared/CelestialLoading";
-import { ChatApiError, askChat, getChatHistoryById } from "../services/chatApi";
+import { ChatApiError, askChat, getChatThreadById } from "../services/chatApi";
 import { listDocuments } from "../services/documentApi";
 import { getFileBadgeClass } from "../utils/formatters";
 import { normalizeSubjectColor } from "../utils/subjectColor";
@@ -81,21 +81,9 @@ function getDocumentSubjectKey(doc: DocumentItem) {
 
 export default function NewAIChatboxPage() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
 
-
-  const historyId = searchParams.get("historyId") ?? undefined;
-  const sessionIdsParam = searchParams.get("sessionIds") ?? undefined;
-
-  // Support both new ?sessionIds=id1,id2,... and legacy ?historyId=id
-  const sessionIds = useMemo(
-    () =>
-      sessionIdsParam
-        ? sessionIdsParam.split(",").filter(Boolean)
-        : historyId
-        ? [historyId]
-        : [],
-    [sessionIdsParam, historyId],
-  );
+  const threadId = searchParams.get("threadId") ?? undefined;
 
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [loadingDocs, setLoadingDocs] = useState(true);
@@ -114,25 +102,33 @@ export default function NewAIChatboxPage() {
   const [historyMessages, setHistoryMessages] = useState<readonly ThreadMessageLike[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
 
-  // Fetch all items in session and reconstruct full conversation
+  // Fetch all messages in the thread and reconstruct full conversation
   useEffect(() => {
-    if (sessionIds.length === 0) {
+    if (!threadId) {
       setHistoryMessages([]);
+      setLastSources([]);
+      setLastEvaluation(null);
       return;
     }
     setLoadingHistory(true);
-    Promise.all(sessionIds.map((id) => getChatHistoryById(id)))
-      .then((items) => {
-        const sorted = [...items].sort(
+    getChatThreadById(threadId)
+      .then((detail) => {
+        const sorted = [...detail.messages].sort(
           (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
         );
-        // Restore context from the most recent item
+        // Restore context from the thread snapshot first, then the latest message.
         const last = sorted[sorted.length - 1];
-        if (last.documentIds?.length) setSelectedDocIds(last.documentIds);
-        else if (last.documentId) setSelectedDocIds([last.documentId]);
-        if (last.mode === "basic" || last.mode === "corrective") setRagMode(last.mode);
-        if (last.sources?.length) setLastSources(last.sources);
-        if (last.evaluation) setLastEvaluation(last.evaluation);
+        if (detail.thread.documentIds?.length) setSelectedDocIds(detail.thread.documentIds);
+        else if (detail.thread.documentId) setSelectedDocIds([detail.thread.documentId]);
+        else if (last?.documentIds?.length) setSelectedDocIds(last.documentIds);
+        else if (last?.documentId) setSelectedDocIds([last.documentId]);
+        else setSelectedDocIds([]);
+        const nextMode = detail.thread.mode || last?.mode;
+        if (nextMode === "basic" || nextMode === "corrective") setRagMode(nextMode);
+        if (last?.sources?.length) setLastSources(last.sources);
+        else setLastSources([]);
+        if (last?.evaluation) setLastEvaluation(last.evaluation);
+        else setLastEvaluation(null);
         // Reconstruct full thread: each item → user + assistant message
         const messages: ThreadMessageLike[] = [];
         for (const item of sorted) {
@@ -143,13 +139,14 @@ export default function NewAIChatboxPage() {
       })
       .catch(() => setHistoryMessages([]))
       .finally(() => setLoadingHistory(false));
-  }, [sessionIds]);
+  }, [threadId]);
 
   // Refs so the stable adapter closure can read latest state
   const selectedDocIdsRef = useRef<string[]>([]);
   const selectedSubjectIdRef = useRef<string | undefined>(undefined);
   const selectedDocSubjectRef = useRef<string | undefined>(undefined);
   const ragModeRef = useRef<"basic" | "corrective">("basic");
+  const currentThreadIdRef = useRef<string | undefined>(threadId);
   const onResponseRef = useRef<
     ((sources: ChatSource[], evaluation?: ChatEvaluation) => void) | null
   >(null);
@@ -157,6 +154,10 @@ export default function NewAIChatboxPage() {
   useEffect(() => {
     ragModeRef.current = ragMode;
   }, [ragMode]);
+
+  useEffect(() => {
+    currentThreadIdRef.current = threadId;
+  }, [threadId]);
 
   useEffect(() => {
     if (!isResizingContext) return;
@@ -329,6 +330,7 @@ export default function NewAIChatboxPage() {
 
         const payload: AskChatPayload = {
           question,
+          threadId: currentThreadIdRef.current,
           subject: docSubject || undefined,
           subjectId: subjectId || undefined,
           scope: docIds.length === 0 ? "library_all" : docIds.length === 1 ? "single_document" : "document_set",
@@ -342,8 +344,13 @@ export default function NewAIChatboxPage() {
         }
 
         let finalAnswer = "";
+        let createdThreadId: string | undefined;
         try {
           const result = await askChat(payload, abortSignal);
+          if (result.threadId) {
+            createdThreadId = result.threadId;
+            currentThreadIdRef.current = result.threadId;
+          }
           onResponseRef.current?.(result.sources, result.evaluation);
           finalAnswer = result.answer;
         } catch (err) {
@@ -353,6 +360,10 @@ export default function NewAIChatboxPage() {
               const fallbackPayload = { ...payload, mode: "basic" as const };
               try {
                 const fallback = await askChat(fallbackPayload, abortSignal);
+                if (fallback.threadId) {
+                  createdThreadId = fallback.threadId;
+                  currentThreadIdRef.current = fallback.threadId;
+                }
                 onResponseRef.current?.(fallback.sources, fallback.evaluation);
                 finalAnswer = fallback.answer;
               } catch (retryErr) {
@@ -370,6 +381,11 @@ export default function NewAIChatboxPage() {
           setIsThinking(false);
         }
 
+        if (!threadId && createdThreadId) {
+          navigate(`/aichatbox?threadId=${createdThreadId}`, { replace: true });
+        }
+        window.dispatchEvent(new Event("chat-threads:refresh"));
+
         // Stream the text to simulate typewriter running text typing effect
         let currentText = "";
         const chunkSize = 4;
@@ -384,7 +400,7 @@ export default function NewAIChatboxPage() {
         }
       },
     }),
-    [],
+    [navigate, threadId],
   );
 
   const selectedContext = selectedDocs[0]
@@ -466,7 +482,7 @@ export default function NewAIChatboxPage() {
             <LoadingState className="m-5 h-[calc(100%-2.5rem)]" label="Loading chat history..." tone="mist" />
           ) : (
             <ChatThread
-              key={sessionIdsParam ?? historyId ?? "new"}
+              key={threadId ?? "new"}
               adapter={realAdapter}
               initialMessages={historyMessages}
               onClearSelectedDoc={() => setSelectedDocIds([])}

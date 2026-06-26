@@ -18,6 +18,7 @@ export interface ChatEvaluation {
 
 export interface AskChatPayload {
   question: string
+  threadId?: string
   documentId?: string
   documentIds?: string[]
   subject?: string
@@ -27,6 +28,7 @@ export interface AskChatPayload {
 }
 
 export interface AskChatResponse {
+  threadId?: string
   answer: string
   mode: string
   originalQuestion: string
@@ -37,6 +39,7 @@ export interface AskChatResponse {
 
 export interface ChatHistoryItem {
   id: string
+  threadId?: string
   question: string
   answer: string
   mode: string
@@ -52,6 +55,32 @@ export interface ChatHistoryItem {
 }
 
 export type ChatHistoryListResponse = ChatHistoryItem[]
+
+export interface ChatThreadItem {
+  id: string
+  ownerId: string
+  title: string
+  status: 'ACTIVE' | 'ARCHIVED'
+  lastMessageAt: string
+  messageCount: number
+  scope?: 'single_document' | 'subject_all' | 'document_set' | 'library_all'
+  subjectId?: string
+  documentId?: string
+  documentIds?: string[]
+  mode?: 'basic' | 'corrective'
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ChatThreadDetail {
+  thread: ChatThreadItem
+  messages: ChatHistoryItem[]
+}
+
+export interface ChatThreadListResponse {
+  threads: ChatThreadItem[]
+  total: number
+}
 
 export interface EvaluationLog {
   id: string
