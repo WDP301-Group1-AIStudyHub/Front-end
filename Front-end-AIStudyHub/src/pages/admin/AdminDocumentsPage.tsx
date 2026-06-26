@@ -74,14 +74,14 @@ export default function AdminDocumentsPage() {
   }
 
   return (
-    <main className="celestial-page min-h-svh overflow-y-auto p-5 md:p-8">
+    <main className="botanical-page min-h-svh overflow-y-auto p-5 md:p-8">
       <AdminPageHeader
         description="Review uploaded documents and edit metadata that powers library search and AI retrieval."
         eyebrow="Admin documents"
         title="Documents Metadata"
       />
 
-      <section className="celestial-card celestial-table tone-surface tone-gold mt-8 overflow-hidden">
+      <section className="botanical-bento moonlit-table tone-surface tone-gold mt-8 overflow-hidden">
         <div className="flex flex-col gap-3 border-b border-border/70 p-5 md:flex-row md:items-center md:justify-between">
           <label className="relative max-w-lg flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -102,7 +102,7 @@ export default function AdminDocumentsPage() {
             </div>
           ) : filteredDocuments.length === 0 ? (
             <div className="grid min-h-72 place-items-center p-8 text-center text-muted-foreground">
-              <div>
+              <div className="botanical-empty">
                 <FileCog className="mx-auto mb-3 size-8" />
                 <p>No documents match the current search.</p>
               </div>

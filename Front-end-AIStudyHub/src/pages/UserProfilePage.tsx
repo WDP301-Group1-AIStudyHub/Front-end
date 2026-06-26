@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+﻿import { useEffect, useRef, useState } from 'react'
 import {
   AtSign,
   CalendarDays,
@@ -60,7 +60,7 @@ function InfoChip({
   value: string
 }) {
   return (
-    <div className="celestial-card flex items-center gap-3 px-4 py-3">
+    <div className="botanical-card flex items-center gap-3 px-4 py-3">
       <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted text-primary [&>svg]:size-4">
         {icon}
       </span>
@@ -115,13 +115,12 @@ export default function UserProfilePage() {
     : 'Not available'
 
   return (
-    <main className="celestial-page min-h-svh overflow-y-auto p-5 md:p-8">
-      {/* ── Page header ── */}
+    <main className="botanical-page min-h-svh overflow-y-auto p-5 md:p-8">
       <header className="flex flex-col gap-2">
-        <p className="text-sm font-semibold text-primary">
+        <p className="botanical-kicker">
           Account settings
         </p>
-        <h1 className="celestial-title text-3xl font-semibold tracking-tight md:text-4xl">
+        <h1 className="moonlit-title text-3xl font-semibold tracking-tight md:text-4xl">
           My Profile
         </h1>
         <p className="text-sm text-muted-foreground">
@@ -130,9 +129,8 @@ export default function UserProfilePage() {
       </header>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[280px_1fr]">
-        {/* ── Left column – avatar card ── */}
         <div className="flex flex-col gap-4">
-          <div className="celestial-card flex flex-col items-center gap-4 p-6 text-center">
+          <div className="botanical-bento flex flex-col items-center gap-4 p-6 text-center">
             <div className="relative">
               <div className="flex size-24 items-center justify-center overflow-hidden rounded-full border border-border bg-muted">
                 {avatar ? (
@@ -176,7 +174,7 @@ export default function UserProfilePage() {
             <InfoChip
               icon={<AtSign />}
               label="Email"
-              value={storedUser?.email ?? '—'}
+              value={storedUser?.email ?? 'N/A'}
             />
             <InfoChip
               icon={<CalendarDays />}
@@ -191,9 +189,8 @@ export default function UserProfilePage() {
           </div>
         </div>
 
-        {/* ── Right column – edit form ── */}
         <div className="flex flex-col gap-5">
-          <div className="celestial-card p-6">
+          <div className="botanical-bento p-6">
             <div className="mb-5 border-b border-border/60 pb-4">
               <h2 className="text-base font-semibold">Personal information</h2>
               <p className="mt-0.5 text-sm text-muted-foreground">
@@ -234,7 +231,7 @@ export default function UserProfilePage() {
           </div>
 
           {/* Read-only account info */}
-          <div className="celestial-card p-6">
+          <div className="botanical-bento p-6">
             <div className="mb-5 border-b border-border/60 pb-4">
               <h2 className="text-base font-semibold">Account details</h2>
               <p className="mt-0.5 text-sm text-muted-foreground">

@@ -44,8 +44,8 @@ function MobileAppNav() {
       aria-label="Mobile app navigation"
       className="fixed inset-x-3 bottom-3 z-50 md:hidden"
     >
-      <div className="grid grid-cols-5 items-center gap-1 rounded-xl border border-border bg-card px-2 py-2 ">
-        <SidebarTrigger className="h-11 w-full rounded-lg border border-border bg-card text-foreground" />
+      <div className="grid grid-cols-5 items-center gap-1 rounded-[20px] border border-border/80 bg-card/95 px-2 py-2 shadow-[0_16px_40px_rgb(72_106_77_/_0.16)] backdrop-blur-md">
+        <SidebarTrigger className="h-11 w-full rounded-xl border border-border bg-card text-foreground" />
         {items.map((item) => {
           const Icon = item.icon
           const isActive =
@@ -56,7 +56,7 @@ function MobileAppNav() {
             <Link
               aria-current={isActive ? 'page' : undefined}
               className={cn(
-                'flex h-11 min-w-0 flex-col items-center justify-center gap-1 rounded-lg border border-transparent px-1 text-[0.66rem] font-medium text-muted-foreground transition-colors',
+                'flex h-11 min-w-0 flex-col items-center justify-center gap-1 rounded-xl border border-transparent px-1 text-[0.66rem] font-semibold text-muted-foreground transition-colors',
                 isActive
                   ? 'border-primary bg-primary text-primary-foreground'
                   : 'hover:border-border/80 hover:bg-muted/45 hover:text-foreground',

@@ -41,7 +41,7 @@ export default function AdminDashboardPage() {
   }, [activities, documents, users])
 
   return (
-    <main className="celestial-page min-h-svh overflow-y-auto p-5 md:p-8">
+    <main className="botanical-page min-h-svh overflow-y-auto p-5 md:p-8">
       <AdminPageHeader
         actions={<Button asChild><Link to="/admin/users">Review users</Link></Button>}
         description="Control accounts, review document metadata, and monitor the system health signals described by the admin usecase."
@@ -57,7 +57,7 @@ export default function AdminDashboardPage() {
       </section>
 
       <section className="mt-8 grid gap-5 xl:grid-cols-[1fr_360px]">
-        <article className="celestial-card celestial-table tone-surface tone-sapphire overflow-hidden">
+        <article className="botanical-bento moonlit-table tone-surface tone-sapphire overflow-hidden">
           <div className="flex items-center justify-between border-b border-border/70 p-5">
             <div>
               <h2 className="text-lg font-semibold">System activity stream</h2>
@@ -83,8 +83,8 @@ export default function AdminDashboardPage() {
           </div>
         </article>
 
-        <aside className="celestial-card p-5">
-          <div className="admin-icon-badge admin-tone-violet">
+        <aside className="botanical-bento p-5">
+          <div className="admin-icon-badge admin-tone-mist">
             <Database />
           </div>
           <h2 className="mt-5 text-lg font-semibold">Usecase coverage</h2>

@@ -3,7 +3,7 @@ export interface ChatSource {
   title: string
   chunkIndex: number
   contentPreview: string
-  relevanceScore: number
+  relevanceScore?: number
 }
 
 export interface ChatEvaluation {
@@ -19,7 +19,10 @@ export interface ChatEvaluation {
 export interface AskChatPayload {
   question: string
   documentId?: string
+  documentIds?: string[]
   subject?: string
+  subjectId?: string
+  scope?: 'single_document' | 'subject_all' | 'document_set' | 'library_all'
   mode: 'basic' | 'corrective'
 }
 
@@ -38,7 +41,10 @@ export interface ChatHistoryItem {
   answer: string
   mode: string
   documentId?: string
+  documentIds?: string[]
   subject?: string
+  subjectId?: string
+  scope?: 'single_document' | 'subject_all' | 'document_set' | 'library_all'
   sources: ChatSource[]
   evaluation?: ChatEvaluation
   createdAt: string

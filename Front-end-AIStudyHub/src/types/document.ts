@@ -4,6 +4,7 @@ export interface DocumentSubject {
   description?: string
   color?: string
   code?: string
+  semester?: string
 }
 
 export interface DocumentItem {
@@ -62,6 +63,7 @@ export interface UploadDocumentPayload {
   title: string
   description?: string
   subject?: string
+  subjectId?: string
 }
 
 export interface UpdateDocumentPayload {

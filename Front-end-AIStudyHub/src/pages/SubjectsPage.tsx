@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { BookMarked, Pencil, Plus, Trash2 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+﻿import { useEffect, useMemo, useState } from "react";
+import { BookMarked, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -28,86 +27,25 @@ import {
   updateSubject,
 } from "../services/subjectApi";
 import type { SubjectItem, SubjectPayload } from "../services/subjectApi";
+import {
+  DEFAULT_SUBJECT_COLOR,
+  normalizeSubjectColor,
+} from "../utils/subjectColor";
 
 type SubjectForm = {
   name: string;
   code: string;
+  semester: string;
   description: string;
   color: string;
 };
 
-type SubjectColorTone = "blue" | "green" | "sky" | "purple" | "red";
-
-const subjectColorToneClasses: Record<SubjectColorTone, string> = {
-  blue: "border-blue-500/60 bg-white text-black dark:border-blue-300/60 dark:bg-white dark:text-black",
-  green:
-    "border-green-500/60 bg-white text-black dark:border-green-300/60 dark:bg-white dark:text-black",
-  sky: "border-sky-500/60 bg-white text-black dark:border-sky-300/60 dark:bg-white dark:text-black",
-  purple:
-    "border-purple-500/60 bg-white text-black dark:border-purple-300/60 dark:bg-white dark:text-black",
-  red: "border-red-500/60 bg-white text-black dark:border-red-300/60 dark:bg-white dark:text-black",
-};
-
-function hexToHue(color: string): number | null {
-  const normalized = color.trim().toLowerCase();
-
-  if (!normalized.startsWith("#")) return null;
-
-  const hex = normalized.slice(1);
-  const expanded =
-    hex.length === 3
-      ? hex
-          .split("")
-          .map((char) => `${char}${char}`)
-          .join("")
-      : hex;
-
-  if (!/^[0-9a-f]{6}$/.test(expanded)) return null;
-
-  const red = Number.parseInt(expanded.slice(0, 2), 16) / 255;
-  const green = Number.parseInt(expanded.slice(2, 4), 16) / 255;
-  const blue = Number.parseInt(expanded.slice(4, 6), 16) / 255;
-
-  const max = Math.max(red, green, blue);
-  const min = Math.min(red, green, blue);
-  const delta = max - min;
-
-  if (delta === 0) return 0;
-
-  let hue = 0;
-
-  if (max === red) {
-    hue = ((green - blue) / delta) % 6;
-  } else if (max === green) {
-    hue = (blue - red) / delta + 2;
-  } else {
-    hue = (red - green) / delta + 4;
-  }
-
-  return Math.round(hue * 60 + 360) % 360;
-}
-
-function getSubjectColorTone(color?: string): SubjectColorTone {
-  const hue = color ? hexToHue(color) : null;
-
-  if (hue === null) return "blue";
-  if (hue < 30 || hue >= 330) return "red";
-  if (hue < 90) return "green";
-  if (hue < 170) return "sky";
-  if (hue < 250) return "blue";
-  return "purple";
-}
-
-function getSubjectColorLabel(color?: string): string {
-  const tone = getSubjectColorTone(color);
-  return tone.charAt(0).toUpperCase() + tone.slice(1);
-}
-
 const emptyForm: SubjectForm = {
   name: "",
   code: "",
+  semester: "",
   description: "",
-  color: "#ffd166",
+  color: DEFAULT_SUBJECT_COLOR,
 };
 
 function formatDate(value?: string): string {
@@ -138,21 +76,58 @@ export default function SubjectsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [semesterFilter, setSemesterFilter] = useState("");
   const [feedback, setFeedback] = useState<{
     tone: "success" | "error";
     message: string;
   } | null>(null);
 
+  const semesters = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          subjects
+            .map((subject) => subject.semester?.trim())
+            .filter((semester): semester is string => Boolean(semester)),
+        ),
+      ).sort((a, b) => a.localeCompare(b)),
+    [subjects],
+  );
+
+  const filteredSubjects = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+
+    return subjects.filter((subject) => {
+      const matchesSemester =
+        !semesterFilter || subject.semester?.trim() === semesterFilter;
+
+      if (!matchesSemester) return false;
+      if (!normalizedQuery) return true;
+
+      return [
+        subject.name,
+        subject.code,
+        subject.semester,
+        subject.description,
+      ]
+        .filter(Boolean)
+        .some((value) => value!.toLowerCase().includes(normalizedQuery));
+    });
+  }, [searchQuery, semesterFilter, subjects]);
+
   const sortedSubjects = useMemo(
     () =>
-      [...subjects].sort((a, b) =>
+      [...filteredSubjects].sort((a, b) =>
         [a.code, a.name]
           .filter(Boolean)
           .join(" ")
           .localeCompare([b.code, b.name].filter(Boolean).join(" ")),
       ),
-    [subjects],
+    [filteredSubjects],
   );
+
+  const hasActiveFilters = Boolean(searchQuery.trim() || semesterFilter);
 
   async function loadSubjects() {
     setIsLoading(true);
@@ -181,8 +156,9 @@ export default function SubjectsPage() {
     setForm({
       name: subject.name,
       code: subject.code ?? "",
+      semester: subject.semester ?? "",
       description: subject.description ?? "",
-      color: subject.color ?? "#ffd166",
+      color: normalizeSubjectColor(subject.color),
     });
     setIsEditorOpen(true);
   }
@@ -197,8 +173,9 @@ export default function SubjectsPage() {
     const payload: SubjectPayload = {
       name: form.name.trim(),
       code: form.code.trim() || undefined,
+      semester: form.semester.trim() || undefined,
       description: form.description.trim() || undefined,
-      color: form.color,
+      color: normalizeSubjectColor(form.color),
     };
 
     setIsSaving(true);
@@ -249,17 +226,21 @@ export default function SubjectsPage() {
     }
   }
 
+  const previewColor = normalizeSubjectColor(form.color);
+  const previewCode = form.code.trim() || "CODE";
+
   return (
-    <main className="celestial-page flex min-h-svh w-full min-w-0 flex-col overflow-y-auto text-foreground">
+    <main className="botanical-page flex min-h-svh w-full min-w-0 flex-col overflow-y-auto text-foreground">
       <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-5 py-6 sm:px-8 lg:px-10">
         <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">
-              Study workspace
-            </p>
-            <h1 className="celestial-title mt-2 text-3xl font-black tracking-tight md:text-5xl">
+            <p className="botanical-kicker">Study workspace</p>
+            <h1 className="moonlit-title mt-2 text-3xl font-black tracking-tight md:text-5xl">
               Subjects
             </h1>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
+              Give every course a clear color so documents and chat context stay easy to scan.
+            </p>
           </div>
           <Button onClick={openCreate} type="button">
             <Plus data-icon="inline-start" aria-hidden="true" />
@@ -270,14 +251,14 @@ export default function SubjectsPage() {
         {feedback ? (
           feedback.tone === "error" ? (
             <div
-              className="celestial-card tone-surface tone-coral px-4 py-3 text-sm"
+              className="moonlit-card tone-surface tone-coral px-4 py-3 text-sm"
               role="alert"
             >
               {feedback.message}
             </div>
           ) : (
             <div
-              className="celestial-card tone-surface tone-emerald px-4 py-3 text-sm"
+              className="moonlit-card tone-surface tone-emerald px-4 py-3 text-sm"
               role="status"
             >
               {feedback.message}
@@ -285,14 +266,54 @@ export default function SubjectsPage() {
           )
         ) : null}
 
-        <section className="celestial-card celestial-table tone-surface tone-sapphire overflow-x-auto">
+        <section className="moonlit-card tone-surface tone-sapphire p-4">
+          <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_220px_auto] md:items-center">
+            <label className="relative block">
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                aria-label="Search subjects"
+                className="pl-9"
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="Search name, code, semester, description"
+                value={searchQuery}
+              />
+            </label>
+            <select
+              aria-label="Filter by semester"
+              className="h-10 rounded-md border border-border bg-background px-3 text-sm text-foreground outline-none transition-colors focus:border-ring"
+              onChange={(event) => setSemesterFilter(event.target.value)}
+              value={semesterFilter}
+            >
+              <option value="">All semesters</option>
+              {semesters.map((semester) => (
+                <option key={semester} value={semester}>
+                  {semester}
+                </option>
+              ))}
+            </select>
+            <Button
+              disabled={!hasActiveFilters}
+              onClick={() => {
+                setSearchQuery("");
+                setSemesterFilter("");
+              }}
+              type="button"
+              variant="secondary"
+            >
+              <X data-icon="inline-start" aria-hidden="true" />
+              Clear
+            </Button>
+          </div>
+        </section>
+
+        <section className="moonlit-card moonlit-table tone-surface tone-sapphire overflow-x-auto">
           <Table className="min-w-[760px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Code</TableHead>
+                <TableHead>Semester</TableHead>
                 <TableHead>Description</TableHead>
-                <TableHead>Color</TableHead>
                 <TableHead>Created</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -308,10 +329,10 @@ export default function SubjectsPage() {
                         <Skeleton className="h-4 w-20" />
                       </TableCell>
                       <TableCell>
-                        <Skeleton className="h-4 w-56" />
+                        <Skeleton className="h-4 w-24" />
                       </TableCell>
                       <TableCell>
-                        <Skeleton className="h-6 w-20" />
+                        <Skeleton className="h-4 w-56" />
                       </TableCell>
                       <TableCell>
                         <Skeleton className="h-4 w-24" />
@@ -321,67 +342,91 @@ export default function SubjectsPage() {
                       </TableCell>
                     </TableRow>
                   ))
-                : sortedSubjects.map((subject) => (
-                    <TableRow key={subject._id}>
-                      <TableCell className="font-bold">
-                        {subject.name}
-                      </TableCell>
-                      <TableCell>{subject.code || "None"}</TableCell>
-                      <TableCell className="max-w-sm truncate">
-                        {subject.description || "No description"}
-                      </TableCell>
-                      <TableCell>
-                        <span className="inline-flex items-center gap-2">
-                          <Badge
-                            className={
-                              subjectColorToneClasses[
-                                getSubjectColorTone(subject.color)
-                              ]
+                : sortedSubjects.map((subject) => {
+                    const subjectColor = normalizeSubjectColor(subject.color);
+
+                    return (
+                      <TableRow key={subject._id}>
+                        <TableCell className="font-bold">
+                          {subject.name}
+                        </TableCell>
+                        <TableCell>
+                          <span
+                            className="subject-code-pill"
+                            style={
+                              {
+                                "--subject-color": subjectColor,
+                              } as React.CSSProperties
                             }
+                            title={subjectColor}
                           >
-                            {getSubjectColorLabel(subject.color)}
-                          </Badge>
-                        </span>
-                      </TableCell>
-                      <TableCell>{formatDate(subject.createdAt)}</TableCell>
-                      <TableCell>
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            aria-label={`Edit ${subject.name}`}
-                            onClick={() => openEdit(subject)}
-                            size="icon-sm"
-                            type="button"
-                            variant="secondary"
-                          >
-                            <Pencil aria-hidden="true" />
-                          </Button>
-                          <Button
-                            aria-label={`Delete ${subject.name}`}
-                            onClick={() => setDeletingSubject(subject)}
-                            size="icon-sm"
-                            type="button"
-                            variant="destructive"
-                          >
-                            <Trash2 aria-hidden="true" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                            {subject.code || "No code"}
+                          </span>
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {subject.semester || "No semester"}
+                        </TableCell>
+                        <TableCell className="max-w-sm truncate">
+                          {subject.description || "No description"}
+                        </TableCell>
+                        <TableCell>{formatDate(subject.createdAt)}</TableCell>
+                        <TableCell>
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              aria-label={`Edit ${subject.name}`}
+                              onClick={() => openEdit(subject)}
+                              size="icon-sm"
+                              type="button"
+                              variant="secondary"
+                            >
+                              <Pencil aria-hidden="true" />
+                            </Button>
+                            <Button
+                              aria-label={`Delete ${subject.name}`}
+                              onClick={() => setDeletingSubject(subject)}
+                              size="icon-sm"
+                              type="button"
+                              variant="destructive"
+                            >
+                              <Trash2 aria-hidden="true" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
             </TableBody>
           </Table>
 
           {!isLoading && sortedSubjects.length === 0 ? (
             <div className="flex min-h-72 flex-col items-center justify-center gap-3 p-8 text-center">
               <BookMarked className="size-9" aria-hidden="true" />
-              <h2 className="text-xl font-black">No subjects yet</h2>
+              <h2 className="text-xl font-black">
+                {hasActiveFilters ? "No subjects found" : "No subjects yet"}
+              </h2>
               <p className="max-w-md text-sm text-muted-foreground">
-                Create a subject to organize documents and improve search.
+                {hasActiveFilters
+                  ? "Try a different search term or semester filter."
+                  : "Create a subject to organize documents and improve search."}
               </p>
-              <Button onClick={openCreate}>
-                <Plus data-icon="inline-start" aria-hidden="true" />
-                Add subject
-              </Button>
+              {hasActiveFilters ? (
+                <Button
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSemesterFilter("");
+                  }}
+                  type="button"
+                  variant="secondary"
+                >
+                  <X data-icon="inline-start" aria-hidden="true" />
+                  Clear filters
+                </Button>
+              ) : (
+                <Button onClick={openCreate}>
+                  <Plus data-icon="inline-start" aria-hidden="true" />
+                  Add subject
+                </Button>
+              )}
             </div>
           ) : null}
         </section>
@@ -422,6 +467,18 @@ export default function SubjectsPage() {
                 />
               </label>
               <label className="grid gap-2 text-sm font-bold">
+                Semester
+                <Input
+                  disabled={isSaving}
+                  maxLength={80}
+                  onChange={(event) =>
+                    setForm({ ...form, semester: event.target.value })
+                  }
+                  placeholder="Fall 2026"
+                  value={form.semester}
+                />
+              </label>
+              <label className="grid gap-2 text-sm font-bold">
                 Description
                 <Textarea
                   disabled={isSaving}
@@ -442,7 +499,7 @@ export default function SubjectsPage() {
                       setForm({ ...form, color: event.target.value })
                     }
                     type="color"
-                    value={form.color}
+                    value={previewColor}
                   />
                   <Input
                     disabled={isSaving}
@@ -451,6 +508,21 @@ export default function SubjectsPage() {
                     }
                     value={form.color}
                   />
+                </div>
+                <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-muted/55 px-3 py-2">
+                  <span
+                    className="subject-code-pill"
+                    style={
+                      {
+                        "--subject-color": previewColor,
+                      } as React.CSSProperties
+                    }
+                  >
+                    {previewCode}
+                  </span>
+                  <span className="font-mono text-xs text-muted-foreground">
+                    {previewColor}
+                  </span>
                 </div>
               </label>
             </div>

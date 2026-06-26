@@ -11,8 +11,8 @@ export default function ResetPasswordPage() {
         title={<>Reset access</>}
         variant="found"
       />
-      <section className="celestial-card relative min-h-[430px] overflow-hidden p-12">
-        <h2 className="celestial-title m-0 mb-3 text-[32px] leading-[1.2]">Reset password</h2>
+      <section className="moonlit-card relative min-h-[430px] overflow-hidden p-12">
+        <h2 className="moonlit-title m-0 mb-3 text-[32px] leading-[1.2]">Reset password</h2>
         <p className="mb-9 max-w-[360px] text-sm leading-[1.5] text-muted-foreground">
           Password reset links are not active on this backend yet. Request a recovery email or return to sign in.
         </p>

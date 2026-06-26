@@ -1,5 +1,4 @@
 import {
-  ComposerAddAttachment,
   ComposerAttachments,
   UserMessageAttachments,
 } from "@/components/assistant-ui/attachment";
@@ -19,6 +18,7 @@ import {
 import { ToolFallback } from "@/components/assistant-ui/tool-fallback";
 import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
 import { TextShimmerWave } from "@/src/components/shared/TextShimmerWave";
+import { normalizeSubjectColor } from "@/src/utils/subjectColor";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -54,9 +54,14 @@ import type { FC } from "react";
 type SelectedDocInfo = {
   fileName: string;
   subject?: string | { _id: string; name: string; description?: string; color?: string; code?: string };
+  subjectColor?: string;
+  semester?: string;
 };
 
-export const Thread: FC<{ selectedDoc?: SelectedDocInfo }> = ({ selectedDoc }) => {
+export const Thread: FC<{
+  selectedDoc?: SelectedDocInfo;
+  onClearSelectedDoc?: () => void;
+}> = ({ selectedDoc, onClearSelectedDoc }) => {
   return (
     <ThreadPrimitive.Root
       className="aui-root aui-thread-root @container flex h-full flex-col bg-background"
@@ -87,23 +92,7 @@ export const Thread: FC<{ selectedDoc?: SelectedDocInfo }> = ({ selectedDoc }) =
 
           <ThreadPrimitive.ViewportFooter className="aui-thread-viewport-footer sticky bottom-0 mt-auto flex flex-col gap-4 overflow-visible rounded-t-(--composer-radius) bg-background pb-4 md:pb-6">
             <ThreadScrollToBottom />
-            <AuiIf condition={(s) => s.thread.isRunning}>
-              <div className="flex items-center gap-2 px-2">
-                <span className="flex size-5 shrink-0 items-center justify-center rounded-full border border-border bg-muted">
-                  <span className="size-1.5 rounded-full bg-black/80" />
-                </span>
-                <TextShimmerWave
-                  className="text-sm font-medium"
-                  duration={1.2}
-                  spread={1.5}
-                  baseColor="var(--foreground)"
-                  shimmerColor="var(--foreground)"
-                >
-                  Đang suy nghĩ...
-                </TextShimmerWave>
-              </div>
-            </AuiIf>
-            <Composer selectedDoc={selectedDoc} />
+            <Composer onClearSelectedDoc={onClearSelectedDoc} selectedDoc={selectedDoc} />
           </ThreadPrimitive.ViewportFooter>
         </div>
       </ThreadPrimitive.Viewport>
@@ -168,7 +157,7 @@ const ThreadSuggestionItem: FC = () => {
       <SuggestionPrimitive.Trigger send asChild>
         <Button
           variant="ghost"
-          className="aui-thread-welcome-suggestion h-auto w-full @md:flex-col flex-wrap items-start justify-start gap-1 rounded-3xl border border-border bg-background px-4 py-3 text-start text-sm transition-colors hover:bg-muted"
+            className="aui-thread-welcome-suggestion h-auto w-full @md:flex-col flex-wrap items-start justify-start gap-1 rounded-[20px] border border-border bg-card px-4 py-3 text-start text-sm transition-colors hover:bg-muted"
         >
           <SuggestionPrimitive.Title className="aui-thread-welcome-suggestion-text-1 font-medium" />
           <SuggestionPrimitive.Description className="aui-thread-welcome-suggestion-text-2 text-muted-foreground empty:hidden truncate max-w-full" />
@@ -178,25 +167,55 @@ const ThreadSuggestionItem: FC = () => {
   );
 };
 
-const Composer: FC<{ selectedDoc?: SelectedDocInfo }> = ({ selectedDoc }) => {
+const Composer: FC<{
+  selectedDoc?: SelectedDocInfo;
+  onClearSelectedDoc?: () => void;
+}> = ({ selectedDoc, onClearSelectedDoc }) => {
+  const subjectName =
+    selectedDoc && typeof selectedDoc.subject === "object"
+      ? selectedDoc.subject?.name
+      : selectedDoc?.subject;
+  const subjectColor = selectedDoc
+    ? normalizeSubjectColor(
+        typeof selectedDoc.subject === "object"
+          ? selectedDoc.subject?.color
+          : selectedDoc.subjectColor,
+      )
+    : undefined;
+
   return (
     <ComposerPrimitive.Root className="aui-composer-root relative flex w-full flex-col">
       <ComposerPrimitive.AttachmentDropzone asChild>
         <div
           data-slot="aui_composer-shell"
-          className="flex w-full flex-col gap-2 rounded-(--composer-radius) border bg-background p-(--composer-padding) transition-shadow focus-within:border-ring/75 focus-within:ring-2 focus-within:ring-ring/20 data-[dragging=true]:border-ring data-[dragging=true]:border-dashed data-[dragging=true]:bg-accent/50"
+          className="flex w-full flex-col gap-2 rounded-(--composer-radius) border bg-background/95 p-(--composer-padding) shadow-lg shadow-black/5 transition-shadow focus-within:border-ring/75 focus-within:ring-2 focus-within:ring-ring/20 data-[dragging=true]:border-ring data-[dragging=true]:border-dashed data-[dragging=true]:bg-accent/50"
         >
           <ComposerAttachments />
           {selectedDoc && (
-            <div className="flex items-center gap-1.5 rounded-lg border border-[color-mix(in_oklab,var(--accent-violet,#a78bfa)_35%,transparent)] bg-[color-mix(in_oklab,var(--accent-violet,#a78bfa)_10%,transparent)] px-2.5 py-1.5">
-              <FileTextIcon className="size-3 shrink-0 text-[var(--accent-violet,#a78bfa)]" />
-              <span className="min-w-0 flex-1 truncate text-xs font-medium text-[var(--accent-violet,#c4b5fd)]">
-                {(() => {
-                  const subjectName = typeof selectedDoc.subject === "object" ? selectedDoc.subject?.name : selectedDoc.subject;
-                  return subjectName ? `${subjectName} · ` : "";
-                })()}{selectedDoc.fileName}
+            <div
+              className="subject-meta-pill"
+              style={
+                subjectColor
+                  ? {
+                      "--subject-color": subjectColor,
+                    } as React.CSSProperties
+                  : undefined
+              }
+            >
+              <FileTextIcon className="size-3 shrink-0" />
+              <span className="min-w-0 flex-1 truncate text-xs font-semibold">
+                {selectedDoc.semester ? `${selectedDoc.semester} - ` : ""}
+                {subjectName ? `${subjectName} - ` : ""}
+                {selectedDoc.fileName}
               </span>
-              <XIcon className="size-3 shrink-0 text-muted-foreground opacity-50" />
+              <button
+                aria-label="Clear selected documents"
+                className="grid size-5 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-background/70 hover:text-foreground"
+                onClick={onClearSelectedDoc}
+                type="button"
+              >
+                <XIcon className="size-3" />
+              </button>
             </div>
           )}
           <ComposerPrimitive.Input
@@ -215,8 +234,7 @@ const Composer: FC<{ selectedDoc?: SelectedDocInfo }> = ({ selectedDoc }) => {
 
 const ComposerAction: FC = () => {
   return (
-    <div className="aui-composer-action-wrapper relative flex items-center justify-between">
-      <ComposerAddAttachment />
+    <div className="aui-composer-action-wrapper relative flex items-center justify-end">
       <AuiIf condition={(s) => !s.thread.isRunning}>
         <ComposerPrimitive.Send asChild>
           <TooltipIconButton
@@ -260,6 +278,12 @@ const MessageError: FC = () => {
 };
 
 const AssistantMessage: FC = () => {
+  const isRunning = useAuiState((s) => s.thread.isRunning);
+  const isLast = useAuiState((s) => s.message.isLast);
+  const content = useAuiState((s) => s.message.content);
+
+  const isThinking = isLast && isRunning && (content.length === 0 || (content.length === 1 && content[0].type === "text" && !content[0].text));
+
   // reserves space for action bar and compensates with `-mb` for consistent msg spacing
   // keeps hovered action bar from shifting layout (autohide doesn't support absolute positioning well)
   // for pt-[n] use -mb-[n + 6] & min-h-[n + 6] to preserve compensation
@@ -274,55 +298,72 @@ const AssistantMessage: FC = () => {
     >
       <div
         data-slot="aui_assistant-message-content"
-        className="wrap-break-word px-2 text-foreground leading-relaxed"
+        className="wrap-break-word rounded-2xl rounded-tl-none bg-muted/40 border border-border/80 px-4 py-3 text-foreground leading-relaxed shadow-xs"
       >
-        <MessagePrimitive.GroupedParts
-          groupBy={(part) => {
-            if (part.type === "reasoning")
-              return ["group-chainOfThought", "group-reasoning"];
-            if (part.type === "tool-call") {
-              if (getMcpAppFromToolPart(part)) return null;
-              return ["group-chainOfThought", "group-tool"];
-            }
-            return null;
-          }}
-        >
-          {({ part, children }) => {
-            switch (part.type) {
-              case "group-chainOfThought":
-                return <div data-slot="aui_chain-of-thought">{children}</div>;
-              case "group-reasoning": {
-                const running = part.status.type === "running";
-                return (
-                  <ReasoningRoot defaultOpen={running}>
-                    <ReasoningTrigger active={running} />
-                    <ReasoningContent aria-busy={running}>
-                      <ReasoningText>{children}</ReasoningText>
-                    </ReasoningContent>
-                  </ReasoningRoot>
-                );
+        {isThinking ? (
+          <div className="flex items-center gap-2 py-1">
+            <span className="flex size-5 shrink-0 items-center justify-center rounded-full border border-border bg-muted">
+              <span className="size-1.5 rounded-full bg-black/80" />
+            </span>
+            <TextShimmerWave
+              className="text-sm font-medium"
+              duration={1.2}
+              spread={1.5}
+              baseColor="var(--foreground)"
+              shimmerColor="var(--foreground)"
+            >
+              Thinking...
+            </TextShimmerWave>
+          </div>
+        ) : (
+          <MessagePrimitive.GroupedParts
+            groupBy={(part) => {
+              if (part.type === "reasoning")
+                return ["group-chainOfThought", "group-reasoning"];
+              if (part.type === "tool-call") {
+                if (getMcpAppFromToolPart(part)) return null;
+                return ["group-chainOfThought", "group-tool"];
               }
-              case "group-tool":
-                return (
-                  <ToolGroupRoot>
-                    <ToolGroupTrigger
-                      count={part.indices.length}
-                      active={part.status.type === "running"}
-                    />
-                    <ToolGroupContent>{children}</ToolGroupContent>
-                  </ToolGroupRoot>
-                );
-              case "text":
-                return <MarkdownText />;
-              case "reasoning":
-                return <Reasoning {...part} />;
-              case "tool-call":
-                return part.toolUI ?? <ToolFallback {...part} />;
-              default:
-                return null;
-            }
-          }}
-        </MessagePrimitive.GroupedParts>
+              return null;
+            }}
+          >
+            {({ part, children }) => {
+              switch (part.type) {
+                case "group-chainOfThought":
+                  return <div data-slot="aui_chain-of-thought">{children}</div>;
+                case "group-reasoning": {
+                  const running = part.status.type === "running";
+                  return (
+                    <ReasoningRoot defaultOpen={running}>
+                      <ReasoningTrigger active={running} />
+                      <ReasoningContent aria-busy={running}>
+                        <ReasoningText>{children}</ReasoningText>
+                      </ReasoningContent>
+                    </ReasoningRoot>
+                  );
+                }
+                case "group-tool":
+                  return (
+                    <ToolGroupRoot>
+                      <ToolGroupTrigger
+                        count={part.indices.length}
+                        active={part.status.type === "running"}
+                      />
+                      <ToolGroupContent>{children}</ToolGroupContent>
+                    </ToolGroupRoot>
+                  );
+                case "text":
+                  return <MarkdownText />;
+                case "reasoning":
+                  return <Reasoning {...part} />;
+                case "tool-call":
+                  return part.toolUI ?? <ToolFallback {...part} />;
+                default:
+                  return null;
+              }
+            }}
+          </MessagePrimitive.GroupedParts>
+        )}
         <MessageError />
       </div>
 
@@ -395,7 +436,7 @@ const UserMessage: FC = () => {
       <UserMessageAttachments />
 
       <div className="aui-user-message-content-wrapper relative col-start-2 min-w-0">
-        <div className="aui-user-message-content wrap-break-word peer rounded-2xl bg-muted px-4 py-2.5 text-foreground empty:hidden">
+        <div className="aui-user-message-content wrap-break-word peer rounded-2xl rounded-tr-none bg-primary px-4 py-2.5 text-primary-foreground shadow-sm empty:hidden">
           <MessagePrimitive.Parts />
         </div>
         <div className="aui-user-action-bar-wrapper absolute start-0 top-1/2 -translate-x-full -translate-y-1/2 pe-2 peer-empty:hidden rtl:translate-x-full">

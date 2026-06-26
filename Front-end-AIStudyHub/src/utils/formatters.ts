@@ -27,3 +27,24 @@ export function formatDate(value: string | undefined): string {
     year: 'numeric',
   }).format(date)
 }
+
+export function getFileBadgeClass(fileName: string | undefined): string {
+  if (!fileName) return "file-txt-badge";
+  const ext = fileName.split(".").pop()?.toLowerCase();
+  if (ext === "pdf") return "file-pdf-badge";
+  if (ext === "docx" || ext === "doc") return "file-docx-badge";
+  if (ext === "xlsx" || ext === "xls") return "file-xlsx-badge";
+  if (ext === "pptx" || ext === "ppt") return "file-pptx-badge";
+  return "file-txt-badge";
+}
+
+export function getFileIconColorClass(fileName: string | undefined): string {
+  if (!fileName) return "text-muted-foreground";
+  const ext = fileName.split(".").pop()?.toLowerCase();
+  if (ext === "pdf") return "text-red-500";
+  if (ext === "docx" || ext === "doc") return "text-blue-500";
+  if (ext === "xlsx" || ext === "xls") return "text-green-600";
+  if (ext === "pptx" || ext === "ppt") return "text-orange-500";
+  return "text-muted-foreground";
+}
+

@@ -31,5 +31,38 @@ export default defineConfig(({ mode }) => {
           }
         : {},
     plugins: [react(), tailwindcss()],
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (!id.includes("node_modules")) {
+              return undefined;
+            }
+
+            if (id.includes("@assistant-ui") || id.includes("remark-gfm")) {
+              return "vendor-ai-chat";
+            }
+
+            if (id.includes("radix-ui")) {
+              return "vendor-radix";
+            }
+
+            if (id.includes("motion")) {
+              return "vendor-motion";
+            }
+
+            if (
+              id.includes("react") ||
+              id.includes("scheduler") ||
+              id.includes("react-router-dom")
+            ) {
+              return "vendor-react";
+            }
+
+            return "vendor";
+          },
+        },
+      },
+    },
   };
 });

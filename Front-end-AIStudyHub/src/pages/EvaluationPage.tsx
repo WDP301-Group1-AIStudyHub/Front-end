@@ -15,7 +15,7 @@ function StatCard({
   value: string
 }) {
   return (
-    <article className={`celestial-card tone-surface tone-${tone} p-5`}>
+    <article className={`moonlit-card tone-surface tone-${tone} p-5`}>
       <div className={`admin-icon-badge admin-tone-${tone}`}>{icon}</div>
       <p className="mt-4 text-3xl font-light tracking-tight">{value}</p>
       <p className="mt-1 text-sm text-muted-foreground">{label}</p>
@@ -52,12 +52,12 @@ export default function EvaluationPage() {
   }, [])
 
   return (
-    <main className="celestial-page min-h-svh overflow-y-auto p-5 md:p-8">
+    <main className="botanical-page min-h-svh overflow-y-auto p-5 md:p-8">
       <header className="flex flex-col gap-2">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
           RAG Research
         </p>
-        <h1 className="celestial-title text-3xl font-semibold tracking-tight md:text-4xl">Evaluation</h1>
+        <h1 className="moonlit-title text-3xl font-semibold tracking-tight md:text-4xl">Evaluation</h1>
         <p className="text-sm text-muted-foreground">
           Compare Basic RAG vs Corrective RAG performance metrics.
         </p>
@@ -100,7 +100,7 @@ export default function EvaluationPage() {
             <StatCard
               icon={<Clock />}
               label="Avg response time"
-              tone="violet"
+              tone="mist"
               value={`${(summary.averageResponseTime / 1000).toFixed(1)}s`}
             />
             <StatCard
@@ -119,7 +119,7 @@ export default function EvaluationPage() {
 
           {/* Logs table */}
           <section className="mt-8">
-            <article className="celestial-card celestial-table tone-surface tone-violet overflow-hidden">
+            <article className="moonlit-card moonlit-table tone-surface tone-mist overflow-hidden">
               <div className="border-b border-border/70 p-5">
                 <h2 className="text-lg font-semibold">Evaluation logs</h2>
                 <p className="text-sm text-muted-foreground">
@@ -163,12 +163,12 @@ export default function EvaluationPage() {
                           <td className="px-5 py-3 text-right">
                             {log.evaluation
                               ? `${Math.round(log.evaluation.confidenceScore * 100)}%`
-                              : '—'}
+                              : 'N/A'}
                           </td>
                           <td className="px-5 py-3 text-right">
                             {log.evaluation
                               ? `${Math.round(log.evaluation.averageRelevanceScore * 100)}%`
-                              : '—'}
+                              : 'N/A'}
                           </td>
                           <td className="px-5 py-3 text-right">
                             {log.evaluation ? (
@@ -178,13 +178,13 @@ export default function EvaluationPage() {
                                 <span className="text-yellow-500">No</span>
                               )
                             ) : (
-                              '—'
+                              'N/A'
                             )}
                           </td>
                           <td className="px-5 py-3 text-right">
                             {log.evaluation
                               ? `${(log.evaluation.responseTimeMs / 1000).toFixed(1)}s`
-                              : '—'}
+                              : 'N/A'}
                           </td>
                           <td className="px-5 py-3 text-right text-muted-foreground">
                             {new Date(log.createdAt).toLocaleDateString()}

@@ -58,7 +58,7 @@ function InfoCard({
   items: Array<{ label: string; value: string | number }>
 }) {
   return (
-    <section className="celestial-card tone-surface tone-sapphire p-5">
+    <section className="botanical-bento tone-surface tone-sapphire p-5">
       <h2 className="text-lg font-black">{title}</h2>
       <dl className="mt-4 grid gap-4 sm:grid-cols-2">
         {items.map((item) => (
@@ -133,7 +133,7 @@ export default function DocumentDetailPage() {
   }
 
   return (
-    <main className="celestial-page flex min-h-svh w-full min-w-0 flex-col overflow-y-auto text-foreground">
+    <main className="botanical-page flex min-h-svh w-full min-w-0 flex-col overflow-y-auto text-foreground">
       <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-5 py-6 sm:px-8 lg:px-10">
         <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0">
@@ -143,7 +143,7 @@ export default function DocumentDetailPage() {
                 Back to library
               </Link>
             </Button>
-            <h1 className="celestial-title mt-4 break-words text-3xl font-black tracking-tight md:text-5xl">
+            <h1 className="moonlit-title mt-4 break-words text-3xl font-black tracking-tight md:text-5xl">
               {document?.title || 'Document detail'}
             </h1>
           </div>
@@ -154,7 +154,7 @@ export default function DocumentDetailPage() {
         </header>
 
         {error ? (
-          <div className="celestial-card tone-surface tone-coral px-4 py-3 text-sm" role="alert">
+          <div className="moonlit-card tone-surface tone-coral px-4 py-3 text-sm" role="alert">
             {error}
           </div>
         ) : null}
@@ -162,7 +162,7 @@ export default function DocumentDetailPage() {
         {isLoading ? (
           <div className="grid gap-4 lg:grid-cols-2">
             {Array.from({ length: 4 }).map((_, index) => (
-              <section className="celestial-card p-5" key={index}>
+              <section className="botanical-card p-5" key={index}>
                 <Skeleton className="h-6 w-48" />
                 <div className="mt-5 grid gap-4 sm:grid-cols-2">
                   {Array.from({ length: 6 }).map((__, itemIndex) => (
@@ -206,7 +206,7 @@ export default function DocumentDetailPage() {
               />
             </div>
 
-            <section className="celestial-card celestial-table tone-surface tone-sapphire overflow-x-auto">
+            <section className="botanical-bento moonlit-table tone-surface tone-sapphire overflow-x-auto">
               <div className="flex items-center gap-3 p-5">
                 <FileText aria-hidden="true" />
                 <h2 className="text-lg font-black">Version history</h2>
@@ -242,7 +242,7 @@ export default function DocumentDetailPage() {
                 </TableBody>
               </Table>
               {versions.length === 0 ? (
-                <div className="border-t-2 border-foreground p-8 text-center text-sm text-muted-foreground">
+                <div className="border-t border-border p-8 text-center text-sm text-muted-foreground">
                   No version history available.
                 </div>
               ) : null}

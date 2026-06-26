@@ -35,7 +35,7 @@ export default function DashboardSidebar({ collapsed, onToggle }: DashboardSideb
 
   return (
     <aside
-      className={`flex-shrink-0 h-screen flex flex-col items-center py-8 border-r border-white/10 bg-[rgba(19,19,19,0.2)] backdrop-blur-[24px] z-50 relative overflow-hidden transition-[width] duration-[350ms] ease-[cubic-bezier(0.4,0,0.2,1)] ${collapsed ? 'w-20' : 'w-56'}`}
+      className={`relative z-50 flex min-h-svh flex-shrink-0 flex-col items-center overflow-hidden border-r border-border bg-sidebar py-8 text-sidebar-foreground transition-[width] duration-[350ms] ease-[cubic-bezier(0.4,0,0.2,1)] ${collapsed ? 'w-20' : 'w-56'}`}
     >
       {/* Toggle chevron */}
       <button
@@ -92,7 +92,7 @@ export default function DashboardSidebar({ collapsed, onToggle }: DashboardSideb
         })}
       </nav>
 
-      {/* Recent Chats — visible only when expanded */}
+      {/* Recent chats are visible only when expanded. */}
       {!collapsed ? (
         <div className="flex-1 flex flex-col overflow-hidden w-full px-3 pt-5 min-h-0 border-t border-white/5 mt-6">
           <div className="flex justify-between items-center mb-3 flex-shrink-0">
