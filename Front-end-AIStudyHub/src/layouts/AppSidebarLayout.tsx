@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import {
   Activity,
   BarChart2,
+  Brain,
   FileCog,
   LayoutDashboard,
   Library,
@@ -16,6 +17,7 @@ import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/s
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { getStoredUser } from '@/src/services/authStorage'
 import { cn } from '@/lib/utils'
+import StudyMaterialNotificationTray from '../components/shared/StudyMaterialNotificationTray'
 
 type AppSidebarLayoutProps = {
   children: ReactNode
@@ -35,6 +37,7 @@ function MobileAppNav() {
     : [
         { href: '/dashboard', icon: LayoutDashboard, label: 'Home' },
         { href: '/library', icon: Library, label: 'Library' },
+        { href: '/study-materials', icon: Brain, label: 'Study' },
         { href: '/aichatbox', icon: MessageSquare, label: 'Chat' },
         { href: '/evaluation', icon: BarChart2, label: 'Eval' },
       ]
@@ -44,7 +47,10 @@ function MobileAppNav() {
       aria-label="Mobile app navigation"
       className="fixed inset-x-3 bottom-3 z-50 md:hidden"
     >
-      <div className="grid grid-cols-5 items-center gap-1 rounded-[20px] border border-border/80 bg-card/95 px-2 py-2 shadow-[0_16px_40px_rgb(72_106_77_/_0.16)] backdrop-blur-md">
+      <div className={cn(
+        "grid items-center gap-1 rounded-[20px] border border-border/80 bg-card/95 px-2 py-2 shadow-[0_16px_40px_rgb(72_106_77_/_0.16)] backdrop-blur-md",
+        isAdmin ? "grid-cols-5" : "grid-cols-6"
+      )}>
         <SidebarTrigger className="h-11 w-full rounded-xl border border-border bg-card text-foreground" />
         {items.map((item) => {
           const Icon = item.icon
@@ -83,6 +89,7 @@ export default function AppSidebarLayout({ children }: AppSidebarLayoutProps) {
           {children}
         </SidebarInset>
         <MobileAppNav />
+        <StudyMaterialNotificationTray />
       </SidebarProvider>
     </TooltipProvider>
   )

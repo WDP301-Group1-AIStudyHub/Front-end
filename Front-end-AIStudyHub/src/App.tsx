@@ -17,6 +17,8 @@ const ResetPasswordPage = lazy(() => import('./pages/auth/ResetPasswordPage'));
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const NewLibraryPage = lazy(() => import('./pages/new-LibraryPage'));
 const DocumentDetailPage = lazy(() => import('./pages/DocumentDetailPage'));
+const StudyMaterialsPage = lazy(() => import('./pages/StudyMaterialsPage'));
+const StudyMaterialsListPage = lazy(() => import('./pages/StudyMaterialsListPage'));
 const SubjectsPage = lazy(() => import('./pages/SubjectsPage'));
 const NewAIChatboxPage = lazy(() => import('./pages/new-AIChatboxPage'));
 const EvaluationPage = lazy(() => import('./pages/evaluation/EvaluationPage'));
@@ -184,6 +186,14 @@ function App() {
           <Route
             path="/documents/:id"
             element={<ProtectedRoute userOnly>{() => routeWithShell(<DocumentDetailPage />)}</ProtectedRoute>}
+          />
+          <Route
+            path="/study-materials"
+            element={<ProtectedRoute userOnly>{() => routeWithShell(<StudyMaterialsListPage />)}</ProtectedRoute>}
+          />
+          <Route
+            path="/library/study/:materialId"
+            element={<ProtectedRoute userOnly>{() => routeWithShell(<StudyMaterialsPage />)}</ProtectedRoute>}
           />
           <Route
             path="/subjects"
