@@ -92,7 +92,10 @@ export default function DocumentDetailPage() {
     setIsLoading(true)
     setError(null)
 
-    Promise.all([getDocument(id), listDocumentVersions(id)])
+    Promise.all([
+      getDocument(id),
+      listDocumentVersions(id)
+    ])
       .then(([nextDocument, nextVersions]) => {
         if (cancelled) return
         setDocument(nextDocument)
@@ -114,6 +117,8 @@ export default function DocumentDetailPage() {
       cancelled = true
     }
   }, [id])
+
+
 
   const subject =
     document?.subject && typeof document.subject === 'object'
@@ -247,6 +252,7 @@ export default function DocumentDetailPage() {
                 </div>
               ) : null}
             </section>
+
           </>
         ) : null}
       </div>

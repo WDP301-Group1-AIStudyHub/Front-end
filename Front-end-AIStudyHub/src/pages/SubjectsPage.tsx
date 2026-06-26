@@ -228,6 +228,7 @@ export default function SubjectsPage() {
 
   const previewColor = normalizeSubjectColor(form.color);
   const previewCode = form.code.trim() || "CODE";
+  const deletingDocumentCount = deletingSubject?.documentCount ?? 0;
 
   return (
     <main className="botanical-page flex min-h-svh w-full min-w-0 flex-col overflow-y-auto text-foreground">
@@ -545,8 +546,9 @@ export default function SubjectsPage() {
           <DialogHeader>
             <DialogTitle>Delete subject?</DialogTitle>
             <DialogDescription>
-              Subjects linked to documents cannot be deleted. The backend will
-              preserve them and return an error.
+              {deletingDocumentCount > 0
+                ? `This subject currently has ${deletingDocumentCount} document${deletingDocumentCount === 1 ? "" : "s"}. If you delete it, all documents in this subject will be removed from your library.`
+                : "This subject has no documents. Deleting it will remove the subject from your workspace."}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -564,7 +566,11 @@ export default function SubjectsPage() {
               type="button"
               variant="destructive"
             >
-              {isDeleting ? "Deleting..." : "Delete"}
+              {isDeleting
+                ? "Deleting..."
+                : deletingDocumentCount > 0
+                  ? "Delete subject and documents"
+                  : "Delete subject"}
             </Button>
           </DialogFooter>
         </DialogContent>

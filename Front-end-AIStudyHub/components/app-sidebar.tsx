@@ -5,6 +5,7 @@ import {
   Activity,
   BarChart2,
   BookMarked,
+  Brain,
   FileCog,
   LayoutDashboardIcon,
   LibraryIcon,
@@ -104,6 +105,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: "/subjects",
       icon: <BookMarked />,
       isActive: activePath === "/subjects",
+    },
+    {
+      title: "Study Materials",
+      url: "/study-materials",
+      icon: <Brain />,
+      isActive: activePath === "/study-materials" || activePath.startsWith("/library/study/"),
     },
     {
       title: "AI Chatbox",
