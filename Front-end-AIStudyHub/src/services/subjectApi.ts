@@ -12,6 +12,7 @@ export interface SubjectItem {
   description?: string
   color?: string
   semester?: string
+  documentCount?: number
   createdAt?: string
   updatedAt?: string
 }
