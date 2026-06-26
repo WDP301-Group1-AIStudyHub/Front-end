@@ -8,6 +8,9 @@ import type {
   BenchmarkSummary,
   ChatHistoryItem,
   ChatHistoryListResponse,
+  ChatThreadDetail,
+  ChatThreadItem,
+  ChatThreadListResponse,
   CreateBenchmarkQuestionPayload,
   EvaluationLogsResponse,
   EvaluationSummary,
@@ -137,6 +140,35 @@ export async function getChatHistoryById(id: string): Promise<ChatHistoryItem> {
 
 export async function deleteChatHistory(id: string): Promise<void> {
   await request(`/api/chat/history/${id}`, { method: 'DELETE' })
+}
+
+export async function listChatThreads(): Promise<ChatThreadItem[]> {
+  const res = await request<ChatThreadListResponse | ChatThreadItem[]>('/api/chat/threads')
+  if (!res.data) return []
+  if (Array.isArray(res.data)) return res.data
+  return res.data.threads ?? []
+}
+
+export async function getChatThreadById(threadId: string): Promise<ChatThreadDetail> {
+  const res = await request<ChatThreadDetail>(`/api/chat/threads/${threadId}`)
+  if (!res.data) throw new ChatApiError('Chat thread not found', 404)
+  return res.data
+}
+
+export async function updateChatThread(
+  threadId: string,
+  payload: { title?: string; status?: 'ACTIVE' | 'ARCHIVED' },
+): Promise<ChatThreadItem> {
+  const res = await request<ChatThreadItem>(`/api/chat/threads/${threadId}`, {
+    method: 'PATCH',
+    body: payload,
+  })
+  if (!res.data) throw new ChatApiError('Chat thread not found', 404)
+  return res.data
+}
+
+export async function deleteChatThread(threadId: string): Promise<void> {
+  await request(`/api/chat/threads/${threadId}`, { method: 'DELETE' })
 }
 
 // ─── Evaluation ──────────────────────────────────────────────────────────────
