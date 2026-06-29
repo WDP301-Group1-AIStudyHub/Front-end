@@ -32,6 +32,7 @@ export interface DocumentItem {
   extractionStatus?: string
   extractedText?: string
   uploadedBy: string
+  ownerId?: string
   createdAt: string
   updatedAt: string
 }
@@ -69,8 +70,9 @@ export interface UploadDocumentPayload {
 export interface UpdateDocumentPayload {
   title?: string
   description?: string
-  subject?: string
   subjectId?: string
+  visibility?: 'PUBLIC' | 'PRIVATE'
+  status?: 'ACTIVE' | 'ARCHIVED'
 }
 
 export type DocumentsResponse = DocumentItem[]

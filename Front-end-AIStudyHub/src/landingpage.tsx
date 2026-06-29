@@ -15,7 +15,7 @@ import CelestialBackdrop from './components/shared/CelestialBackdrop'
 const stats = [
   ['Multi-format', 'Document intake', 'PDF, DOCX, PPTX, XLSX, TXT, and MD sources'],
   ['Subject color', 'Organized context', 'Course codes stay visually tied to each subject'],
-  ['Basic + corrective', 'RAG modes', 'Compare retrieval behavior before trusting an answer'],
+  ['DR-RAG', 'Single retrieval flow', 'Two-stage retrieval with grounded answer checks'],
   ['Benchmark-ready', 'Evaluation flow', 'Create questions and inspect answer quality'],
 ]
 
@@ -35,7 +35,7 @@ const features = [
   {
     icon: BookOpenCheck,
     title: 'Practical evaluation',
-    text: 'Compare RAG modes, inspect sources, and understand answer quality before you trust it.',
+    text: 'Inspect retrieved sources, grounding checks, and answer quality before you trust it.',
     colSpan: 'md:col-span-1',
   },
   {
@@ -164,10 +164,10 @@ export default function LandingPage() {
               <div className="botanical-bento p-5">
                 <div className="relative z-10 flex flex-col gap-3">
                   <div className="self-end rounded-2xl rounded-tr-sm bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
-                    Explain corrective RAG.
+                    Explain DR-RAG.
                   </div>
                   <div className="self-start rounded-2xl rounded-tl-sm border border-border bg-card px-4 py-2 text-sm text-muted-foreground">
-                    It checks retrieval quality before answering...
+                    It expands retrieval from static chunks before answering...
                   </div>
                 </div>
               </div>

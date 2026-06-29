@@ -33,7 +33,6 @@ const AdminActivityPage = lazy(() => import('./pages/admin/AdminActivityPage'));
 
 const demoAdminUser: AuthUser = {
   id: "admin-001",
-  avatar: "https://i.pravatar.cc/150?img=11",
   createdAt: "2025-08-12T09:00:00.000Z",
   email: "arjun.admin@aistudy.edu",
   fullName: "Arjun Sharma",
