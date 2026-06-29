@@ -49,19 +49,14 @@ function normalizeBenchmarkSummary(summary: BenchmarkSummary): BenchmarkSummary 
 
   return {
     ...summary,
-    averageBasicScore: numberFrom(summary.averageBasicScore ?? summary.basicAverageScore ?? record.basicAvgScore),
-    averageCorrectiveScore: numberFrom(
-      summary.averageCorrectiveScore ?? summary.correctiveAverageScore ?? record.correctiveAvgScore,
+    averageScore: numberFrom(summary.averageScore ?? record.avgScore),
+    averageAnswerCorrectness: numberFrom(
+      summary.averageAnswerCorrectness ?? record.averageCorrectness ?? record.answerCorrectness,
     ),
-    basicWinRate: numberFrom(summary.basicWinRate),
-    correctnessImprovement: numberFrom(
-      summary.correctnessImprovement ?? summary.averageCorrectnessImprovement,
-    ),
-    correctiveWinRate: numberFrom(summary.correctiveWinRate),
-    faithfulnessImprovement: numberFrom(
-      summary.faithfulnessImprovement ?? summary.averageFaithfulnessImprovement,
-    ),
-    totalRuns: numberFrom(summary.totalRuns ?? summary.totalBenchmarks),
+    averageCompleteness: numberFrom(summary.averageCompleteness ?? record.completeness),
+    averageFaithfulness: numberFrom(summary.averageFaithfulness ?? record.faithfulness),
+    averageRelevance: numberFrom(summary.averageRelevance ?? record.relevance),
+    totalRuns: numberFrom(summary.totalRuns),
   }
 }
 

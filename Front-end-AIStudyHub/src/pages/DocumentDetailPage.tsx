@@ -1,8 +1,17 @@
 import { useEffect, useState } from 'react'
-import { ArrowLeft, Download, FileText } from 'lucide-react'
-import { Link, useParams } from 'react-router-dom'
+import { ArrowLeft, Download, FileText, Pencil, Trash2 } from 'lucide-react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Table,
   TableBody,
@@ -11,7 +20,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { getDocument, listDocumentVersions } from '../services/documentApi'
+import { deleteDocument, getDocument, listDocumentVersions, updateDocument } from '../services/documentApi'
+import { listSubjects, type SubjectItem } from '../services/subjectApi'
 import type {
   DocumentDetail,
   DocumentSubject,
@@ -76,9 +86,18 @@ function InfoCard({
 
 export default function DocumentDetailPage() {
   const { id } = useParams()
+  const navigate = useNavigate()
   const [document, setDocument] = useState<DocumentDetail | null>(null)
   const [versions, setVersions] = useState<DocumentVersion[]>([])
+  const [subjects, setSubjects] = useState<SubjectItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isEditOpen, setIsEditOpen] = useState(false)
+  const [isSavingEdit, setIsSavingEdit] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [editTitle, setEditTitle] = useState('')
+  const [editDescription, setEditDescription] = useState('')
+  const [editSubjectId, setEditSubjectId] = useState('')
+  const [editVisibility, setEditVisibility] = useState<'PUBLIC' | 'PRIVATE'>('PRIVATE')
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -94,12 +113,14 @@ export default function DocumentDetailPage() {
 
     Promise.all([
       getDocument(id),
-      listDocumentVersions(id)
+      listDocumentVersions(id),
+      listSubjects().catch(() => []),
     ])
-      .then(([nextDocument, nextVersions]) => {
+      .then(([nextDocument, nextVersions, nextSubjects]) => {
         if (cancelled) return
         setDocument(nextDocument)
         setVersions(nextVersions)
+        setSubjects(nextSubjects)
       })
       .catch((caughtError) => {
         if (cancelled) return
@@ -137,6 +158,66 @@ export default function DocumentDetailPage() {
     }
   }
 
+  function openEdit() {
+    if (!document) return
+    setEditTitle(document.title)
+    setEditDescription(document.description ?? '')
+    setEditSubjectId(document.subjectId ?? subject?._id ?? '')
+    setEditVisibility(document.visibility === 'PUBLIC' ? 'PUBLIC' : 'PRIVATE')
+    setIsEditOpen(true)
+  }
+
+  async function saveEdit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!document || !id) return
+    const title = editTitle.trim()
+    if (!title) {
+      setError('Title is required')
+      return
+    }
+
+    setIsSavingEdit(true)
+    setError(null)
+    try {
+      const updated = await updateDocument(id, {
+        description: editDescription.trim(),
+        subjectId: editSubjectId || undefined,
+        title,
+        visibility: editVisibility,
+      })
+      setDocument(updated as DocumentDetail)
+      setIsEditOpen(false)
+    } catch (caughtError) {
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : 'Unable to update document',
+      )
+    } finally {
+      setIsSavingEdit(false)
+    }
+  }
+
+  async function confirmDelete() {
+    if (!document || !id) return
+    const ok = window.confirm(`Delete "${document.title}"? This cannot be undone.`)
+    if (!ok) return
+
+    setIsDeleting(true)
+    setError(null)
+    try {
+      await deleteDocument(id)
+      navigate('/library')
+    } catch (caughtError) {
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : 'Unable to delete document',
+      )
+      setIsDeleting(false)
+    }
+  }
+
   return (
     <main className="botanical-page flex min-h-svh w-full min-w-0 flex-col overflow-y-auto text-foreground">
       <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-5 py-6 sm:px-8 lg:px-10">
@@ -152,10 +233,20 @@ export default function DocumentDetailPage() {
               {document?.title || 'Document detail'}
             </h1>
           </div>
-          <Button disabled={!document?.fileUrl} onClick={downloadDocument} type="button">
-            <Download data-icon="inline-start" aria-hidden="true" />
-            Download
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button disabled={!document} onClick={openEdit} type="button" variant="secondary">
+              <Pencil data-icon="inline-start" aria-hidden="true" />
+              Edit details
+            </Button>
+            <Button disabled={!document?.fileUrl} onClick={downloadDocument} type="button">
+              <Download data-icon="inline-start" aria-hidden="true" />
+              Download
+            </Button>
+            <Button disabled={!document || isDeleting} onClick={confirmDelete} type="button" variant="destructive">
+              <Trash2 data-icon="inline-start" aria-hidden="true" />
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </Button>
+          </div>
         </header>
 
         {error ? (
@@ -256,6 +347,77 @@ export default function DocumentDetailPage() {
           </>
         ) : null}
       </div>
+
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent>
+          <form className="flex flex-col gap-4" onSubmit={saveEdit}>
+            <DialogHeader>
+              <DialogTitle>Edit document</DialogTitle>
+            </DialogHeader>
+
+            <label className="flex flex-col gap-2 text-sm font-semibold">
+              Title
+              <Input
+                disabled={isSavingEdit}
+                maxLength={160}
+                onChange={(event) => setEditTitle(event.target.value)}
+                value={editTitle}
+              />
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm font-semibold">
+              Subject
+              <select
+                className="h-9 w-full rounded-md border-2 border-foreground bg-background px-3 text-sm font-semibold outline-none disabled:opacity-50"
+                disabled={isSavingEdit}
+                onChange={(event) => setEditSubjectId(event.target.value)}
+                value={editSubjectId}
+              >
+                <option value="">Keep current subject</option>
+                {subjects.map((item) => (
+                  <option key={item._id} value={item._id}>
+                    {[item.code, item.name].filter(Boolean).join(' ')}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm font-semibold">
+              Description
+              <Textarea
+                disabled={isSavingEdit}
+                maxLength={1000}
+                onChange={(event) => setEditDescription(event.target.value)}
+                value={editDescription}
+              />
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm font-semibold">
+              Visibility
+              <select
+                className="h-9 w-full rounded-md border-2 border-foreground bg-background px-3 text-sm font-semibold outline-none disabled:opacity-50"
+                disabled={isSavingEdit}
+                onChange={(event) =>
+                  setEditVisibility(event.target.value === 'PUBLIC' ? 'PUBLIC' : 'PRIVATE')
+                }
+                value={editVisibility}
+              >
+                <option value="PRIVATE">Private</option>
+                <option value="PUBLIC">Public</option>
+              </select>
+            </label>
+
+            <DialogFooter>
+              <Button disabled={isSavingEdit} type="button" variant="secondary" onClick={() => setIsEditOpen(false)}>
+                Cancel
+              </Button>
+              <Button disabled={isSavingEdit} type="submit">
+                {isSavingEdit ? 'Saving...' : 'Save changes'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </main>
   )
 }
