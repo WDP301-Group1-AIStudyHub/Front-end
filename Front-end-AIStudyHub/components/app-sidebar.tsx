@@ -3,7 +3,6 @@
 import * as React from "react"
 import {
   Activity,
-  BarChart2,
   BookMarked,
   Brain,
   FileCog,
@@ -45,7 +44,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const storedUser = getStoredUser()
   const isAdmin = storedUser?.role === "admin"
   const user = {
-    avatar: storedUser?.avatar || "https://i.pravatar.cc/150?img=3",
+    avatar: storedUser?.avatar,
     email: storedUser?.email || "john.doe@example.com",
     name: storedUser?.fullName || "John Doe",
   }
@@ -121,12 +120,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: "/aichatbox",
       icon: <MessagesSquareIcon />,
       isActive: activePath === "/aichatbox" || activePath === "/new-aichatbox",
-    },
-    {
-      title: "Evaluation",
-      url: "/evaluation",
-      icon: <BarChart2 />,
-      isActive: activePath === "/evaluation",
     },
   ]
 

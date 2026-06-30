@@ -27,6 +27,12 @@ export default function DashboardSidebar({ collapsed, onToggle }: DashboardSideb
   const navigate = useNavigate()
   const { pathname: activePath } = useLocation()
   const user = getStoredUser()
+  const userInitials = (user?.fullName || user?.email || 'User')
+    .split(/\s+/)
+    .map((part) => part[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase()
 
   const handleLogout = async () => {
     await logout()
@@ -136,11 +142,17 @@ export default function DashboardSidebar({ collapsed, onToggle }: DashboardSideb
           className="relative w-8 h-8 rounded-full border border-white/10 overflow-hidden cursor-pointer bg-transparent p-0 transition-all duration-300 hover:border-white/40 active:scale-95"
           title="User Profile"
         >
-          <img
-            src={user?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=120'}
-            alt="User Avatar"
-            className="block w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500"
-          />
+          {user?.avatar ? (
+            <img
+              src={user.avatar}
+              alt="User Avatar"
+              className="block w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500"
+            />
+          ) : (
+            <span className="flex h-full w-full items-center justify-center text-[10px] font-semibold text-white/70">
+              {userInitials}
+            </span>
+          )}
         </button>
         <button
           className="flex bg-transparent border-none cursor-pointer text-[rgba(196,199,200,0.6)] opacity-60 hover:opacity-100 transition-opacity p-0"

@@ -11,6 +11,7 @@ import {
   GraduationCap,
   Library,
   PanelRight,
+  Plus,
   Search,
   Zap,
 } from "lucide-react";
@@ -96,7 +97,6 @@ export default function NewAIChatboxPage() {
   const [openSubjects, setOpenSubjects] = useState<Set<string>>(new Set());
   const [contextPanelWidth, setContextPanelWidth] = useState(340);
   const [isResizingContext, setIsResizingContext] = useState(false);
-  const [ragMode, setRagMode] = useState<"basic" | "corrective">("basic");
 
   // History loading
   const [historyMessages, setHistoryMessages] = useState<readonly ThreadMessageLike[]>([]);
@@ -123,8 +123,6 @@ export default function NewAIChatboxPage() {
         else if (last?.documentIds?.length) setSelectedDocIds(last.documentIds);
         else if (last?.documentId) setSelectedDocIds([last.documentId]);
         else setSelectedDocIds([]);
-        const nextMode = detail.thread.mode || last?.mode;
-        if (nextMode === "basic" || nextMode === "corrective") setRagMode(nextMode);
         if (last?.sources?.length) setLastSources(last.sources);
         else setLastSources([]);
         if (last?.evaluation) setLastEvaluation(last.evaluation);
@@ -145,15 +143,10 @@ export default function NewAIChatboxPage() {
   const selectedDocIdsRef = useRef<string[]>([]);
   const selectedSubjectIdRef = useRef<string | undefined>(undefined);
   const selectedDocSubjectRef = useRef<string | undefined>(undefined);
-  const ragModeRef = useRef<"basic" | "corrective">("basic");
   const currentThreadIdRef = useRef<string | undefined>(threadId);
   const onResponseRef = useRef<
     ((sources: ChatSource[], evaluation?: ChatEvaluation) => void) | null
   >(null);
-
-  useEffect(() => {
-    ragModeRef.current = ragMode;
-  }, [ragMode]);
 
   useEffect(() => {
     currentThreadIdRef.current = threadId;
@@ -313,7 +306,7 @@ export default function NewAIChatboxPage() {
     setSelectedDocIds(allSelected ? [] : ids);
   };
 
-  // Real adapter for POST /api/chat/ask with the selected mode.
+  // Real adapter for POST /api/chat/ask using the DR-RAG pipeline.
   const realAdapter = useMemo<ChatModelAdapter>(
     () => ({
       async *run({ messages, abortSignal }) {
@@ -326,7 +319,6 @@ export default function NewAIChatboxPage() {
         const docIds = selectedDocIdsRef.current;
         const subjectId = selectedSubjectIdRef.current;
         const docSubject = selectedDocSubjectRef.current;
-        const mode = ragModeRef.current;
 
         const payload: AskChatPayload = {
           question,
@@ -334,7 +326,6 @@ export default function NewAIChatboxPage() {
           subject: docSubject || undefined,
           subjectId: subjectId || undefined,
           scope: docIds.length === 0 ? "library_all" : docIds.length === 1 ? "single_document" : "document_set",
-          mode,
         };
 
         if (docIds.length === 1) {
@@ -343,7 +334,7 @@ export default function NewAIChatboxPage() {
           payload.documentIds = docIds;
         }
 
-        let finalAnswer = "";
+        let finalAnswer: string;
         let createdThreadId: string | undefined;
         try {
           const result = await askChat(payload, abortSignal);
@@ -356,23 +347,7 @@ export default function NewAIChatboxPage() {
         } catch (err) {
           if (err instanceof DOMException && err.name === "AbortError") throw err;
           if (err instanceof ChatApiError && err.status >= 500) {
-            if (mode === "corrective") {
-              const fallbackPayload = { ...payload, mode: "basic" as const };
-              try {
-                const fallback = await askChat(fallbackPayload, abortSignal);
-                if (fallback.threadId) {
-                  createdThreadId = fallback.threadId;
-                  currentThreadIdRef.current = fallback.threadId;
-                }
-                onResponseRef.current?.(fallback.sources, fallback.evaluation);
-                finalAnswer = fallback.answer;
-              } catch (retryErr) {
-                if (retryErr instanceof DOMException && retryErr.name === "AbortError") throw retryErr;
-                finalAnswer = "The server is busy or still waking up. Please send the message again in 10-15 seconds.";
-              }
-            } else {
-              finalAnswer = "The server is busy or still waking up. Please send the message again in 10-15 seconds.";
-            }
+            finalAnswer = "The server is busy or still waking up. Please send the message again in 10-15 seconds.";
           } else {
             const msg = err instanceof Error ? err.message : "Failed to get answer";
             finalAnswer = `Warning: ${msg}`;
@@ -431,14 +406,23 @@ export default function NewAIChatboxPage() {
                 AI Study Chat
               </h1>
               <p className="text-sm text-muted-foreground">
-                {ragMode === "corrective"
-                  ? "Corrective RAG - Groq - Pinecone"
-                  : "Basic RAG - Groq - Pinecone"}
+                DR-RAG - Groq - Pinecone
               </p>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            {threadId && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="inline-flex items-center gap-2 px-3 py-2 border-primary/30 text-primary hover:bg-primary/10 rounded-xl"
+                onClick={() => navigate("/aichatbox")}
+              >
+                <Plus className="size-4" />
+                Tạo trò chuyện mới
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"
@@ -448,22 +432,17 @@ export default function NewAIChatboxPage() {
               {selectedContextLabel}
             </Button>
             <Button
-              variant={ragMode === "corrective" ? "default" : "outline"}
+              variant="default"
               size="sm"
-              onClick={() =>
-                setRagMode((prev) => (prev === "basic" ? "corrective" : "basic"))
-              }
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl transition-all"
-              title={ragMode === "corrective" ? "Switch back to Basic RAG" : "Turn on Corrective RAG"}
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl"
+              title="DR-RAG is the active retrieval pipeline"
             >
               {isThinking ? (
                 <CelestialInlineLoader label="Thinking..." />
-              ) : ragMode === "corrective" ? (
-                <Brain className="size-4" aria-hidden="true" />
               ) : (
-                <Zap className="size-4" aria-hidden="true" />
+                <Brain className="size-4" aria-hidden="true" />
               )}
-              {ragMode === "corrective" ? "Corrective RAG" : "Basic RAG"}
+              DR-RAG
             </Button>
           </div>
         </div>
@@ -782,7 +761,7 @@ export default function NewAIChatboxPage() {
                   <li>1. Select a document for narrow answers, or use all documents.</li>
                   <li>2. Ask a question about your study material.</li>
                   <li>
-                    3. The AI uses Corrective RAG to answer from your docs.
+                    3. The AI uses DR-RAG to answer from your docs.
                   </li>
                 </ol>
               </section>

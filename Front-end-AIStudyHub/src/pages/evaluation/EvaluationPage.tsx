@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+﻿import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import {
   AlertCircle,
@@ -29,12 +29,11 @@ import type {
 type TabKey = "all" | "mine" | "recent" | "review";
 
 const emptySummary: BenchmarkSummary = {
-  averageBasicScore: 0,
-  averageCorrectiveScore: 0,
-  basicWinRate: 0,
-  correctnessImprovement: 0,
-  correctiveWinRate: 0,
-  faithfulnessImprovement: 0,
+  averageAnswerCorrectness: 0,
+  averageCompleteness: 0,
+  averageFaithfulness: 0,
+  averageRelevance: 0,
+  averageScore: 0,
   totalRuns: 0,
 };
 
@@ -73,11 +72,6 @@ function percent(value: unknown): string {
   return `${Math.round(normalizeScore(value) * 100)}%`;
 }
 
-function signedPercent(value: unknown): string {
-  const normalized = normalizeScore(value);
-  const sign = normalized > 0 ? "+" : "";
-  return `${sign}${Math.round(normalized * 100)}%`;
-}
 
 
 function shortenText(value: string, maxLength = 120): string {
@@ -278,7 +272,7 @@ export default function EvaluationPage() {
               Evaluation
             </h1>
             <p className="mt-2 text-sm font-bold text-muted-foreground">
-              Create benchmark questions with expected answers, then run them through Basic RAG and Corrective RAG to compare performance.
+              Create benchmark questions with expected answers, then score the DR-RAG pipeline.
             </p>
             <p className="mt-2 text-xs font-bold text-foreground/60">
               {questions.length} questions across {subjectCount || 0} subjects.
@@ -329,33 +323,33 @@ export default function EvaluationPage() {
           />
           <StatCard
             icon={<BarChart3 />}
-            label="Avg basic"
+            label="Avg score"
             tone="coral"
-            value={percent(summary.averageBasicScore)}
+            value={percent(summary.averageScore)}
           />
           <StatCard
             icon={<Sparkles />}
-            label="Avg corrective"
+            label="Correctness"
             tone="teal"
-            value={percent(summary.averageCorrectiveScore)}
+            value={percent(summary.averageAnswerCorrectness)}
           />
           <StatCard
             icon={<Trophy />}
-            label="Corrective wins"
+            label="Relevance"
             tone="gold"
-            value={percent(summary.correctiveWinRate)}
+            value={percent(summary.averageRelevance)}
           />
           <StatCard
             icon={<CheckCircle2 />}
             label="Faithfulness"
             tone="mist"
-            value={signedPercent(summary.faithfulnessImprovement)}
+            value={percent(summary.averageFaithfulness)}
           />
           <StatCard
             icon={<CheckCircle2 />}
-            label="Correctness"
+            label="Completeness"
             tone="emerald"
-            value={signedPercent(summary.correctnessImprovement)}
+            value={percent(summary.averageCompleteness)}
           />
         </section>
 
@@ -429,7 +423,7 @@ export default function EvaluationPage() {
                   No benchmark questions found
                 </h2>
                 <p className="mt-1 max-w-md text-sm font-bold text-muted-foreground">
-                  Create a question with an expected answer, then run it through Basic RAG and Corrective RAG.
+                  Create a question with an expected answer, then run it through DR-RAG.
                 </p>
               </div>
             </div>

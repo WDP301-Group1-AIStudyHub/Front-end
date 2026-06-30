@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { BarChart2, Clock, Loader2, Target, Zap } from 'lucide-react'
 import { getEvaluationLogs, getEvaluationSummary } from '../services/chatApi'
-import type { EvaluationLog, EvaluationSummary } from '../types/chat'
+import type { ChatEvaluation, EvaluationLog, EvaluationSummary } from '../types/chat'
 
 function StatCard({
   icon,
@@ -21,6 +21,20 @@ function StatCard({
       <p className="mt-1 text-sm text-muted-foreground">{label}</p>
     </article>
   )
+}
+
+function evaluationFromLog(log: EvaluationLog): ChatEvaluation | undefined {
+  if (log.evaluation) return log.evaluation
+  if (typeof log.confidenceScore !== 'number') return undefined
+
+  return {
+    averageRelevanceScore: log.averageRelevanceScore ?? 0,
+    confidenceScore: log.confidenceScore,
+    isGrounded: Boolean(log.isGrounded),
+    relevantChunksCount: log.relevantChunksCount ?? 0,
+    responseTimeMs: log.responseTimeMs ?? 0,
+    retrievedChunksCount: log.retrievedChunksCount ?? 0,
+  }
 }
 
 export default function EvaluationPage() {
@@ -59,7 +73,7 @@ export default function EvaluationPage() {
         </p>
         <h1 className="moonlit-title text-3xl font-semibold tracking-tight md:text-4xl">Evaluation</h1>
         <p className="text-sm text-muted-foreground">
-          Compare Basic RAG vs Corrective RAG performance metrics.
+          Track DR-RAG retrieval quality, grounding and latency.
         </p>
       </header>
 
@@ -105,15 +119,9 @@ export default function EvaluationPage() {
             />
             <StatCard
               icon={<BarChart2 />}
-              label="Basic mode questions"
+              label="DR-RAG questions"
               tone="coral"
-              value={String(summary.basicModeCount)}
-            />
-            <StatCard
-              icon={<Zap />}
-              label="Corrective mode questions"
-              tone="teal"
-              value={String(summary.correctiveModeCount)}
+              value={String(summary.drRagModeCount)}
             />
           </section>
 
@@ -137,7 +145,7 @@ export default function EvaluationPage() {
                     <thead>
                       <tr className="border-b border-border/60 bg-muted/30 text-xs text-muted-foreground">
                         <th className="px-5 py-3 text-left font-medium">Question</th>
-                        <th className="px-5 py-3 text-left font-medium">Mode</th>
+                        <th className="px-5 py-3 text-left font-medium">Pipeline</th>
                         <th className="px-5 py-3 text-right font-medium">Confidence</th>
                         <th className="px-5 py-3 text-right font-medium">Relevance</th>
                         <th className="px-5 py-3 text-right font-medium">Grounded</th>
@@ -146,51 +154,48 @@ export default function EvaluationPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border/60">
-                      {logs.map((log) => (
-                        <tr className="hover:bg-muted/35" key={log.id}>
-                          <td className="max-w-[260px] truncate px-5 py-3">{log.question}</td>
-                          <td className="px-5 py-3">
-                            <span
-                              className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                                log.mode === 'corrective'
-                                  ? 'bg-primary/10 text-primary'
-                                  : 'bg-primary/10 text-primary'
-                              }`}
-                            >
-                              {log.mode}
-                            </span>
-                          </td>
-                          <td className="px-5 py-3 text-right">
-                            {log.evaluation
-                              ? `${Math.round(log.evaluation.confidenceScore * 100)}%`
-                              : 'N/A'}
-                          </td>
-                          <td className="px-5 py-3 text-right">
-                            {log.evaluation
-                              ? `${Math.round(log.evaluation.averageRelevanceScore * 100)}%`
-                              : 'N/A'}
-                          </td>
-                          <td className="px-5 py-3 text-right">
-                            {log.evaluation ? (
-                              log.evaluation.isGrounded ? (
-                                <span className="text-green-500">Yes</span>
+                      {logs.map((log) => {
+                        const evaluation = evaluationFromLog(log)
+                        return (
+                          <tr className="hover:bg-muted/35" key={log.id}>
+                            <td className="max-w-[260px] truncate px-5 py-3">{log.question}</td>
+                            <td className="px-5 py-3">
+                              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                                {log.retrievalMode ?? log.mode ?? 'dr-rag'}
+                              </span>
+                            </td>
+                            <td className="px-5 py-3 text-right">
+                              {evaluation
+                                ? `${Math.round(evaluation.confidenceScore * 100)}%`
+                                : 'N/A'}
+                            </td>
+                            <td className="px-5 py-3 text-right">
+                              {evaluation
+                                ? `${Math.round(evaluation.averageRelevanceScore * 100)}%`
+                                : 'N/A'}
+                            </td>
+                            <td className="px-5 py-3 text-right">
+                              {evaluation ? (
+                                evaluation.isGrounded ? (
+                                  <span className="text-green-500">Yes</span>
+                                ) : (
+                                  <span className="text-yellow-500">No</span>
+                                )
                               ) : (
-                                <span className="text-yellow-500">No</span>
-                              )
-                            ) : (
-                              'N/A'
-                            )}
-                          </td>
-                          <td className="px-5 py-3 text-right">
-                            {log.evaluation
-                              ? `${(log.evaluation.responseTimeMs / 1000).toFixed(1)}s`
-                              : 'N/A'}
-                          </td>
-                          <td className="px-5 py-3 text-right text-muted-foreground">
-                            {new Date(log.createdAt).toLocaleDateString()}
-                          </td>
-                        </tr>
-                      ))}
+                                'N/A'
+                              )}
+                            </td>
+                            <td className="px-5 py-3 text-right">
+                              {evaluation
+                                ? `${(evaluation.responseTimeMs / 1000).toFixed(1)}s`
+                                : 'N/A'}
+                            </td>
+                            <td className="px-5 py-3 text-right text-muted-foreground">
+                              {new Date(log.createdAt).toLocaleDateString()}
+                            </td>
+                          </tr>
+                        )
+                      })}
                     </tbody>
                   </table>
                 </div>

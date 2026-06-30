@@ -1,4 +1,4 @@
-import {
+﻿import {
   useEffect,
   useMemo,
   useState,
@@ -85,7 +85,6 @@ function readDraft(): DraftState {
     return initialDraft;
   }
 }
-
 function trimPayload(form: DraftState): CreateBenchmarkQuestionPayload {
   return {
     difficulty: form.difficulty,
@@ -134,7 +133,6 @@ function FieldShell({
     </label>
   );
 }
-
 export default function NewQuestion() {
   const navigate = useNavigate();
   const [form, setForm] = useState<DraftState>(() => readDraft());
@@ -259,7 +257,7 @@ export default function NewQuestion() {
               <span>/</span>
               <span className="text-foreground">New</span>
               <span className="ml-2 rounded-full border border-border/70 px-2 py-1 text-[10px] uppercase tracking-[0.14em]">
-                v0.4 - dev
+                DR-RAG
               </span>
             </div>
             <h1 className="moonlit-title text-3xl font-semibold tracking-tight md:text-4xl">
@@ -325,12 +323,11 @@ export default function NewQuestion() {
                   question: event.target.value,
                 }))
               }
-              placeholder="Giải thích định luật Newton thứ ba và cho ví dụ"
+              placeholder="Explain Newton's third law and give an example."
               value={form.question}
             />
             <p className="rounded-lg border border-border/70 bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
-              Tip: longer or ambiguous questions tend to reveal Corrective RAG's
-              advantage.
+              Tip: multi-hop or ambiguous questions are useful for checking DR-RAG retrieval depth.
             </p>
           </FieldShell>
 
@@ -495,8 +492,7 @@ export default function NewQuestion() {
                   Run benchmark immediately after saving
                 </span>
                 <span className="mt-1 block text-xs leading-5 text-muted-foreground">
-                  Runs Basic RAG and Corrective RAG once the question is
-                  created.
+                  Runs DR-RAG once the question is created.
                 </span>
               </span>
             </label>
@@ -506,3 +502,4 @@ export default function NewQuestion() {
     </main>
   );
 }
+

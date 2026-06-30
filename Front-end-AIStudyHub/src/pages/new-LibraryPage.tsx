@@ -8,6 +8,7 @@ import {
   ExternalLink,
   FileIcon,
   FileText,
+  ListFilter,
   LinkIcon,
   MessageSquare,
   MoreHorizontal,
@@ -33,6 +34,7 @@ import { Input } from "@/components/ui/input";
 import {
   InputGroup,
   InputGroupAddon,
+  InputGroupButton,
   InputGroupInput,
 } from "@/components/ui/input-group";
 import { Separator } from "@/components/ui/separator";
@@ -83,6 +85,7 @@ import {
 } from "../services/subjectApi";
 import type { SubjectItem } from "../services/subjectApi";
 import { useUploadStore } from "../store/useUploadStore";
+import { getStoredUser } from "../services/authStorage";
 import type { DocumentItem } from "../types/document";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -112,6 +115,7 @@ const SUPPORTED_UPLOAD_ACCEPT = [
   ...SUPPORTED_UPLOAD_EXTENSIONS,
 ].join(",");
 const SUPPORTED_UPLOAD_LABEL = "PDF, DOCX, PPTX, XLSX, TXT, or MD";
+const DOCUMENT_FILE_TYPES = ["PDF", "DOCX", "PPTX", "XLSX", "TXT", "MD"];
 
 type Feedback = {
   tone: "success" | "error" | "info";
@@ -245,6 +249,41 @@ function getErrorMessage(error: unknown): string {
 function getFileExtension(fileName: string): string {
   const match = fileName.toLowerCase().match(/\.[^.]+$/);
   return match?.[0] ?? "";
+}
+
+function getDocumentFileType(document: DocumentItem): string {
+  const extension = getFileExtension(document.fileName || document.title);
+
+  if (extension) {
+    return extension.slice(1).toUpperCase();
+  }
+
+  return document.fileType.split("/").pop()?.toUpperCase() || "OTHER";
+}
+
+function getDocumentProcessingStatus(
+  document: DocumentItem,
+): "ready" | "processing" | "failed" {
+  const status = [document.extractionStatus, document.status]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  if (status.includes("fail") || status.includes("error")) {
+    return "failed";
+  }
+
+  if (
+    status.includes("pending") ||
+    status.includes("processing") ||
+    status.includes("uploading") ||
+    status.includes("extracting") ||
+    status.includes("indexing")
+  ) {
+    return "processing";
+  }
+
+  return "ready";
 }
 
 function isSupportedUploadFile(file: File): boolean {
@@ -635,6 +674,7 @@ function DocumentPreviewPage({
 
 export default function NewLibraryPage() {
   const navigate = useNavigate();
+  const currentUser = getStoredUser();
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [editingDocument, setEditingDocument] = useState<DocumentItem | null>(
     null,
@@ -648,6 +688,8 @@ export default function NewLibraryPage() {
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [subjectFilter, setSubjectFilter] = useState("");
+  const [fileTypeFilter, setFileTypeFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
   const [subjects, setSubjects] = useState<SubjectItem[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadForm, setUploadForm] = useState<DocumentFormState>(emptyForm);
@@ -665,11 +707,16 @@ export default function NewLibraryPage() {
   };
 
   const toggleSelectAll = () => {
-    if (selectedIds.length === sortedDocuments.length) {
-      setSelectedIds([]);
-    } else {
-      setSelectedIds(sortedDocuments.map((d) => d.id));
-    }
+    const visibleIds = visibleDocuments.map((document) => document.id);
+    const allVisibleSelected = visibleIds.every((id) =>
+      selectedIds.includes(id),
+    );
+
+    setSelectedIds((current) =>
+      allVisibleSelected
+        ? current.filter((id) => !visibleIds.includes(id))
+        : [...new Set([...current, ...visibleIds])],
+    );
   };
 
   const handleBulkDelete = async () => {
@@ -734,7 +781,10 @@ export default function NewLibraryPage() {
     prevSuccessCountRef.current = successCount;
   }, [uploads]);
 
-  const showSearchMode = searchQuery.trim() || subjectFilter.trim();
+  const showSearchMode = Boolean(searchQuery.trim() || subjectFilter.trim());
+  const hasActiveFilters = Boolean(
+    showSearchMode || fileTypeFilter || statusFilter,
+  );
 
   const subjectById = useMemo(
     () => new Map(subjects.map((subject) => [subject._id, subject])),
@@ -751,6 +801,40 @@ export default function NewLibraryPage() {
       ),
     [documents],
   );
+
+  const visibleDocuments = useMemo(
+    () =>
+      sortedDocuments.filter((document) => {
+        if (
+          fileTypeFilter &&
+          getDocumentFileType(document) !== fileTypeFilter
+        ) {
+          return false;
+        }
+
+        if (
+          statusFilter &&
+          getDocumentProcessingStatus(document) !== statusFilter
+        ) {
+          return false;
+        }
+
+        return true;
+      }),
+    [fileTypeFilter, sortedDocuments, statusFilter],
+  );
+
+  const allVisibleSelected =
+    visibleDocuments.length > 0 &&
+    visibleDocuments.every((document) => selectedIds.includes(document.id));
+
+  function clearFilters() {
+    setSearchQuery("");
+    setSubjectFilter("");
+    setFileTypeFilter("");
+    setStatusFilter("");
+    setSelectedIds([]);
+  }
 
   async function loadDocuments() {
     setIsLoading(true);
@@ -875,8 +959,16 @@ export default function NewLibraryPage() {
     setFeedback(null);
 
     try {
-      let subjectId = undefined;
-      if (editForm.subject.trim()) {
+      let subjectId = editingDocument.subjectId;
+      const currentSubjectName =
+        typeof editingDocument.subject === "object"
+          ? editingDocument.subject?.name
+          : editingDocument.subject;
+      if (
+        editForm.subject.trim() &&
+        editForm.subject.trim().toLowerCase() !==
+          (currentSubjectName ?? "").trim().toLowerCase()
+      ) {
         subjectId = await findOrCreateSubjectByName(editForm.subject.trim());
       }
 
@@ -987,35 +1079,6 @@ export default function NewLibraryPage() {
   return (
     <main className="moonlit-page flex min-h-svh w-full min-w-0 flex-col overflow-y-auto text-foreground">
       <div className="mx-auto flex w-full min-w-0 max-w-7xl flex-1 flex-col gap-8 px-5 py-6 sm:px-8 lg:px-10">
-        <header className="flex min-w-0 flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-          <InputGroup className="mx-auto max-w-md bg-card/70 backdrop-blur">
-            <InputGroupAddon align="inline-start">
-              <SearchIcon />
-            </InputGroupAddon>
-            <InputGroupInput
-              aria-label="Search documents"
-              onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="Search documents"
-              type="search"
-              value={searchQuery}
-            />
-          </InputGroup>
-
-          <select
-            aria-label="Filter by subject"
-            className="h-9 w-full max-w-56 rounded-md border-2 border-foreground bg-background px-3 text-sm font-semibold "
-            onChange={(event) => setSubjectFilter(event.target.value)}
-            value={subjectFilter}
-          >
-            <option value="">All subjects</option>
-            {subjects.map((subject) => (
-              <option key={subject._id} value={subject._id}>
-                {[subject.code, subject.name].filter(Boolean).join(" ")}
-              </option>
-            ))}
-          </select>
-        </header>
-
         <section className="flex flex-1 flex-col gap-4">
           <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
             <div className="flex flex-col gap-5">
@@ -1068,6 +1131,112 @@ export default function NewLibraryPage() {
             </div>
           </div>
 
+          <div className="flex flex-col gap-3 border-y border-border/70 py-4">
+            <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center">
+              <InputGroup className="min-w-0 bg-background lg:max-w-xl">
+                <InputGroupAddon align="inline-start">
+                  <SearchIcon aria-hidden="true" />
+                </InputGroupAddon>
+                <InputGroupInput
+                  aria-label="Search documents"
+                  onChange={(event) => {
+                    setSearchQuery(event.target.value);
+                    setSelectedIds([]);
+                  }}
+                  placeholder="Search by title, file name, or description"
+                  type="search"
+                  value={searchQuery}
+                />
+                {searchQuery && (
+                  <InputGroupAddon align="inline-end">
+                    <InputGroupButton
+                      aria-label="Clear search"
+                      onClick={() => {
+                        setSearchQuery("");
+                        setSelectedIds([]);
+                      }}
+                      size="icon-xs"
+                    >
+                      <X aria-hidden="true" />
+                    </InputGroupButton>
+                  </InputGroupAddon>
+                )}
+              </InputGroup>
+
+              <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+                <span className="inline-flex h-9 items-center gap-2 text-sm font-medium text-muted-foreground">
+                  <ListFilter aria-hidden="true" className="size-4" />
+                  Filters
+                </span>
+
+                <select
+                  aria-label="Filter by subject"
+                  className="h-9 min-w-40 flex-1 rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 sm:flex-none"
+                  onChange={(event) => {
+                    setSubjectFilter(event.target.value);
+                    setSelectedIds([]);
+                  }}
+                  value={subjectFilter}
+                >
+                  <option value="">All subjects</option>
+                  {subjects.map((subject) => (
+                    <option key={subject._id} value={subject._id}>
+                      {[subject.code, subject.name].filter(Boolean).join(" ")}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  aria-label="Filter by file type"
+                  className="h-9 min-w-32 flex-1 rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 sm:flex-none"
+                  onChange={(event) => {
+                    setFileTypeFilter(event.target.value);
+                    setSelectedIds([]);
+                  }}
+                  value={fileTypeFilter}
+                >
+                  <option value="">All file types</option>
+                  {DOCUMENT_FILE_TYPES.map((fileType) => (
+                    <option key={fileType} value={fileType}>
+                      {fileType}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  aria-label="Filter by processing status"
+                  className="h-9 min-w-32 flex-1 rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 sm:flex-none"
+                  onChange={(event) => {
+                    setStatusFilter(event.target.value);
+                    setSelectedIds([]);
+                  }}
+                  value={statusFilter}
+                >
+                  <option value="">All statuses</option>
+                  <option value="ready">Ready</option>
+                  <option value="processing">Processing</option>
+                  <option value="failed">Failed</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
+              <span aria-live="polite">
+                {visibleDocuments.length} of {documents.length} documents
+              </span>
+              <Button
+                disabled={!hasActiveFilters}
+                onClick={clearFilters}
+                size="sm"
+                type="button"
+                variant="ghost"
+              >
+                <X data-icon="inline-start" aria-hidden="true" />
+                Clear filters
+              </Button>
+            </div>
+          </div>
+
           {feedback && (
             <div
               className={`moonlit-card tone-surface px-4 py-3 text-sm ${feedback.tone === "error" ? "tone-coral" : feedback.tone === "success" ? "tone-emerald" : "tone-sapphire"}`}
@@ -1103,8 +1272,9 @@ export default function NewLibraryPage() {
                     <input
                       type="checkbox"
                       className="rounded border-border text-primary focus:ring-primary size-4 accent-primary cursor-pointer"
-                      checked={sortedDocuments.length > 0 && selectedIds.length === sortedDocuments.length}
+                      checked={allVisibleSelected}
                       onChange={toggleSelectAll}
+                      aria-label="Select all visible documents"
                     />
                   </TableHead>
                   <TableHead>Name</TableHead>
@@ -1144,7 +1314,7 @@ export default function NewLibraryPage() {
                         </TableCell>
                       </TableRow>
                     ))
-                  : sortedDocuments.map((document) => (
+                  : visibleDocuments.map((document) => (
                       <TableRow key={document.id} className={selectedIds.includes(document.id) ? "bg-[#ECEFE7]/35" : ""}>
                         <TableCell className="w-12 px-4 text-center">
                           <input
@@ -1239,26 +1409,30 @@ export default function NewLibraryPage() {
                                 <Download />
                                 Download
                               </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onSelect={() => openEdit(document)}
-                              >
-                                <Pencil />
-                                Edit details
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                disabled={isDeletingId === document.id}
-                                onSelect={(event) => {
-                                  event.preventDefault();
-                                  void handleDelete(document);
-                                }}
-                                variant="destructive"
-                              >
-                                <Trash2 />
-                                {pendingDeleteId === document.id
-                                  ? "Confirm delete"
-                                  : "Delete"}
-                              </DropdownMenuItem>
+                              {currentUser && (document.ownerId === currentUser.id || document.uploadedBy === currentUser.id || currentUser.role === "admin") && (
+                                <>
+                                  <DropdownMenuItem
+                                    onSelect={() => openEdit(document)}
+                                  >
+                                    <Pencil />
+                                    Edit details
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    disabled={isDeletingId === document.id}
+                                    onSelect={(event) => {
+                                      event.preventDefault();
+                                      void handleDelete(document);
+                                    }}
+                                    variant="destructive"
+                                  >
+                                    <Trash2 />
+                                    {pendingDeleteId === document.id
+                                      ? "Confirm delete"
+                                      : "Delete"}
+                                  </DropdownMenuItem>
+                                </>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
@@ -1267,7 +1441,7 @@ export default function NewLibraryPage() {
               </TableBody>
             </Table>
 
-            {!isLoading && sortedDocuments.length === 0 && (
+            {!isLoading && visibleDocuments.length === 0 && (
               <div className="flex min-h-72 flex-col items-center justify-center gap-3 rounded-md border border-dashed border-border p-8 text-center">
                 <BookOpenText
                   className="text-muted-foreground"
@@ -1276,14 +1450,22 @@ export default function NewLibraryPage() {
                 <div className="flex flex-col gap-1">
                   <h2 className="font-medium">No documents found</h2>
                   <p className="max-w-md text-sm text-muted-foreground">
-                    Upload a PDF to store it in Cloudinary and prepare it for AI
-                    chat.
+                    {hasActiveFilters
+                      ? "No documents match the current search and filters."
+                      : "Upload a document to store it in Cloudinary and prepare it for AI chat."}
                   </p>
                 </div>
-                <Button onClick={() => setIsUploadOpen(true)}>
-                  <UploadCloud data-icon="inline-start" aria-hidden="true" />
-                  Upload document
-                </Button>
+                {hasActiveFilters ? (
+                  <Button onClick={clearFilters} variant="outline">
+                    <X data-icon="inline-start" aria-hidden="true" />
+                    Clear filters
+                  </Button>
+                ) : (
+                  <Button onClick={() => setIsUploadOpen(true)}>
+                    <UploadCloud data-icon="inline-start" aria-hidden="true" />
+                    Upload document
+                  </Button>
+                )}
               </div>
             )}
           </div>
