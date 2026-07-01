@@ -8,6 +8,7 @@ import {
   ExternalLink,
   FileIcon,
   FileText,
+  History,
   LinkIcon,
   MessageSquare,
   MoreHorizontal,
@@ -73,6 +74,7 @@ import {
 } from "@/components/ui/tooltip";
 import {
   deleteDocument,
+  listDocumentVersions,
   listDocuments,
   searchDocuments,
   updateDocument,
@@ -83,7 +85,7 @@ import {
 } from "../services/subjectApi";
 import type { SubjectItem } from "../services/subjectApi";
 import { useUploadStore } from "../store/useUploadStore";
-import type { DocumentItem } from "../types/document";
+import type { DocumentItem, DocumentVersion } from "../types/document";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -171,6 +173,33 @@ function formatDate(value: string): string {
     month: "short",
     year: "numeric",
   }).format(date);
+}
+
+function getLatestVersionNumber(document: DocumentItem): number {
+  return Math.max(1, document.totalVersions ?? 1);
+}
+
+function formatVersionLabel(document: DocumentItem): string {
+  const versionCount = getLatestVersionNumber(document);
+  return `v${versionCount}`;
+}
+
+function getVersionStatusClass(status?: string): string {
+  const normalized = status?.toUpperCase();
+
+  if (normalized === "ACTIVE" || normalized === "INDEXED" || normalized === "COMPLETED") {
+    return "status-success";
+  }
+
+  if (normalized === "FAILED" || normalized === "DELETED") {
+    return "status-error";
+  }
+
+  if (normalized === "PROCESSING" || normalized === "PENDING") {
+    return "status-warning";
+  }
+
+  return "status-info";
 }
 
 function safeDecode(value: string): string {
@@ -637,14 +666,21 @@ export default function NewLibraryPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [isVersionsLoading, setIsVersionsLoading] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [subjectFilter, setSubjectFilter] = useState("");
   const [subjects, setSubjects] = useState<SubjectItem[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadForm, setUploadForm] = useState<DocumentFormState>(emptyForm);
-  const editForm = useState<DocumentFormState>(emptyForm)[0];
-  const setEditForm = useState<DocumentFormState>(emptyForm)[1];
+  const [editForm, setEditForm] = useState<DocumentFormState>(emptyForm);
+  const [versionUploadDocument, setVersionUploadDocument] =
+    useState<DocumentItem | null>(null);
+  const [versionsDocument, setVersionsDocument] = useState<DocumentItem | null>(
+    null,
+  );
+  const [versions, setVersions] = useState<DocumentVersion[]>([]);
+  const [versionsError, setVersionsError] = useState<string | null>(null);
   const didLoadRef = useRef(false);
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -821,27 +857,36 @@ export default function NewLibraryPage() {
       return;
     }
 
-    // Delegate to Zustand background store with conflict check interception
-    useUploadStore.getState().processIncomingUpload(
-      {
-        description: uploadForm.description,
-        file: selectedFile,
-        subject: uploadForm.subject,
-        title: uploadForm.title,
-      },
-      documents
-    );
+    const uploadPayload = {
+      description: uploadForm.description,
+      file: selectedFile,
+      subject: uploadForm.subject,
+      title: uploadForm.title,
+    };
+
+    if (versionUploadDocument) {
+      void useUploadStore
+        .getState()
+        .uploadFile(uploadPayload, () => void loadDocuments(), versionUploadDocument.id);
+    } else {
+      useUploadStore
+        .getState()
+        .processIncomingUpload(uploadPayload, documents, () => void loadDocuments());
+    }
 
     // Close the dialog and clear form inputs immediately
     setUploadForm(emptyForm);
     setSelectedFile(null);
+    setVersionUploadDocument(null);
     setIsUploadOpen(false);
 
     // Provide user feedback that it's running in the background
     setFeedback({
       tone: "success",
       message:
-        "Document added to background upload queue. Track progress at the bottom right.",
+        versionUploadDocument
+          ? "New document version added to the background upload queue. Track progress at the bottom right."
+          : "Document added to background upload queue. Track progress at the bottom right.",
     });
   }
 
@@ -957,6 +1002,57 @@ export default function NewLibraryPage() {
     setIsEditOpen(true);
   }
 
+  function openUploadDocument() {
+    setVersionUploadDocument(null);
+    setUploadForm(emptyForm);
+    setSelectedFile(null);
+    setIsUploadOpen(true);
+  }
+
+  function openVersionUpload(document: DocumentItem) {
+    setVersionUploadDocument(document);
+    setUploadForm({
+      description: document.description ?? "",
+      subject:
+        (typeof document.subject === "object"
+          ? document.subject?.name
+          : document.subject) ?? "",
+      title: document.title,
+    });
+    setSelectedFile(null);
+    setIsUploadOpen(true);
+  }
+
+  function closeUploadDialog(open: boolean) {
+    setIsUploadOpen(open);
+
+    if (!open) {
+      setVersionUploadDocument(null);
+      setSelectedFile(null);
+      setUploadForm(emptyForm);
+    }
+  }
+
+  async function openVersionHistory(document: DocumentItem) {
+    setVersionsDocument(document);
+    setVersions([]);
+    setVersionsError(null);
+    setIsVersionsLoading(true);
+
+    try {
+      const nextVersions = await listDocumentVersions(document.id);
+      setVersions(
+        [...nextVersions].sort(
+          (a, b) => b.versionNumber - a.versionNumber,
+        ),
+      );
+    } catch (error) {
+      setVersionsError(getErrorMessage(error));
+    } finally {
+      setIsVersionsLoading(false);
+    }
+  }
+
   function openFile(document: DocumentItem) {
     navigate(`/library?preview=${encodeURIComponent(document.id)}`);
   }
@@ -1051,7 +1147,7 @@ export default function NewLibraryPage() {
                 </DropdownMenuTrigger>
 
                 <DropdownMenuContent className="w-fit" align="end">
-                  <DropdownMenuItem onSelect={() => setIsUploadOpen(true)}>
+                  <DropdownMenuItem onSelect={openUploadDocument}>
                     <FileIcon />
                     Document file
                   </DropdownMenuItem>
@@ -1088,7 +1184,7 @@ export default function NewLibraryPage() {
           )}
 
           <div className="moonlit-card moonlit-table tone-surface tone-sapphire overflow-x-auto overflow-y-hidden relative">
-            <Table className="min-w-[820px]">
+            <Table className="min-w-[960px]">
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-12 px-4 text-center">
@@ -1101,6 +1197,7 @@ export default function NewLibraryPage() {
                   </TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Subject</TableHead>
+                  <TableHead>Document version</TableHead>
                   <TableHead>Size</TableHead>
                   <TableHead>Uploaded</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -1124,6 +1221,9 @@ export default function NewLibraryPage() {
                         </TableCell>
                         <TableCell>
                           <Skeleton className="h-4 w-24" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-8 w-28 rounded-full" />
                         </TableCell>
                         <TableCell>
                           <Skeleton className="h-4 w-16" />
@@ -1183,6 +1283,20 @@ export default function NewLibraryPage() {
                           })()}
                         </TableCell>
                         <TableCell>
+                          <button
+                            className="inline-flex max-w-[10rem] items-center gap-2 rounded-full border border-border bg-background/70 px-2.5 py-1 text-left text-xs font-semibold text-foreground transition-colors hover:bg-muted"
+                            onClick={() => void openVersionHistory(document)}
+                            type="button"
+                          >
+                            <History className="size-3.5 shrink-0" aria-hidden="true" />
+                            <span className="shrink-0">{formatVersionLabel(document)}</span>
+                            <span className="truncate text-muted-foreground">
+                              {getLatestVersionNumber(document)} version
+                              {getLatestVersionNumber(document) === 1 ? "" : "s"}
+                            </span>
+                          </button>
+                        </TableCell>
+                        <TableCell>
                           <span className="text-sm text-muted-foreground">
                             {formatFileSize(document.fileSize)}
                           </span>
@@ -1210,7 +1324,7 @@ export default function NewLibraryPage() {
                                 <MoreHorizontal aria-hidden="true" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-44 rounded-xl">
+                            <DropdownMenuContent align="end" className="w-52 rounded-xl">
                               <DropdownMenuItem
                                 onSelect={() => openDetails(document)}
                               >
@@ -1236,6 +1350,18 @@ export default function NewLibraryPage() {
                               >
                                 <Pencil />
                                 Edit details
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onSelect={() => openVersionUpload(document)}
+                              >
+                                <UploadCloud />
+                                Upload new version
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onSelect={() => void openVersionHistory(document)}
+                              >
+                                <History />
+                                Version history
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem
@@ -1272,7 +1398,7 @@ export default function NewLibraryPage() {
                     chat.
                   </p>
                 </div>
-                <Button onClick={() => setIsUploadOpen(true)}>
+                <Button onClick={openUploadDocument}>
                   <UploadCloud data-icon="inline-start" aria-hidden="true" />
                   Upload document
                 </Button>
@@ -1282,16 +1408,20 @@ export default function NewLibraryPage() {
         </section>
       </div>
 
-      <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
+      <Dialog open={isUploadOpen} onOpenChange={closeUploadDialog}>
         <DialogContent className="sm:max-w-[500px]">
           <form
             className="flex min-h-0 flex-1 flex-col"
             onSubmit={handleUpload}
           >
             <DialogHeader>
-              <DialogTitle>Upload document</DialogTitle>
+              <DialogTitle>
+                {versionUploadDocument ? "Upload new version" : "Upload document"}
+              </DialogTitle>
               <DialogDescription>
-                Study documents are stored in Cloudinary, parsed, and indexed for AI chat.
+                {versionUploadDocument
+                  ? `Add a new version for "${versionUploadDocument.title}". The latest version will stay visible in Library.`
+                  : "Study documents are stored in Cloudinary, parsed, and indexed for AI chat."}
               </DialogDescription>
             </DialogHeader>
             <Separator className="my-4" />
@@ -1312,7 +1442,13 @@ export default function NewLibraryPage() {
             <DialogFooter className="mt-6">
               <Button disabled={isUploading} type="submit" className="w-full sm:w-auto">
                 <UploadCloud data-icon="inline-start" aria-hidden="true" />
-                {isUploading ? <CelestialInlineLoader label="Uploading..." /> : "Upload document"}
+                {isUploading ? (
+                  <CelestialInlineLoader label="Uploading..." />
+                ) : versionUploadDocument ? (
+                  "Upload new version"
+                ) : (
+                  "Upload document"
+                )}
               </Button>
             </DialogFooter>
           </form>
@@ -1357,6 +1493,133 @@ export default function NewLibraryPage() {
           </form>
         </SheetContent>
       </Sheet>
+
+      <Sheet
+        open={Boolean(versionsDocument)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setVersionsDocument(null);
+            setVersions([]);
+            setVersionsError(null);
+          }
+        }}
+      >
+        <SheetContent className="w-full overflow-hidden sm:max-w-2xl">
+          <SheetHeader>
+            <SheetTitle>Version history</SheetTitle>
+            <SheetDescription>
+              {versionsDocument
+                ? `${versionsDocument.title} currently shows ${formatVersionLabel(versionsDocument)} in Library.`
+                : "All versions for this document."}
+            </SheetDescription>
+          </SheetHeader>
+          <Separator />
+          <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
+            {versionsDocument ? (
+              <div className="flex flex-col gap-3 rounded-lg border border-border bg-muted/25 p-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold">
+                    {versionsDocument.fileName}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Latest: {formatVersionLabel(versionsDocument)} · {getLatestVersionNumber(versionsDocument)} version
+                    {getLatestVersionNumber(versionsDocument) === 1 ? "" : "s"}
+                  </p>
+                </div>
+                <Button
+                  className="w-full sm:w-auto"
+                  onClick={() => {
+                    const currentDocument = versionsDocument;
+                    setVersionsDocument(null);
+                    openVersionUpload(currentDocument);
+                  }}
+                  type="button"
+                >
+                  <UploadCloud data-icon="inline-start" aria-hidden="true" />
+                  Upload new version
+                </Button>
+              </div>
+            ) : null}
+
+            {versionsError ? (
+              <div className="moonlit-card tone-surface tone-coral px-4 py-3 text-sm" role="alert">
+                {versionsError}
+              </div>
+            ) : null}
+
+            {isVersionsLoading ? (
+              <div className="flex flex-col gap-3">
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <Skeleton className="h-14 w-full" key={index} />
+                ))}
+              </div>
+            ) : versions.length > 0 ? (
+              <div className="overflow-x-auto rounded-lg border border-border">
+                <Table className="min-w-[640px]">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Version</TableHead>
+                      <TableHead>File</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Size</TableHead>
+                      <TableHead>Uploaded</TableHead>
+                      <TableHead className="text-right">Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {versions.map((version) => (
+                      <TableRow key={version.id}>
+                        <TableCell className="font-semibold">
+                          v{version.versionNumber}
+                          {version.isActive ? (
+                            <Badge className="ml-2 rounded-full" variant="secondary">
+                              Latest
+                            </Badge>
+                          ) : null}
+                        </TableCell>
+                        <TableCell className="max-w-[14rem] truncate">
+                          {version.fileName}
+                        </TableCell>
+                        <TableCell>
+                          <span className={`status-badge ${getVersionStatusClass(version.processingStatus)}`}>
+                            {version.processingStatus || "UNKNOWN"}
+                          </span>
+                        </TableCell>
+                        <TableCell>{formatFileSize(version.fileSize)}</TableCell>
+                        <TableCell>{formatDate(version.createdAt)}</TableCell>
+                        <TableCell className="text-right">
+                          <IconTooltip label={`Download v${version.versionNumber}`}>
+                            <Button
+                              disabled={!version.fileUrl}
+                              onClick={() => {
+                                window.location.href = version.fileUrl;
+                              }}
+                              size="icon-sm"
+                              type="button"
+                              variant="ghost"
+                            >
+                              <Download aria-hidden="true" />
+                            </Button>
+                          </IconTooltip>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              <div className="flex min-h-44 flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border p-6 text-center">
+                <History className="text-muted-foreground" aria-hidden="true" />
+                <p className="text-sm font-medium">No version history available</p>
+                <p className="max-w-sm text-xs text-muted-foreground">
+                  Upload a new version to keep the document grouped instead of creating duplicates.
+                </p>
+              </div>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
+
       {selectedIds.length > 0 && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-card border border-border/80 rounded-2xl shadow-xl px-5 py-3 flex items-center gap-4 text-xs font-semibold">
           <span className="text-muted-foreground">
