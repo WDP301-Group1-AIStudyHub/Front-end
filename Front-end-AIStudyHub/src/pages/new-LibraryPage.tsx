@@ -14,6 +14,7 @@ import {
   MessageSquare,
   MoreHorizontal,
   Pencil,
+  Star,
   SearchIcon,
   Settings,
   Trash2,
@@ -79,7 +80,9 @@ import {
   downloadDocumentFile,
   listDocuments,
   listSharedWithMe,
+  restoreDocument,
   searchDocuments,
+  setDocumentStar,
   updateDocument,
 } from "../services/documentApi";
 import {
@@ -125,6 +128,10 @@ const DOCUMENT_FILE_TYPES = ["PDF", "DOCX", "PPTX", "XLSX", "TXT", "MD"];
 type Feedback = {
   tone: "success" | "error" | "info";
   message: string;
+  action?: {
+    label: string;
+    onClick: () => void | Promise<void>;
+  };
 };
 
 type DocumentFormState = {
@@ -690,6 +697,7 @@ export default function NewLibraryPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const libraryView = searchParams.get("view") === "shared" ? "shared" : "mine";
+  const searchQueryParam = searchParams.get("q") ?? "";
   const currentUser = getStoredUser();
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [editingDocument, setEditingDocument] = useState<DocumentItem | null>(
@@ -697,6 +705,7 @@ export default function NewLibraryPage() {
   );
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
+  const [isStarringId, setIsStarringId] = useState<string | null>(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
@@ -704,7 +713,7 @@ export default function NewLibraryPage() {
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [sharingDocument, setSharingDocument] = useState<DocumentItem | null>(null);
   const [classifyingDocument, setClassifyingDocument] = useState<DocumentItem | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(searchQueryParam);
   const [subjectFilter, setSubjectFilter] = useState("");
   const [fileTypeFilter, setFileTypeFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -715,6 +724,11 @@ export default function NewLibraryPage() {
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+
+  useEffect(() => {
+    setSearchQuery(searchQueryParam);
+    setSelectedIds([]);
+  }, [searchQueryParam]);
 
   const getAccessRole = (document: DocumentItem) => {
     if (currentUser?.role === "admin") return "OWNER";
@@ -771,16 +785,16 @@ export default function NewLibraryPage() {
     }
 
     setIsBulkDeleting(true);
-    setFeedback({ tone: "info", message: `Deleting ${selectedIds.length} selected document(s)...` });
+    setFeedback({ tone: "info", message: `Moving ${selectedIds.length} selected document(s) to trash...` });
     try {
       await Promise.all(deletableDocuments.map((document) => deleteDocument(document.id)));
       setDocuments((current) =>
         current.filter((item) => !deletableDocuments.some((document) => document.id === item.id)),
       );
       setSelectedIds([]);
-      setFeedback({ tone: "success", message: "Selected documents deleted successfully." });
+      setFeedback({ tone: "success", message: "Selected documents moved to trash." });
     } catch {
-      setFeedback({ tone: "error", message: "Error deleting some documents. Please refresh." });
+      setFeedback({ tone: "error", message: "Error moving some documents to trash. Please refresh." });
     } finally {
       setIsBulkDeleting(false);
     }
@@ -795,6 +809,38 @@ export default function NewLibraryPage() {
       }
     });
     setFeedback({ tone: "success", message: `Downloads triggered for ${selectedIds.length} file(s).` });
+  };
+
+  const handleToggleStar = async (document: DocumentItem) => {
+    const nextStarred = !document.isStarred;
+    setIsStarringId(document.id);
+    setDocuments((current) =>
+      current.map((item) =>
+        item.id === document.id
+          ? { ...item, isStarred: nextStarred }
+          : item,
+      ),
+    );
+
+    try {
+      const updatedDocument = await setDocumentStar(document.id, nextStarred);
+      setDocuments((current) =>
+        current.map((item) =>
+          item.id === updatedDocument.id ? updatedDocument : item,
+        ),
+      );
+    } catch (error) {
+      setDocuments((current) =>
+        current.map((item) =>
+          item.id === document.id
+            ? { ...item, isStarred: Boolean(document.isStarred) }
+            : item,
+        ),
+      );
+      setFeedback({ tone: "error", message: getErrorMessage(error) });
+    } finally {
+      setIsStarringId(null);
+    }
   };
 
   const [uploadTouched, setUploadTouched] = useState<Record<string, boolean>>({});
@@ -849,7 +895,8 @@ export default function NewLibraryPage() {
     () =>
       [...documents].sort(
         (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+          new Date(b.updatedAt ?? b.createdAt).getTime() -
+          new Date(a.updatedAt ?? a.createdAt).getTime(),
       ),
     [documents],
   );
@@ -1068,7 +1115,7 @@ export default function NewLibraryPage() {
       setPendingDeleteId(document.id);
       setFeedback({
         tone: "info",
-        message: `Choose Delete again to permanently remove "${document.title}".`,
+        message: `Choose Delete again to move "${document.title}" to trash.`,
       });
       return;
     }
@@ -1084,7 +1131,26 @@ export default function NewLibraryPage() {
       setPendingDeleteId(null);
       setFeedback({
         tone: "success",
-        message: "Document deleted successfully",
+        message: "Document moved to trash.",
+        action: {
+          label: "Undo",
+          onClick: async () => {
+            try {
+              const restored = await restoreDocument(document.id);
+              setDocuments((current) =>
+                current.some((item) => item.id === restored.id)
+                  ? current
+                  : [restored, ...current],
+              );
+              setFeedback({
+                tone: "success",
+                message: "Document restored successfully.",
+              });
+            } catch (error) {
+              setFeedback({ tone: "error", message: getErrorMessage(error) });
+            }
+          },
+        },
       });
     } catch (error) {
       setFeedback({ tone: "error", message: getErrorMessage(error) });
@@ -1113,6 +1179,41 @@ export default function NewLibraryPage() {
       color: subjectColor,
       label: [subjectCode, subjectName].filter(Boolean).join(" ") || "Unsorted",
     };
+  }
+
+  function getAccessPresentation(document: DocumentItem) {
+    const accessRole = getAccessRole(document);
+
+    if (accessRole === "OWNER") {
+      return {
+        className: "border-primary/25 bg-primary/10 text-primary",
+        label: "Owner",
+      };
+    }
+
+    if (accessRole === "EDITOR") {
+      return {
+        className: "border-amber-300 bg-amber-50 text-amber-700",
+        label: "Editor",
+      };
+    }
+
+    return {
+      className: "border-slate-300 bg-slate-50 text-slate-700",
+      label: "Viewer",
+    };
+  }
+
+  function getAccessSubLabel(document: DocumentItem) {
+    if (document.isShared && document.sharedBy?.fullName) {
+      return `Shared by ${document.sharedBy.fullName}`;
+    }
+
+    if (getAccessRole(document) === "OWNER") {
+      return "Owned by you";
+    }
+
+    return document.sharedBy?.email ?? "Shared access";
   }
 
   function openEdit(document: DocumentItem) {
@@ -1174,13 +1275,13 @@ export default function NewLibraryPage() {
 
   return (
     <main className="moonlit-page flex min-h-svh w-full min-w-0 flex-col overflow-y-auto text-foreground">
-      <div className="mx-auto flex w-full min-w-0 max-w-7xl flex-1 flex-col gap-8 px-5 py-6 sm:px-8 lg:px-10">
+      <div className="mx-auto flex w-full min-w-0 max-w-7xl flex-1 flex-col gap-6 px-5 py-6 sm:px-8 lg:px-10">
         <section className="flex flex-1 flex-col gap-4">
           <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-            <div className="flex flex-col gap-5">
-              <div className="flex items-center gap-2">
-                <h1 className="moonlit-title text-3xl font-semibold tracking-tight md:text-5xl">
-                  Study documents
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-wrap items-center gap-3">
+                <h1 className="moonlit-title page-title document-manager-title">
+                  My Document
                 </h1>
                 <IconTooltip label="Document settings">
                   <Button
@@ -1191,11 +1292,17 @@ export default function NewLibraryPage() {
                     <Settings aria-hidden="true" />
                   </Button>
                 </IconTooltip>
+                <Badge className="rounded-full px-2.5 py-1" variant="secondary">
+                  {documents.length} total
+                </Badge>
+                <Badge className="rounded-full px-2.5 py-1" variant="outline">
+                  {visibleDocuments.length} visible
+                </Badge>
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
                 <div
-                  aria-label="Library view"
+                  aria-label="My Document view"
                   className="inline-flex rounded-lg border border-border bg-muted/40 p-1"
                   role="tablist"
                 >
@@ -1224,7 +1331,7 @@ export default function NewLibraryPage() {
                 </div>
                 <Button variant="secondary" size="sm" className="rounded-full">
                   <Clock3 data-icon="inline-start" aria-hidden="true" />
-                  Newest first
+                  Recently updated
                 </Button>
               </div>
             </div>
@@ -1259,12 +1366,13 @@ export default function NewLibraryPage() {
 
           <div className="flex flex-col gap-3 border-y border-border/70 py-4">
             <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center">
-              <InputGroup className="min-w-0 bg-background lg:max-w-xl">
+              <InputGroup className="document-manager-search min-w-0 lg:max-w-xl">
                 <InputGroupAddon align="inline-start">
                   <SearchIcon aria-hidden="true" />
                 </InputGroupAddon>
                 <InputGroupInput
                   aria-label="Search documents"
+                  className="h-full min-w-0 px-1 text-sm"
                   onChange={(event) => {
                     setSearchQuery(event.target.value);
                     setSelectedIds([]);
@@ -1365,7 +1473,7 @@ export default function NewLibraryPage() {
 
           {feedback && (
             <div
-              className={`moonlit-card tone-surface px-4 py-3 text-sm ${feedback.tone === "error" ? "tone-coral" : feedback.tone === "success" ? "tone-emerald" : "tone-sapphire"}`}
+              className={`moonlit-card tone-surface flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm ${feedback.tone === "error" ? "tone-coral" : feedback.tone === "success" ? "tone-emerald" : "tone-sapphire"}`}
               role={feedback.tone === "error" ? "alert" : "status"}
             >
               <span
@@ -1377,6 +1485,16 @@ export default function NewLibraryPage() {
               >
                 {feedback.message}
               </span>
+              {feedback.action ? (
+                <Button
+                  onClick={() => void feedback.action?.onClick()}
+                  size="sm"
+                  type="button"
+                  variant="outline"
+                >
+                  {feedback.action.label}
+                </Button>
+              ) : null}
             </div>
           )}
 
@@ -1391,7 +1509,7 @@ export default function NewLibraryPage() {
           )}
 
           <div className="moonlit-card moonlit-table tone-surface tone-sapphire overflow-x-auto overflow-y-hidden relative">
-            <Table className="min-w-[820px]">
+            <Table className="min-w-[520px] md:min-w-[760px] lg:min-w-[980px]">
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-12 px-4 text-center">
@@ -1404,9 +1522,10 @@ export default function NewLibraryPage() {
                     />
                   </TableHead>
                   <TableHead>Name</TableHead>
-                  <TableHead>Subject</TableHead>
-                  <TableHead>Size</TableHead>
-                  <TableHead>Uploaded</TableHead>
+                  <TableHead className="hidden md:table-cell">Subject</TableHead>
+                  <TableHead className="hidden md:table-cell">Access</TableHead>
+                  <TableHead className="hidden lg:table-cell">Size</TableHead>
+                  <TableHead className="hidden lg:table-cell">Updated</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -1426,13 +1545,16 @@ export default function NewLibraryPage() {
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden md:table-cell">
                           <Skeleton className="h-4 w-24" />
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          <Skeleton className="h-4 w-28" />
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell">
                           <Skeleton className="h-4 w-16" />
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden lg:table-cell">
                           <Skeleton className="h-4 w-24" />
                         </TableCell>
                         <TableCell className="text-right">
@@ -1451,27 +1573,55 @@ export default function NewLibraryPage() {
                           />
                         </TableCell>
                         <TableCell>
-                          <button
-                            className="flex min-w-0 items-center gap-3 text-left group"
-                            onClick={() => openFile(document)}
-                            type="button"
-                          >
-                            <div className={`admin-icon-badge ${getFileBadgeClass(document.fileName)} flex size-9 shrink-0 items-center justify-center rounded-lg transition-transform group-hover:scale-[1.02]`}>
-                              <FileText aria-hidden="true" />
-                            </div>
-                            <div className="min-w-0">
-                              <div className="truncate text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
-                                {document.fileName}
+                          <div className="flex min-w-0 items-center gap-2">
+                            <Button
+                              aria-label={document.isStarred ? "Unstar document" : "Star document"}
+                              className="shrink-0 rounded-lg"
+                              disabled={isStarringId === document.id}
+                              onClick={() => void handleToggleStar(document)}
+                              size="icon-sm"
+                              type="button"
+                              variant="ghost"
+                            >
+                              <Star
+                                aria-hidden="true"
+                                className={
+                                  document.isStarred
+                                    ? "fill-amber-400 text-amber-500"
+                                    : "text-muted-foreground"
+                                }
+                              />
+                            </Button>
+                            <button
+                              className="flex min-w-0 items-center gap-3 text-left group"
+                              onClick={() => openFile(document)}
+                              type="button"
+                            >
+                              <div className={`admin-icon-badge ${getFileBadgeClass(document.fileName)} flex size-9 shrink-0 items-center justify-center rounded-lg transition-transform group-hover:scale-[1.02]`}>
+                                <FileText aria-hidden="true" />
                               </div>
-                              {document.isShared && (
-                                <Badge className="mt-1 w-fit" variant="secondary">
-                                  Shared
-                                </Badge>
-                              )}
-                            </div>
-                          </button>
+                              <div className="min-w-0">
+                                <div className="truncate text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
+                                  {document.title || document.fileName}
+                                </div>
+                                <div className="mt-1 flex min-w-0 flex-wrap items-center gap-1.5">
+                                  <span className="truncate text-xs text-muted-foreground">
+                                    {document.fileName}
+                                  </span>
+                                  <Badge className="h-5 rounded-full px-1.5 text-[0.65rem]" variant="outline">
+                                    {getDocumentFileType(document)}
+                                  </Badge>
+                                  {document.isShared && (
+                                    <Badge className="h-5 rounded-full px-1.5 text-[0.65rem]" variant="secondary">
+                                      Shared
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                            </button>
+                          </div>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden md:table-cell">
                           {(() => {
                             const subjectMeta = getDocumentSubjectMeta(document);
                             return (
@@ -1491,14 +1641,29 @@ export default function NewLibraryPage() {
                             );
                           })()}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          {(() => {
+                            const access = getAccessPresentation(document);
+                            return (
+                              <div className="flex min-w-0 flex-col gap-1">
+                                <Badge className={`w-fit rounded-full border px-2 py-0.5 ${access.className}`} variant="outline">
+                                  {access.label}
+                                </Badge>
+                                <span className="max-w-40 truncate text-xs text-muted-foreground">
+                                  {getAccessSubLabel(document)}
+                                </span>
+                              </div>
+                            );
+                          })()}
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell">
                           <span className="text-sm text-muted-foreground">
                             {formatFileSize(document.fileSize)}
                           </span>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden lg:table-cell">
                           <span className="text-sm text-muted-foreground">
-                            {formatDate(document.createdAt)}
+                            {formatDate(document.updatedAt ?? document.createdAt)}
                           </span>
                         </TableCell>
                         <TableCell className="text-right">
@@ -1540,6 +1705,15 @@ export default function NewLibraryPage() {
                                 <Download />
                                 Download
                               </DropdownMenuItem>
+                              <DropdownMenuItem
+                                disabled={isStarringId === document.id}
+                                onSelect={() => {
+                                  void handleToggleStar(document);
+                                }}
+                              >
+                                <Star className={document.isStarred ? "fill-amber-400 text-amber-500" : ""} />
+                                {document.isStarred ? "Unstar" : "Star"}
+                              </DropdownMenuItem>
                               {document.isShared && !canManageDocument(document) && (
                                 <DropdownMenuItem
                                   onSelect={() => setClassifyingDocument(document)}
@@ -1576,8 +1750,8 @@ export default function NewLibraryPage() {
                                   >
                                     <Trash2 />
                                     {pendingDeleteId === document.id
-                                      ? "Confirm delete"
-                                      : "Delete"}
+                                      ? "Confirm move"
+                                      : "Move to trash"}
                                   </DropdownMenuItem>
                                   )}
                                 </>
@@ -1630,7 +1804,7 @@ export default function NewLibraryPage() {
             <DialogHeader>
               <DialogTitle>Upload document</DialogTitle>
               <DialogDescription>
-                Study documents are stored in Cloudinary, parsed, and indexed for AI chat.
+                Documents are stored in Cloudinary, parsed, and indexed for AI chat.
               </DialogDescription>
             </DialogHeader>
             <Separator className="my-4" />
@@ -1721,7 +1895,7 @@ export default function NewLibraryPage() {
             onClick={handleBulkDelete}
           >
             <Trash2 className="size-3.5" />
-            {isBulkDeleting ? "Deleting..." : "Delete"}
+            {isBulkDeleting ? "Moving..." : "Move to trash"}
           </Button>
           <Button size="sm" variant="ghost" className="rounded-xl" onClick={() => setSelectedIds([])}>
             Cancel

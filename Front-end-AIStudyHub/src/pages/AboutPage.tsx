@@ -1,5 +1,4 @@
 import { BookOpenCheck, Brain, Compass, Library } from 'lucide-react'
-import CelestialBackdrop from '../components/shared/CelestialBackdrop'
 import PublicNav from '../components/shared/PublicNav'
 
 const stats = [
@@ -29,11 +28,10 @@ const values = [
 
 export default function AboutPage() {
   return (
-    <div className="botanical-page min-h-svh overflow-x-hidden font-sans text-foreground">
-      <CelestialBackdrop intensity="subtle" />
-      <PublicNav dashboardHref="/#dashboard" />
+    <div className="min-h-svh overflow-x-hidden bg-white font-sans text-foreground">
+      <PublicNav dashboardHref="/#workflow" />
 
-      <main className="relative z-[1] pb-20 pt-28 md:pt-32">
+      <main className="pb-20 pt-28 md:pt-32">
         <section className="mx-auto grid w-[min(100%,1120px)] gap-8 px-4 py-12 md:grid-cols-[0.75fr_1fr] md:px-6">
           <p className="botanical-kicker">Built for researchers</p>
           <div>
@@ -47,7 +45,7 @@ export default function AboutPage() {
         </section>
 
         <section className="mx-auto grid w-[min(100%,1120px)] gap-5 px-4 md:grid-cols-[1.05fr_0.95fr] md:px-6">
-          <article className="botanical-bento p-7 md:p-9">
+          <article className="border-y border-border py-8 md:py-10">
             <BookOpenCheck className="mb-7 size-9 text-primary" aria-hidden="true" />
             <h2 className="moonlit-title text-3xl leading-tight md:text-4xl">A simpler way to study with AI</h2>
             <p className="mt-5 max-w-2xl text-sm leading-7 text-muted-foreground md:text-base">
@@ -59,7 +57,7 @@ export default function AboutPage() {
             {values.map((item) => {
               const Icon = item.icon
               return (
-                <article className="botanical-card flex gap-4 p-5" key={item.title}>
+                <article className="flex gap-4 border-b border-border py-5 first:border-t" key={item.title}>
                   <span className="admin-icon-badge size-10 shrink-0">
                     <Icon className="size-5" aria-hidden="true" />
                   </span>
@@ -85,7 +83,7 @@ export default function AboutPage() {
         </section>
 
         <section className="mx-auto w-[min(100%,820px)] px-4 py-8 text-center md:px-6">
-          <div className="botanical-bento p-8 md:p-12">
+          <div className="border-y border-border py-10 md:py-12">
             <h2 className="moonlit-title text-3xl leading-tight md:text-4xl">Ready to start?</h2>
             <p className="mx-auto mt-4 max-w-[540px] text-sm leading-6 text-muted-foreground">
               Create an account to organize your files and begin practicing with your own material.

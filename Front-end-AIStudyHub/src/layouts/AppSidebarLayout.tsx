@@ -18,6 +18,7 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import { getStoredUser } from '@/src/services/authStorage'
 import { cn } from '@/lib/utils'
 import StudyMaterialNotificationTray from '../components/shared/StudyMaterialNotificationTray'
+import AppTopbar from '../components/layout/AppTopbar'
 
 type AppSidebarLayoutProps = {
   children: ReactNode
@@ -36,7 +37,7 @@ function MobileAppNav() {
       ]
     : [
         { href: '/dashboard', icon: LayoutDashboard, label: 'Home' },
-        { href: '/library', icon: Library, label: 'Library' },
+        { href: '/library', icon: Library, label: 'My Doc' },
         { href: '/study-materials', icon: Brain, label: 'Study' },
         { href: '/aichatbox', icon: MessageSquare, label: 'Chat' },
         { href: '/evaluation', icon: BarChart2, label: 'Eval' },
@@ -54,9 +55,14 @@ function MobileAppNav() {
         <SidebarTrigger className="h-11 w-full rounded-xl border border-border bg-card text-foreground" />
         {items.map((item) => {
           const Icon = item.icon
+          const isDocumentItem = item.href === '/library'
           const isActive =
             pathname === item.href ||
-            (item.href !== '/admin' && pathname.startsWith(`${item.href}/`))
+            (item.href !== '/admin' && pathname.startsWith(`${item.href}/`)) ||
+            (isDocumentItem &&
+              (pathname === '/starred' ||
+                pathname === '/trash' ||
+                pathname.startsWith('/documents/')))
 
           return (
             <Link
@@ -85,8 +91,11 @@ export default function AppSidebarLayout({ children }: AppSidebarLayoutProps) {
     <TooltipProvider>
       <SidebarProvider>
         <AppSidebar />
-        <SidebarInset className="relative z-10 min-h-svh w-0 min-w-0 flex-1 overflow-hidden bg-background">
-          {children}
+        <SidebarInset className="relative z-10 flex min-h-svh w-0 min-w-0 flex-1 flex-col overflow-hidden bg-background">
+          <AppTopbar />
+          <div className="app-shell-content min-h-0 flex-1 overflow-hidden">
+            {children}
+          </div>
         </SidebarInset>
         <MobileAppNav />
         <StudyMaterialNotificationTray />
