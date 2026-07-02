@@ -35,7 +35,7 @@ export function AdminPageHeader({
         <p className="botanical-kicker">
           {eyebrow}
         </p>
-        <h1 className="moonlit-title mt-2 text-3xl md:text-5xl">{title}</h1>
+        <h1 className="moonlit-title page-title mt-2">{title}</h1>
         <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">{description}</p>
       </div>
       {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}

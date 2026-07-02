@@ -197,7 +197,7 @@ export default function RunBenchmark() {
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
               {formatDate(result?.createdAt)}
             </p>
-            <h1 className="mt-2 line-clamp-2 text-2xl font-semibold tracking-tight md:text-3xl">
+            <h1 className="page-title mt-2 line-clamp-2">
               {result?.question || "Running benchmark..."}
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">

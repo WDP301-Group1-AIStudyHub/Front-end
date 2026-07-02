@@ -8,6 +8,7 @@ import {
   UserRound,
 } from 'lucide-react'
 import { CelestialInlineLoader } from '../components/shared/CelestialLoading'
+import { Button } from '@/components/ui/button'
 import { updateProfile } from '../services/authApi'
 import { getStoredToken, getStoredUser, storeAuthSession } from '../services/authStorage'
 
@@ -120,7 +121,7 @@ export default function UserProfilePage() {
         <p className="botanical-kicker">
           Account settings
         </p>
-        <h1 className="moonlit-title text-3xl font-semibold tracking-tight md:text-4xl">
+        <h1 className="moonlit-title page-title">
           My Profile
         </h1>
         <p className="text-sm text-muted-foreground">
@@ -273,8 +274,7 @@ export default function UserProfilePage() {
 
           {/* Save button */}
           <div className="flex justify-end">
-            <button
-              className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
+            <Button
               disabled={saving}
               onClick={handleSave}
               type="button"
@@ -284,7 +284,7 @@ export default function UserProfilePage() {
               ) : (
                 'Save changes'
               )}
-            </button>
+            </Button>
           </div>
         </div>
       </div>

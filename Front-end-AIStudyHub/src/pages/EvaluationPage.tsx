@@ -71,7 +71,7 @@ export default function EvaluationPage() {
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
           RAG Research
         </p>
-        <h1 className="moonlit-title text-3xl font-semibold tracking-tight md:text-4xl">Evaluation</h1>
+        <h1 className="moonlit-title page-title">Evaluation</h1>
         <p className="text-sm text-muted-foreground">
           Track DR-RAG retrieval quality, grounding and latency.
         </p>

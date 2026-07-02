@@ -236,7 +236,7 @@ export default function SubjectsPage() {
         <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="botanical-kicker">Study workspace</p>
-            <h1 className="moonlit-title mt-2 text-3xl font-black tracking-tight md:text-5xl">
+            <h1 className="moonlit-title page-title mt-2">
               Subjects
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
@@ -308,14 +308,14 @@ export default function SubjectsPage() {
         </section>
 
         <section className="moonlit-card moonlit-table tone-surface tone-sapphire overflow-x-auto">
-          <Table className="min-w-[760px]">
+          <Table className="min-w-[440px] md:min-w-[760px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Code</TableHead>
-                <TableHead>Semester</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Created</TableHead>
+                <TableHead className="hidden sm:table-cell">Semester</TableHead>
+                <TableHead className="hidden lg:table-cell">Description</TableHead>
+                <TableHead className="hidden md:table-cell">Created</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -329,13 +329,13 @@ export default function SubjectsPage() {
                       <TableCell>
                         <Skeleton className="h-4 w-20" />
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden sm:table-cell">
                         <Skeleton className="h-4 w-24" />
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden lg:table-cell">
                         <Skeleton className="h-4 w-56" />
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden md:table-cell">
                         <Skeleton className="h-4 w-24" />
                       </TableCell>
                       <TableCell>
@@ -364,13 +364,13 @@ export default function SubjectsPage() {
                             {subject.code || "No code"}
                           </span>
                         </TableCell>
-                        <TableCell className="font-medium">
+                        <TableCell className="hidden font-medium sm:table-cell">
                           {subject.semester || "No semester"}
                         </TableCell>
-                        <TableCell className="max-w-sm truncate">
+                        <TableCell className="hidden max-w-sm truncate lg:table-cell">
                           {subject.description || "No description"}
                         </TableCell>
-                        <TableCell>{formatDate(subject.createdAt)}</TableCell>
+                        <TableCell className="hidden md:table-cell">{formatDate(subject.createdAt)}</TableCell>
                         <TableCell>
                           <div className="flex justify-end gap-2">
                             <Button

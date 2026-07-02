@@ -21,6 +21,10 @@ export interface DocumentItem {
   totalVersions?: number
   totalChunks?: number
   lastIndexedAt?: string | null
+  deletedAt?: string | null
+  deletedBy?: string | null
+  trashExpiresAt?: string | null
+  trashDaysRemaining?: number | null
   fileUrl: string
   filePublicId: string
   fileName: string
@@ -44,6 +48,8 @@ export interface DocumentItem {
   }
   personalSubjectId?: string
   personalSubject?: DocumentSubject | null
+  isStarred?: boolean
+  starredAt?: string | null
 }
 
 export interface DocumentVersion {
@@ -91,6 +97,7 @@ export interface UpdateSharedDocumentProfilePayload {
 export type DocumentsResponse = DocumentItem[]
 
 export type DocumentSharePermission = 'VIEW' | 'EDIT'
+export type EmailDeliveryStatus = 'ACCEPTED' | 'FAILED' | 'SKIPPED'
 
 export interface DocumentShareUser {
   id: string
@@ -106,6 +113,7 @@ export interface DocumentShare {
   permission: DocumentSharePermission
   sharedBy: string
   status: 'ACTIVE' | 'PENDING'
+  notificationStatus?: EmailDeliveryStatus
   expiresAt?: string
   createdAt: string
   updatedAt: string

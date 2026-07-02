@@ -1,297 +1,212 @@
-﻿import {
+import {
   ArrowRight,
-  BookOpenCheck,
+  Brain,
   CheckCircle2,
-  FileSearch,
-  Library,
+  FileText,
   MessageSquareText,
-  Shield,
-  Sprout,
+  MoreHorizontal,
+  Search,
+  Share2,
+  Sparkles,
+  UploadCloud,
 } from 'lucide-react'
-import { motion } from 'motion/react'
-import PublicNav from './components/shared/PublicNav'
-import CelestialBackdrop from './components/shared/CelestialBackdrop'
 
-const stats = [
-  ['Multi-format', 'Document intake', 'PDF, DOCX, PPTX, XLSX, TXT, and MD sources'],
-  ['Subject color', 'Organized context', 'Course codes stay visually tied to each subject'],
-  ['DR-RAG', 'Single retrieval flow', 'Two-stage retrieval with grounded answer checks'],
-  ['Benchmark-ready', 'Evaluation flow', 'Create questions and inspect answer quality'],
+import PublicNav from './components/shared/PublicNav'
+
+const productRows = [
+  { access: 'Owner', name: 'Machine Learning Notes', subject: 'CSE301', type: 'PDF' },
+  { access: 'Editor', name: 'Research Methodology', subject: 'RES201', type: 'DOCX' },
+  { access: 'Viewer', name: 'Project Requirements', subject: 'WDP301', type: 'PPTX' },
+  { access: 'Owner', name: 'Data Structures Review', subject: 'CSD203', type: 'PDF' },
 ]
 
-const features = [
+const workflow = [
   {
-    icon: FileSearch,
-    title: 'Library that stays readable',
-    text: 'Upload study documents, keep metadata tidy, and move from source files to summaries without losing context.',
-    colSpan: 'md:col-span-2',
+    icon: UploadCloud,
+    title: 'Keep every source organized',
+    description: 'Upload common document formats, assign subjects, track versions, and recover deleted files from one workspace.',
+  },
+  {
+    icon: Share2,
+    title: 'Share without losing control',
+    description: 'Invite collaborators with Viewer or Editor access while ownership and destructive actions remain protected.',
   },
   {
     icon: MessageSquareText,
-    title: 'Grounded AI chat',
-    text: 'Ask against selected documents so answers stay close to your own material.',
-    colSpan: 'md:col-span-1',
-  },
-  {
-    icon: BookOpenCheck,
-    title: 'Practical evaluation',
-    text: 'Inspect retrieved sources, grounding checks, and answer quality before you trust it.',
-    colSpan: 'md:col-span-1',
-  },
-  {
-    icon: Shield,
-    title: 'Quiet by design',
-    text: 'A warm, low-noise study surface built for focus, review, and repeat use.',
-    colSpan: 'md:col-span-2',
+    title: 'Ask questions with context',
+    description: 'Choose the documents and subjects AI can use, then inspect grounded answers without leaving your study flow.',
   },
 ]
 
-const process = [
-  'Plant your course documents in one organized library.',
-  'Choose a subject or document before starting an AI study session.',
-  'Use evaluation signals to decide what needs another pass.',
-]
+function ProductPreview() {
+  return (
+    <div className="h-full min-w-[720px] overflow-hidden border border-border bg-white shadow-[0_8px_24px_rgb(16_24_20_/_0.1)]">
+      <div className="flex h-14 items-center gap-3 border-b border-border px-5">
+        <div className="grid size-8 place-items-center rounded-md bg-primary text-primary-foreground">
+          <FileText className="size-4" aria-hidden="true" />
+        </div>
+        <div>
+          <p className="text-sm font-semibold">My Document</p>
+          <p className="text-xs text-muted-foreground">18 documents</p>
+        </div>
+        <button className="ml-auto inline-flex h-9 items-center gap-2 rounded-md bg-primary px-3 text-sm font-semibold text-white" type="button">
+          <UploadCloud className="size-4" aria-hidden="true" />
+          Upload
+        </button>
+      </div>
+
+      <div className="flex items-center gap-3 border-b border-border bg-[#f7f8f7] px-5 py-3">
+        <div className="relative w-80">
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+          <div className="h-9 rounded-md border border-input bg-white pl-9 pt-2 text-xs text-muted-foreground">
+            Search documents
+          </div>
+        </div>
+        <span className="rounded-md border border-border bg-white px-3 py-2 text-xs">All subjects</span>
+        <span className="rounded-md border border-border bg-white px-3 py-2 text-xs">Recently updated</span>
+      </div>
+
+      <div className="grid grid-cols-[minmax(280px,1fr)_130px_100px_44px] border-b border-border bg-[#f7f8f7] px-5 py-3 text-xs font-semibold text-muted-foreground">
+        <span>Name</span>
+        <span>Subject</span>
+        <span>Access</span>
+        <span />
+      </div>
+      {productRows.map((row) => (
+        <div
+          className="grid grid-cols-[minmax(280px,1fr)_130px_100px_44px] items-center border-b border-border px-5 py-4"
+          key={row.name}
+        >
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="grid size-9 shrink-0 place-items-center rounded-md border border-[#d6e4dc] bg-[#eef6f1] text-primary">
+              <FileText className="size-4" aria-hidden="true" />
+            </span>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold">{row.name}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">{row.type} document</p>
+            </div>
+          </div>
+          <span className="w-fit rounded-full border border-border bg-muted px-2 py-1 text-xs font-medium">{row.subject}</span>
+          <span className="text-xs text-muted-foreground">{row.access}</span>
+          <MoreHorizontal className="size-4 text-muted-foreground" aria-hidden="true" />
+        </div>
+      ))}
+    </div>
+  )
+}
 
 export default function LandingPage() {
   return (
-    <div className="botanical-page min-h-svh overflow-x-hidden font-sans text-foreground">
-      <CelestialBackdrop intensity="subtle" />
+    <div className="min-h-svh overflow-x-hidden bg-white text-foreground">
       <PublicNav ctaLabel="Start studying" />
 
-      <main className="relative z-10 pb-20 pt-28 md:pt-32">
-        <section className="mx-auto grid w-[min(100%,1180px)] items-end gap-10 px-4 py-10 md:grid-cols-[0.95fr_1.05fr] md:px-6 lg:py-16">
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-            className="max-w-2xl"
-          >
-            <p className="botanical-kicker">Moonlit botanical workspace</p>
-            <h1 className="moonlit-title mt-5 text-[clamp(3rem,8vw,6.2rem)] leading-[0.94]">
-              AI Study Hub
-            </h1>
-            <p className="mt-6 max-w-[58ch] text-base leading-7 text-muted-foreground md:text-lg">
-              A softer way to organize documents, chat with trusted sources, and evaluate RAG answers without turning study time into another noisy dashboard.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <a
-                href="/register"
-                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-primary bg-primary px-5 text-sm font-semibold text-primary-foreground transition-all hover:bg-[color-mix(in_oklab,var(--primary),black_12%)] active:scale-[0.98]"
-              >
-                Create account
-                <ArrowRight className="size-4" aria-hidden="true" />
-              </a>
-              <a
-                href="/login"
-                className="inline-flex min-h-12 items-center justify-center rounded-xl border border-border bg-card px-5 text-sm font-semibold text-foreground transition-all hover:bg-muted active:scale-[0.98]"
-              >
-                Sign in
-              </a>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 22 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
-            className="grid gap-4 md:grid-cols-[0.85fr_1.15fr]"
-          >
-            <div className="moonlit-media-frame min-h-[420px] p-5 md:translate-y-10">
-              <video
-                aria-hidden="true"
-                autoPlay
-                className="moonlit-video absolute inset-0"
-                loop
-                muted
-                playsInline
-                poster="/landing-assets/moonlit-botanical-poster.webp"
-                preload="metadata"
-              >
-                <source src="/landing-assets/moonlit-botanical-loop.mp4" type="video/mp4" />
-              </video>
-              <img
-                alt=""
-                aria-hidden="true"
-                className="moonlit-image moonlit-video-poster absolute inset-0"
-                src="/landing-assets/moonlit-botanical-poster.webp"
-              />
-              <div className="absolute inset-0 bg-[rgb(247_248_241_/_0.32)]" aria-hidden="true" />
-              <div className="relative z-10 flex h-full flex-col justify-between">
-                <div>
-                  <span className="admin-icon-badge admin-tone-teal">
-                    <Sprout className="size-5" aria-hidden="true" />
-                  </span>
-                  <p className="mt-5 text-sm font-semibold text-muted-foreground">Today under soft light</p>
-                  <h2 className="mt-2 font-heading text-3xl font-bold leading-tight">4 documents ready for review</h2>
-                </div>
-                <div className="space-y-3">
-                  {['WDP301 notes', 'TrietHoc outline', 'RAG evaluation'].map((item, index) => (
-                    <div className="rounded-2xl border border-border bg-card/85 p-3 backdrop-blur-sm" key={item}>
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="truncate text-sm font-semibold">{item}</span>
-                        <span className="botanical-chip">{index === 0 ? 'Fresh' : 'Indexed'}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+      <main>
+        <section className="relative min-h-[640px] overflow-hidden border-b border-border px-5 pb-16 pt-28 sm:px-8 lg:px-12">
+          <div className="relative z-10 mx-auto w-full max-w-7xl">
+            <div className="max-w-[590px] pt-8 lg:pt-12">
+              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-border bg-muted px-3 py-1.5 text-sm font-medium text-primary">
+                <Sparkles className="size-4" aria-hidden="true" />
+                Study from the documents you trust
               </div>
-            </div>
-
-            <div className="grid gap-4">
-              <div className="botanical-bento overflow-hidden p-4">
-                <div className="moonlit-media-frame relative z-10 h-36">
-                  <img
-                    alt="A calm moonlit study desk with paper and plants"
-                    className="moonlit-image"
-                    src="/landing-assets/moonlit-study-still.webp"
-                  />
-                </div>
-                <div className="relative z-10 mt-4 rounded-2xl border border-border bg-[var(--sun-wash)] p-5">
-                  <div className="flex items-center justify-between gap-4">
-                    <div>
-                      <p className="text-xs font-bold uppercase text-primary">Selected source</p>
-                      <p className="mt-2 text-lg font-bold">retrieval_notes.pdf</p>
-                    </div>
-                    <span className="rounded-full bg-card px-3 py-1 text-xs font-bold text-primary">96%</span>
-                  </div>
-                  <div className="mt-5 space-y-2">
-                    <div className="h-2 w-5/6 rounded-full bg-card" />
-                    <div className="h-2 w-2/3 rounded-full bg-card" />
-                    <div className="h-2 w-3/4 rounded-full bg-card" />
-                  </div>
-                </div>
-              </div>
-              <div className="botanical-bento p-5">
-                <div className="relative z-10 flex flex-col gap-3">
-                  <div className="self-end rounded-2xl rounded-tr-sm bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
-                    Explain DR-RAG.
-                  </div>
-                  <div className="self-start rounded-2xl rounded-tl-sm border border-border bg-card px-4 py-2 text-sm text-muted-foreground">
-                    It expands retrieval from static chunks before answering...
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        </section>
-
-        <section id="dashboard" className="mx-auto w-[min(100%,1180px)] px-4 py-12 md:px-6">
-          <div className="mb-8 max-w-2xl">
-            <p className="botanical-kicker">Bento workflow</p>
-            <h2 className="moonlit-title mt-3 text-3xl leading-tight md:text-5xl">Designed for organic learning flow</h2>
-          </div>
-
-          <div className="grid gap-5 md:grid-cols-3">
-            {features.map((feature, index) => {
-              const Icon = feature.icon
-              return (
-                <motion.article
-                  initial={{ opacity: 0, y: 16 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: '-80px' }}
-                  transition={{ duration: 0.35, delay: index * 0.04 }}
-                  className={`botanical-bento p-6 ${feature.colSpan}`}
-                  key={feature.title}
-                >
-                  <div className="relative z-10">
-                    <span className="admin-icon-badge">
-                      <Icon className="size-5" aria-hidden="true" />
-                    </span>
-                    <h3 className="mt-5 text-xl font-bold tracking-normal">{feature.title}</h3>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">{feature.text}</p>
-                  </div>
-                </motion.article>
-              )
-            })}
-          </div>
-        </section>
-
-        <section className="mx-auto grid w-[min(100%,1180px)] gap-5 px-4 py-10 md:grid-cols-[0.88fr_1.12fr] md:px-6">
-          <article className="botanical-bento p-7 md:p-9">
-            <div className="relative z-10">
-              <Library className="mb-6 size-9 text-primary" aria-hidden="true" />
-              <h2 className="moonlit-title text-3xl leading-tight md:text-4xl">From library to answer, with less friction.</h2>
-              <p className="mt-5 text-sm leading-7 text-muted-foreground md:text-base">
-                AI Study Hub keeps the loop simple: organize the source, ask a grounded question, inspect the evidence, then keep learning.
+              <h1 className="max-w-[11ch] text-5xl font-semibold leading-[1.02] tracking-[-0.03em] sm:text-6xl lg:text-[5rem]">
+                AI Study Hub
+              </h1>
+              <p className="mt-6 max-w-[50ch] text-base leading-7 text-muted-foreground sm:text-lg">
+                Organize course documents, collaborate with your team, and ask grounded questions without switching between disconnected tools.
               </p>
-            </div>
-          </article>
-
-          <div className="grid gap-4">
-            <article className="moonlit-media-frame min-h-52">
-              <img
-                alt="A quiet botanical library surface in soft moon-paper light"
-                className="moonlit-image"
-                src="/landing-assets/moonlit-library-still.webp"
-              />
-            </article>
-            {process.map((item, index) => (
-              <article className="botanical-card p-5" key={item}>
-                <div className="relative z-10 flex gap-4">
-                  <span className="grid size-9 shrink-0 place-items-center rounded-full border border-border bg-[#f7efd2] text-sm font-bold text-primary">
-                    {index + 1}
-                  </span>
-                  <p className="pt-1 text-sm leading-6 text-muted-foreground">{item}</p>
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section className="mx-auto w-[min(100%,1180px)] px-4 py-10 md:px-6">
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            {stats.map(([value, label, desc]) => (
-              <div className="botanical-card p-5" key={label}>
-                <div className="relative z-10">
-                  <div className="font-heading text-3xl font-bold text-primary">{value}</div>
-                  <span className="mt-2 block text-sm font-bold">{label}</span>
-                  <span className="mt-4 block text-xs leading-5 text-muted-foreground">{desc}</span>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <a className="inline-flex h-11 items-center gap-2 rounded-md bg-primary px-5 text-sm font-semibold text-white" href="/register">
+                  Create account
+                  <ArrowRight className="size-4" aria-hidden="true" />
+                </a>
+                <a className="inline-flex h-11 items-center rounded-md border border-border bg-white px-5 text-sm font-semibold" href="/login">
+                  Sign in
+                </a>
+              </div>
+              <div className="mt-9 h-[180px] overflow-hidden border-y border-border sm:hidden" aria-hidden="true">
+                <div className="h-[375px] w-[720px] origin-top-left scale-[0.48]">
+                  <ProductPreview />
                 </div>
               </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="mx-auto w-[min(100%,900px)] px-4 py-12 text-center md:px-6">
-          <div className="botanical-bento p-8 md:p-12">
-            <div className="relative z-10">
-              <h2 className="moonlit-title text-3xl leading-tight md:text-4xl">Ready for a cleaner study routine?</h2>
-              <p className="mx-auto mt-4 max-w-[54ch] text-sm leading-6 text-muted-foreground">
-                Start with one document. Grow a library, a chat history, and a better review rhythm from there.
-              </p>
-              <div className="mt-7 flex flex-wrap justify-center gap-2">
-                {['No ads', 'Readable sources', 'Calm motion', 'Evaluation-ready'].map((tag) => (
-                  <span className="botanical-chip" key={tag}>
-                    <CheckCircle2 className="size-3.5 text-primary" aria-hidden="true" />
-                    {tag}
+              <div className="mt-8 hidden flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground sm:flex">
+                {['Protected sharing', 'Version history', 'Grounded AI chat'].map((item) => (
+                  <span className="inline-flex items-center gap-2" key={item}>
+                    <CheckCircle2 className="size-4 text-primary" aria-hidden="true" />
+                    {item}
                   </span>
                 ))}
               </div>
-              <a
-                href="/register"
-                className="mt-8 inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-primary bg-primary px-6 text-sm font-semibold text-primary-foreground transition-all hover:bg-[color-mix(in_oklab,var(--primary),black_12%)] active:scale-[0.98]"
-              >
-                Create free account
-                <ArrowRight className="size-4" aria-hidden="true" />
-              </a>
+            </div>
+          </div>
+
+          <div className="absolute bottom-[-20px] left-[52%] right-[-180px] top-[210px] hidden lg:block xl:left-[48%]" aria-hidden="true">
+            <ProductPreview />
+          </div>
+        </section>
+
+        <section className="border-b border-border bg-[#f7f8f7] px-5 pb-20 pt-10 sm:px-8 lg:px-12" id="workflow">
+          <div className="mx-auto max-w-7xl">
+            <div className="max-w-2xl">
+              <h2 className="text-3xl font-semibold tracking-[-0.02em] sm:text-4xl">A direct path from source to study</h2>
+              <p className="mt-4 text-base leading-7 text-muted-foreground">
+                The workspace stays familiar at every step, so documents remain the center of the experience.
+              </p>
+            </div>
+            <div className="mt-12 divide-y divide-border border-y border-border">
+              {workflow.map((item) => {
+                const Icon = item.icon
+                return (
+                  <article className="grid gap-4 py-8 md:grid-cols-[56px_280px_1fr] md:items-start" key={item.title}>
+                    <span className="grid size-10 place-items-center rounded-md border border-border bg-white text-primary">
+                      <Icon className="size-5" aria-hidden="true" />
+                    </span>
+                    <h3 className="text-lg font-semibold">{item.title}</h3>
+                    <p className="max-w-[65ch] text-sm leading-6 text-muted-foreground">{item.description}</p>
+                  </article>
+                )
+              })}
             </div>
           </div>
         </section>
-      </main>
 
-      <footer className="relative z-10 border-t border-border/70 bg-card/80 py-8">
-        <div className="mx-auto flex w-[min(100%,1180px)] flex-col gap-4 px-4 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between md:px-6">
-          <strong className="text-primary">AI Study Hub</strong>
-          <div className="flex flex-wrap items-center gap-5">
-            {['Privacy', 'Terms', 'Contact'].map((label) => (
-              <a className="transition-colors hover:text-foreground" href={`#${label.toLowerCase()}`} key={label}>
-                {label}
-              </a>
-            ))}
+        <section className="px-5 py-20 sm:px-8 lg:px-12">
+          <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1fr_0.8fr] lg:items-center">
+            <div>
+              <Brain className="size-8 text-primary" aria-hidden="true" />
+              <h2 className="mt-5 max-w-[16ch] text-3xl font-semibold tracking-[-0.02em] sm:text-4xl">
+                AI answers stay tied to your study context
+              </h2>
+              <p className="mt-5 max-w-[65ch] text-base leading-7 text-muted-foreground">
+                Select a subject, document, or version before asking. AI Study Hub keeps retrieval scope visible so you always know what informed an answer.
+              </p>
+            </div>
+            <div className="border-y border-border py-4">
+              <div className="flex justify-end py-3">
+                <p className="max-w-[80%] rounded-lg bg-primary px-4 py-3 text-sm text-white">Summarize the key arguments in this document.</p>
+              </div>
+              <div className="py-3">
+                <p className="max-w-[88%] rounded-lg border border-border bg-muted px-4 py-3 text-sm leading-6">
+                  The document presents three main arguments and connects each one to the source sections selected in your current context.
+                </p>
+                <p className="mt-2 text-xs text-muted-foreground">Based on 3 selected sources</p>
+              </div>
+            </div>
           </div>
-          <div>2026. Botanical Bento study interface.</div>
-        </div>
-      </footer>
+        </section>
+
+        <section className="border-t border-border bg-primary px-5 py-16 text-white sm:px-8 lg:px-12">
+          <div className="mx-auto flex max-w-7xl flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h2 className="text-3xl font-semibold">Bring your next document into focus.</h2>
+              <p className="mt-2 text-sm text-white/80">Create a workspace and start with the material you already use.</p>
+            </div>
+            <a className="inline-flex h-11 w-fit items-center gap-2 rounded-md bg-white px-5 text-sm font-semibold text-primary" href="/register">
+              Get started
+              <ArrowRight className="size-4" aria-hidden="true" />
+            </a>
+          </div>
+        </section>
+      </main>
     </div>
   )
 }

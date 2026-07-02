@@ -1,27 +1,35 @@
-import AuthIcon from './AuthIcon'
+import { CheckCircle2, Files, MessageSquareText, Share2 } from 'lucide-react'
+
+const benefits = [
+  { icon: Files, label: 'Organize documents by subject and semester' },
+  { icon: Share2, label: 'Share with Viewer or Editor permissions' },
+  { icon: MessageSquareText, label: 'Ask AI with a visible document scope' },
+]
 
 export default function AcademicAside() {
   return (
-    <aside className="max-w-[360px]">
-      <p className="botanical-kicker mb-5">Study garden</p>
-      <h1 className="moonlit-title m-0 mb-5 text-[42px] leading-[1.02]">Enter a calmer workspace</h1>
-      <p className="m-0 mb-7 text-sm leading-[1.65] text-muted-foreground">
-        Access documents, questions, and recent sessions from one focused place designed to feel quiet and familiar.
+    <aside className="max-w-[390px] lg:pr-8">
+      <div className="inline-flex items-center gap-2 rounded-full border border-border bg-muted px-3 py-1.5 text-sm font-medium text-primary">
+        <CheckCircle2 className="size-4" aria-hidden="true" />
+        One workspace for your study sources
+      </div>
+      <h1 className="mt-6 text-4xl font-semibold leading-tight tracking-[-0.03em] text-foreground">
+        Continue where your documents left off.
+      </h1>
+      <p className="mt-5 text-sm leading-7 text-muted-foreground">
+        Sign in to manage files, continue recent conversations, and keep study material connected to its source.
       </p>
-      <div className="moonlit-media-frame mb-5 h-44">
-        <img
-          alt="Moonlit botanical study desk"
-          className="moonlit-image"
-          src="/landing-assets/moonlit-study-still.webp"
-        />
-      </div>
-      <div className="botanical-card inline-flex min-w-[250px] items-center gap-[14px] px-5 py-[18px]">
-        <AuthIcon name="school" className="h-[22px] w-[22px] flex-shrink-0 text-primary" />
-        <span className="grid gap-1 text-[11px] tracking-[0.02em] text-muted-foreground">
-          <strong className="text-xs font-semibold text-foreground">Active research</strong>
-          2,831 study sessions online
-        </span>
-      </div>
+      <ul className="mt-8 divide-y divide-border border-y border-border">
+        {benefits.map((benefit) => {
+          const Icon = benefit.icon
+          return (
+            <li className="flex items-center gap-3 py-4 text-sm font-medium" key={benefit.label}>
+              <Icon className="size-4 shrink-0 text-primary" aria-hidden="true" />
+              {benefit.label}
+            </li>
+          )
+        })}
+      </ul>
     </aside>
   )
 }

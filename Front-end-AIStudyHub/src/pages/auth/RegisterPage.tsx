@@ -137,7 +137,7 @@ export default function RegisterPage() {
           </button>
         </form>
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          Already a researcher? <Link to="/login" className="text-foreground hover:text-primary">Sign in</Link>
+          Already have an account? <Link to="/login" className="text-foreground hover:text-primary">Sign in</Link>
         </p>
       </AuthCardShell>
     </AuthScaffold>
