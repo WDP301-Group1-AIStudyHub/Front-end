@@ -215,7 +215,7 @@ export default function Summary() {
                 DR-RAG
               </span>
             </div>
-            <h1 className="moonlit-title text-3xl font-semibold tracking-tight md:text-4xl">
+            <h1 className="moonlit-title page-title">
               Benchmark Summary
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">

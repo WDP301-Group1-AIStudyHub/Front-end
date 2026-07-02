@@ -5,11 +5,14 @@ import {
   Activity,
   BookMarked,
   Brain,
+  FileText,
   FileCog,
+  FolderOpen,
   LayoutDashboardIcon,
-  LibraryIcon,
   MessagesSquareIcon,
   ShieldCheck,
+  Star,
+  Trash2,
   Users,
 } from "lucide-react"
 
@@ -23,6 +26,7 @@ import {
   SidebarFooter,
   SidebarHeader,
   SidebarRail,
+  useSidebar,
 } from "@/components/ui/sidebar"
 import BrandLogo from "@/src/components/shared/BrandLogo"
 import { logout } from "@/src/services/authApi"
@@ -39,8 +43,11 @@ export interface ChatSessionItem {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { state: sidebarState } = useSidebar()
   const navigate = useNavigate()
-  const { pathname: activePath } = useLocation()
+  const { pathname: activePath, search } = useLocation()
+  const activeSearchParams = React.useMemo(() => new URLSearchParams(search), [search])
+  const activeLibraryView = activeSearchParams.get("view")
   const storedUser = getStoredUser()
   const isAdmin = storedUser?.role === "admin"
   const user = {
@@ -87,6 +94,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     }
   }
 
+  const isDocumentNavActive =
+    activePath === "/library" ||
+    activePath === "/new-library" ||
+    activePath === "/starred" ||
+    activePath === "/trash" ||
+    activePath.startsWith("/documents/")
+
   const baseNav = [
     {
       title: "Dashboard",
@@ -95,13 +109,38 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       isActive: activePath === "/dashboard",
     },
     {
-      title: "Library",
+      title: "My Document",
       url: "/library",
-      icon: <LibraryIcon />,
-      isActive:
-        activePath === "/library" ||
-        activePath === "/new-library" ||
-        activePath.startsWith("/documents/"),
+      icon: <FolderOpen />,
+      isActive: isDocumentNavActive,
+      children: [
+        {
+          title: "My documents",
+          url: "/library",
+          icon: <FileText />,
+          isActive:
+            (activePath === "/library" || activePath === "/new-library") &&
+            activeLibraryView !== "shared",
+        },
+        {
+          title: "Shared with me",
+          url: "/library?view=shared",
+          icon: <Users />,
+          isActive: activePath === "/library" && activeLibraryView === "shared",
+        },
+        {
+          title: "Starred",
+          url: "/starred",
+          icon: <Star />,
+          isActive: activePath === "/starred",
+        },
+        {
+          title: "Trash",
+          url: "/trash",
+          icon: <Trash2 />,
+          isActive: activePath === "/trash",
+        },
+      ],
     },
     {
       title: "Subjects",
@@ -156,11 +195,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   }
 
   return (
-    <Sidebar className="border-r-0" {...props}>
-      <SidebarHeader className="gap-4 p-3">
-        <div className="flex items-center justify-between gap-2 rounded-[18px] border border-sidebar-border bg-card/60 px-3 py-3">
+    <Sidebar className="border-r-0" collapsible="icon" {...props}>
+      <SidebarHeader className="gap-3 p-3 group-data-[collapsible=icon]:p-2">
+        <div className="flex min-h-11 items-center gap-2 rounded-md border border-sidebar-border bg-card px-3 py-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2">
           <Link className="min-w-0" to="/dashboard">
-            <BrandLogo />
+            <BrandLogo compact={sidebarState === "collapsed"} />
           </Link>
         </div>
         <NavMain items={isAdmin ? adminNav : baseNav} />
@@ -168,7 +207,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
       {!isAdmin && <NavChats onDelete={handleDeleteChat} recentChats={chatSessions} />}
       </SidebarContent>
-      <SidebarFooter>
+      <SidebarFooter className="sidebar-account-zone mt-auto border-t border-sidebar-border bg-card p-3 group-data-[collapsible=icon]:p-2">
         <NavUser onLogout={handleLogout} user={user} />
       </SidebarFooter>
       <SidebarRail />

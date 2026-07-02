@@ -268,13 +268,13 @@ export default function EvaluationPage() {
         <header className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
             <p className="botanical-kicker">RAG research</p>
-            <h1 className="moonlit-title mt-2 text-4xl font-black md:text-5xl">
+            <h1 className="moonlit-title page-title mt-2">
               Evaluation
             </h1>
-            <p className="mt-2 text-sm font-bold text-muted-foreground">
+            <p className="mt-2 text-sm text-muted-foreground">
               Create benchmark questions with expected answers, then score the DR-RAG pipeline.
             </p>
-            <p className="mt-2 text-xs font-bold text-foreground/60">
+            <p className="mt-2 text-xs text-muted-foreground">
               {questions.length} questions across {subjectCount || 0} subjects.
             </p>
           </div>
@@ -358,7 +358,7 @@ export default function EvaluationPage() {
             <div className="flex gap-2 overflow-x-auto pb-1">
               {tabs.map((tab) => (
                 <button
-                  className={`h-9 shrink-0 rounded-full border border-border px-4 text-xs font-bold uppercase transition ${
+                  className={`h-9 shrink-0 rounded-md border border-border px-4 text-xs font-semibold transition ${
                     activeTab === tab.key
                       ? "bg-primary text-primary-foreground"
                       : "bg-card text-foreground hover:bg-muted"
@@ -419,20 +419,20 @@ export default function EvaluationPage() {
             <div className="grid min-h-64 place-items-center p-8 text-center bg-card">
               <div className="botanical-empty">
                 <FileText className="mx-auto size-9 text-foreground" />
-                <h2 className="mt-3 text-lg font-black uppercase text-foreground">
+                <h2 className="mt-3 text-lg font-semibold text-foreground">
                   No benchmark questions found
                 </h2>
-                <p className="mt-1 max-w-md text-sm font-bold text-muted-foreground">
+                <p className="mt-1 max-w-md text-sm text-muted-foreground">
                   Create a question with an expected answer, then run it through DR-RAG.
                 </p>
               </div>
             </div>
           ) : (
-            <div className="grid gap-4 bg-card p-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="divide-y divide-border bg-card">
               {filteredQuestions.map((question) => {
                 return (
                   <article
-                    className="botanical-card relative flex min-h-[230px] flex-col border border-border bg-card p-5 text-foreground transition-all"
+                    className="relative grid gap-3 bg-white p-4 text-foreground transition-colors hover:bg-muted/40 md:grid-cols-[130px_minmax(0,1fr)_190px_150px] md:items-center"
                     key={question.id}
                   >
                     <div className="flex items-start justify-between gap-3">
@@ -442,7 +442,7 @@ export default function EvaluationPage() {
                         >
                           {question.difficulty}
                         </span>
-                        <p className="mt-3 text-xs font-black text-foreground/60">
+                        <p className="mt-2 text-xs font-medium text-muted-foreground">
                           #{question.id.substring(0, 8)}
                         </p>
                       </div>
@@ -477,11 +477,11 @@ export default function EvaluationPage() {
                       )}
                     </div>
 
-                    <h2 className="mt-3 line-clamp-3 min-h-[4.5rem] text-base font-extrabold leading-6 text-foreground">
+                    <h2 className="line-clamp-2 text-sm font-semibold leading-6 text-foreground">
                       {question.question}
                     </h2>
 
-                    <div className="mt-3 flex min-w-0 items-center gap-2 text-sm font-bold text-muted-foreground">
+                    <div className="flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
                       <FileText className="size-4 shrink-0" />
                       <span className="truncate">
                         {question.subject ||
@@ -490,11 +490,11 @@ export default function EvaluationPage() {
                       </span>
                     </div>
 
-                    <div className="mt-auto flex items-center justify-between gap-3 pt-4 text-sm">
+                    <div className="flex items-center justify-end gap-3 text-sm">
                       <div className="min-w-0 text-foreground/60">
                       </div>
                       <Link
-                        className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-xl border border-border bg-card px-3 text-xs font-extrabold text-foreground hover:bg-muted active:scale-[0.98]"
+                        className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-md border border-border bg-card px-3 text-xs font-semibold text-foreground hover:bg-muted active:translate-y-px"
                         to={`/evaluation/run/${question.id}`}
                       >
                         <RefreshCw className="size-4" />

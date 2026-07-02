@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/table'
 import {
   listDocumentShares,
+  resendDocumentShareEmail,
   revokeDocumentShare,
   shareDocument,
   updateDocumentShare,
@@ -36,6 +37,11 @@ type DocumentShareDialogProps = {
   document: DocumentItem | null
   open: boolean
   onOpenChange: (open: boolean) => void
+}
+
+type DeliveryFeedback = {
+  tone: 'success' | 'warning' | 'info'
+  message: string
 }
 
 const permissionLabel: Record<DocumentSharePermission, string> = {
@@ -54,6 +60,35 @@ function formatExpiry(value?: string): string {
   }).format(date)
 }
 
+function getDeliveryFeedback(
+  share: DocumentShare,
+  action: 'share' | 'update' | 'resend',
+): DeliveryFeedback {
+  if (share.notificationStatus === 'ACCEPTED') {
+    return {
+      tone: 'success',
+      message:
+        action === 'resend'
+          ? 'The notification email was accepted for delivery.'
+          : 'Access was updated and the notification email was accepted for delivery.',
+    }
+  }
+
+  if (share.notificationStatus === 'FAILED') {
+    return {
+      tone: 'warning',
+      message:
+        'Access was updated, but the notification email could not be sent. Use Resend email to try again.',
+    }
+  }
+
+  return {
+    tone: 'info',
+    message:
+      'Access already exists and no new email was sent. Use Resend email when another notification is needed.',
+  }
+}
+
 export default function DocumentShareDialog({
   document,
   onOpenChange,
@@ -61,9 +96,11 @@ export default function DocumentShareDialog({
 }: DocumentShareDialogProps) {
   const [email, setEmail] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [feedback, setFeedback] = useState<DeliveryFeedback | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [permission, setPermission] = useState<DocumentSharePermission>('VIEW')
+  const [resendingId, setResendingId] = useState<string | null>(null)
   const [shares, setShares] = useState<DocumentShare[]>([])
 
   const documentId = document?.id
@@ -81,6 +118,7 @@ export default function DocumentShareDialog({
     let cancelled = false
     setIsLoading(true)
     setError(null)
+    setFeedback(null)
 
     listDocumentShares(documentId)
       .then((nextShares) => {
@@ -108,6 +146,7 @@ export default function DocumentShareDialog({
     if (!open) {
       setEmail('')
       setError(null)
+      setFeedback(null)
       setPermission('VIEW')
     }
   }, [open])
@@ -118,6 +157,7 @@ export default function DocumentShareDialog({
 
     setIsSaving(true)
     setError(null)
+    setFeedback(null)
 
     try {
       const nextShare = await shareDocument(documentId, {
@@ -132,6 +172,7 @@ export default function DocumentShareDialog({
       })
       setEmail('')
       setPermission('VIEW')
+      setFeedback(getDeliveryFeedback(nextShare, 'share'))
     } catch (caughtError) {
       setError(
         caughtError instanceof Error
@@ -150,6 +191,7 @@ export default function DocumentShareDialog({
     if (!documentId || share.permission === nextPermission) return
 
     setError(null)
+    setFeedback(null)
 
     try {
       const updated = await updateDocumentShare(
@@ -160,6 +202,7 @@ export default function DocumentShareDialog({
       setShares((current) =>
         current.map((item) => (item.id === updated.id ? updated : item)),
       )
+      setFeedback(getDeliveryFeedback(updated, 'update'))
     } catch (caughtError) {
       setError(
         caughtError instanceof Error
@@ -183,6 +226,30 @@ export default function DocumentShareDialog({
           ? caughtError.message
           : 'Unable to revoke access',
       )
+    }
+  }
+
+  async function handleResend(share: DocumentShare) {
+    if (!documentId || resendingId) return
+
+    setError(null)
+    setFeedback(null)
+    setResendingId(share.id)
+
+    try {
+      const updated = await resendDocumentShareEmail(documentId, share.id)
+      setShares((current) =>
+        current.map((item) => (item.id === updated.id ? updated : item)),
+      )
+      setFeedback(getDeliveryFeedback(updated, 'resend'))
+    } catch (caughtError) {
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : 'Unable to resend notification email',
+      )
+    } finally {
+      setResendingId(null)
     }
   }
 
@@ -229,6 +296,21 @@ export default function DocumentShareDialog({
         {error ? (
           <div className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive">
             {error}
+          </div>
+        ) : null}
+
+        {feedback ? (
+          <div
+            className={
+              feedback.tone === 'success'
+                ? 'rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-800'
+                : feedback.tone === 'warning'
+                  ? 'rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-800'
+                  : 'rounded-md border border-border bg-muted px-3 py-2 text-sm font-medium text-foreground'
+            }
+            role="status"
+          >
+            {feedback.message}
           </div>
         ) : null}
 
@@ -297,15 +379,32 @@ export default function DocumentShareDialog({
                       </select>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        aria-label={`Revoke access for ${share.sharedWithUser.email}`}
-                        onClick={() => void handleRevoke(share)}
-                        size="icon-sm"
-                        type="button"
-                        variant="ghost"
-                      >
-                        <Trash2 aria-hidden="true" />
-                      </Button>
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          aria-label={`Resend email to ${share.sharedWithUser.email}`}
+                          disabled={resendingId !== null}
+                          onClick={() => void handleResend(share)}
+                          size="icon-sm"
+                          title="Resend email"
+                          type="button"
+                          variant="ghost"
+                        >
+                          {resendingId === share.id ? (
+                            <RefreshCw className="animate-spin" aria-hidden="true" />
+                          ) : (
+                            <Mail aria-hidden="true" />
+                          )}
+                        </Button>
+                        <Button
+                          aria-label={`Revoke access for ${share.sharedWithUser.email}`}
+                          onClick={() => void handleRevoke(share)}
+                          size="icon-sm"
+                          type="button"
+                          variant="ghost"
+                        >
+                          <Trash2 aria-hidden="true" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ArrowLeft, BookOpen, Download, FileText, Pencil, Trash2, UploadCloud, Users } from 'lucide-react'
+import { ArrowLeft, BookOpen, Download, FileText, Pencil, Star, Trash2, UploadCloud, Users } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import {
@@ -25,6 +25,7 @@ import {
   downloadDocumentFile,
   getDocument,
   listDocumentVersions,
+  setDocumentStar,
   updateDocument,
   uploadDocumentVersion,
 } from '../services/documentApi'
@@ -109,6 +110,7 @@ export default function DocumentDetailPage() {
   const [isUploadingVersion, setIsUploadingVersion] = useState(false)
   const [isSavingEdit, setIsSavingEdit] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isStarring, setIsStarring] = useState(false)
   const [editTitle, setEditTitle] = useState('')
   const [editDescription, setEditDescription] = useState('')
   const [editSubjectId, setEditSubjectId] = useState('')
@@ -233,7 +235,7 @@ export default function DocumentDetailPage() {
 
   async function confirmDelete() {
     if (!document || !id) return
-    const ok = window.confirm(`Delete "${document.title}"? This cannot be undone.`)
+    const ok = window.confirm(`Move "${document.title}" to trash? You can restore it within 30 days.`)
     if (!ok) return
 
     setIsDeleting(true)
@@ -248,6 +250,30 @@ export default function DocumentDetailPage() {
           : 'Unable to delete document',
       )
       setIsDeleting(false)
+    }
+  }
+
+  async function toggleStar() {
+    if (!document || !id) return
+    const nextStarred = !document.isStarred
+    setIsStarring(true)
+    setDocument((current) =>
+      current ? { ...current, isStarred: nextStarred } : current,
+    )
+    try {
+      const updated = await setDocumentStar(id, nextStarred)
+      setDocument(updated as DocumentDetail)
+    } catch (caughtError) {
+      setDocument((current) =>
+        current ? { ...current, isStarred: document.isStarred } : current,
+      )
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : 'Unable to update starred state',
+      )
+    } finally {
+      setIsStarring(false)
     }
   }
 
@@ -292,14 +318,22 @@ export default function DocumentDetailPage() {
             <Button asChild variant="secondary">
               <Link to={document?.isShared ? "/library?view=shared" : "/library"}>
                 <ArrowLeft data-icon="inline-start" aria-hidden="true" />
-                Back to library
+                Back to My Document
               </Link>
             </Button>
-            <h1 className="moonlit-title mt-4 break-words text-3xl font-black tracking-tight md:text-5xl">
+            <h1 className="moonlit-title page-title mt-4 break-words">
               {document?.title || 'Document detail'}
             </h1>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            <Button disabled={!document || isStarring} onClick={toggleStar} type="button" variant="secondary">
+              <Star
+                data-icon="inline-start"
+                aria-hidden="true"
+                className={document?.isStarred ? 'fill-amber-400 text-amber-500' : undefined}
+              />
+              {document?.isStarred ? 'Unstar' : 'Star'}
+            </Button>
             {canManage && (
               <Button disabled={!document} onClick={() => setIsShareOpen(true)} type="button" variant="secondary">
                 <Users data-icon="inline-start" aria-hidden="true" />
@@ -331,7 +365,7 @@ export default function DocumentDetailPage() {
             {canManage && (
             <Button disabled={!document || isDeleting} onClick={confirmDelete} type="button" variant="destructive">
               <Trash2 data-icon="inline-start" aria-hidden="true" />
-              {isDeleting ? 'Deleting...' : 'Delete'}
+              {isDeleting ? 'Moving...' : 'Move to trash'}
             </Button>
             )}
           </div>
