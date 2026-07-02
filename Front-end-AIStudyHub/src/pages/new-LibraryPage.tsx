@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowUpFromLineIcon,
+  BookOpen,
   BookOpenText,
   ChevronDownIcon,
   Clock3,
@@ -20,7 +21,7 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -75,7 +76,9 @@ import {
 } from "@/components/ui/tooltip";
 import {
   deleteDocument,
+  downloadDocumentFile,
   listDocuments,
+  listSharedWithMe,
   searchDocuments,
   updateDocument,
 } from "../services/documentApi";
@@ -87,6 +90,8 @@ import type { SubjectItem } from "../services/subjectApi";
 import { useUploadStore } from "../store/useUploadStore";
 import { getStoredUser } from "../services/authStorage";
 import type { DocumentItem } from "../types/document";
+import DocumentShareDialog from "../components/documents/DocumentShareDialog";
+import SharedDocumentSubjectDialog from "../components/documents/SharedDocumentSubjectDialog";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getFileBadgeClass } from "../utils/formatters";
@@ -341,7 +346,10 @@ function getUploadErrors(
   return errors;
 }
 
-function getEditErrors(form: DocumentFormState): Record<string, string | null> {
+function getEditErrors(
+  form: DocumentFormState,
+  requireSubject = true,
+): Record<string, string | null> {
   const errors: Record<string, string | null> = {};
   const title = form.title.trim();
   const description = form.description.trim();
@@ -357,7 +365,9 @@ function getEditErrors(form: DocumentFormState): Record<string, string | null> {
   }
 
   // Subject validation
-  if (!subject) {
+  if (!requireSubject) {
+    errors.subject = null;
+  } else if (!subject) {
     errors.subject = "Subject is required";
   } else if (subject.length > 80) {
     errors.subject = "Subject must be 80 characters or fewer";
@@ -386,6 +396,7 @@ function DocumentFields({
   errors = {},
   touched = {},
   onBlur,
+  showSubject = true,
   subjects,
 }: {
   disabled: boolean;
@@ -397,6 +408,7 @@ function DocumentFields({
   errors?: Record<string, string | null>;
   touched?: Record<string, boolean>;
   onBlur?: (field: string) => void;
+  showSubject?: boolean;
   subjects: SubjectItem[];
 }) {
   return (
@@ -443,6 +455,7 @@ function DocumentFields({
         )}
       </label>
 
+      {showSubject ? (
       <label className="flex flex-col gap-2 text-sm font-medium">
         Subject
         <select
@@ -465,6 +478,7 @@ function DocumentFields({
           <span className="text-xs text-rose-500 font-semibold">{errors.subject}</span>
         )}
       </label>
+      ) : null}
 
       <label className="flex flex-col gap-2 text-sm font-medium">
         Description
@@ -674,6 +688,8 @@ function DocumentPreviewPage({
 
 export default function NewLibraryPage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const libraryView = searchParams.get("view") === "shared" ? "shared" : "mine";
   const currentUser = getStoredUser();
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [editingDocument, setEditingDocument] = useState<DocumentItem | null>(
@@ -686,6 +702,8 @@ export default function NewLibraryPage() {
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [sharingDocument, setSharingDocument] = useState<DocumentItem | null>(null);
+  const [classifyingDocument, setClassifyingDocument] = useState<DocumentItem | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [subjectFilter, setSubjectFilter] = useState("");
   const [fileTypeFilter, setFileTypeFilter] = useState("");
@@ -693,12 +711,30 @@ export default function NewLibraryPage() {
   const [subjects, setSubjects] = useState<SubjectItem[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadForm, setUploadForm] = useState<DocumentFormState>(emptyForm);
-  const editForm = useState<DocumentFormState>(emptyForm)[0];
-  const setEditForm = useState<DocumentFormState>(emptyForm)[1];
-  const didLoadRef = useRef(false);
+  const [editForm, setEditForm] = useState<DocumentFormState>(emptyForm);
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+
+  const getAccessRole = (document: DocumentItem) => {
+    if (currentUser?.role === "admin") return "OWNER";
+    if (document.accessRole) return document.accessRole;
+    if (
+      currentUser &&
+      (document.ownerId === currentUser.id || document.uploadedBy === currentUser.id)
+    ) {
+      return "OWNER";
+    }
+    return "VIEWER";
+  };
+
+  const canEditDocument = (document: DocumentItem) => {
+    const accessRole = getAccessRole(document);
+    return accessRole === "OWNER" || accessRole === "EDITOR";
+  };
+
+  const canManageDocument = (document: DocumentItem) =>
+    getAccessRole(document) === "OWNER";
 
   const toggleSelectOne = (id: string) => {
     setSelectedIds((prev) =>
@@ -721,11 +757,26 @@ export default function NewLibraryPage() {
 
   const handleBulkDelete = async () => {
     if (selectedIds.length === 0) return;
+    const selectedDocuments = documents.filter((document) =>
+      selectedIds.includes(document.id),
+    );
+    const deletableDocuments = selectedDocuments.filter(canManageDocument);
+
+    if (deletableDocuments.length !== selectedDocuments.length) {
+      setFeedback({
+        tone: "error",
+        message: "Only document owners can delete selected documents.",
+      });
+      return;
+    }
+
     setIsBulkDeleting(true);
     setFeedback({ tone: "info", message: `Deleting ${selectedIds.length} selected document(s)...` });
     try {
-      await Promise.all(selectedIds.map((id) => deleteDocument(id)));
-      setDocuments((current) => current.filter((item) => !selectedIds.includes(item.id)));
+      await Promise.all(deletableDocuments.map((document) => deleteDocument(document.id)));
+      setDocuments((current) =>
+        current.filter((item) => !deletableDocuments.some((document) => document.id === item.id)),
+      );
       setSelectedIds([]);
       setFeedback({ tone: "success", message: "Selected documents deleted successfully." });
     } catch {
@@ -739,12 +790,8 @@ export default function NewLibraryPage() {
     if (selectedIds.length === 0) return;
     selectedIds.forEach((id) => {
       const doc = documents.find((d) => d.id === id);
-      if (doc && doc.fileUrl) {
-        const a = document.createElement("a");
-        a.href = doc.fileUrl;
-        a.download = doc.fileName;
-        a.target = "_blank";
-        a.click();
+      if (doc) {
+        void downloadDocumentFile(doc);
       }
     });
     setFeedback({ tone: "success", message: `Downloads triggered for ${selectedIds.length} file(s).` });
@@ -754,7 +801,12 @@ export default function NewLibraryPage() {
   const [editTouched, setEditTouched] = useState<Record<string, boolean>>({});
 
   const uploadErrors = useMemo(() => getUploadErrors(uploadForm, selectedFile), [uploadForm, selectedFile]);
-  const editErrors = useMemo(() => getEditErrors(editForm), [editForm]);
+  const canEditSubject =
+    editingDocument ? canManageDocument(editingDocument) : true;
+  const editErrors = useMemo(
+    () => getEditErrors(editForm, canEditSubject),
+    [canEditSubject, editForm],
+  );
 
   useEffect(() => {
     if (!isUploadOpen) {
@@ -791,7 +843,7 @@ export default function NewLibraryPage() {
     [subjects],
   );
 
-  const urlParams = new URLSearchParams(window.location.search);
+  const urlParams = searchParams;
 
   const sortedDocuments = useMemo(
     () =>
@@ -841,7 +893,10 @@ export default function NewLibraryPage() {
     setFeedback(null);
 
     try {
-      const nextDocuments = await listDocuments();
+      const nextDocuments =
+        libraryView === "shared"
+          ? await listSharedWithMe()
+          : (await listDocuments()).filter((document) => !document.isShared);
       setDocuments(nextDocuments);
     } catch (error) {
       setFeedback({ tone: "error", message: getErrorMessage(error) });
@@ -851,9 +906,7 @@ export default function NewLibraryPage() {
   }
 
   useEffect(() => {
-    didLoadRef.current = true;
     const timeoutId = window.setTimeout(() => {
-      void loadDocuments();
       void listSubjects()
         .then(setSubjects)
         .catch((error) =>
@@ -865,10 +918,6 @@ export default function NewLibraryPage() {
   }, []);
 
   useEffect(() => {
-    if (!didLoadRef.current) {
-      return;
-    }
-
     const timeoutId = window.setTimeout(async () => {
       if (!showSearchMode) {
         void loadDocuments();
@@ -879,10 +928,28 @@ export default function NewLibraryPage() {
       setFeedback(null);
 
       try {
-        const results = await searchDocuments({
-          keyword: searchQuery,
-          subjectId: subjectFilter,
-        });
+        const results =
+          libraryView === "shared"
+            ? (await listSharedWithMe()).filter((document) => {
+                const keyword = searchQuery.trim().toLowerCase();
+                const matchesKeyword =
+                  !keyword ||
+                  document.title.toLowerCase().includes(keyword) ||
+                  document.fileName.toLowerCase().includes(keyword) ||
+                  document.description?.toLowerCase().includes(keyword);
+                const documentSubjectId =
+                  typeof document.subject === "object"
+                    ? document.subject?._id
+                    : document.subjectId;
+                return (
+                  matchesKeyword &&
+                  (!subjectFilter || documentSubjectId === subjectFilter)
+                );
+              })
+            : (await searchDocuments({
+                keyword: searchQuery,
+                subjectId: subjectFilter,
+              })).filter((document) => !document.isShared);
         setDocuments(results);
       } catch (error) {
         setFeedback({ tone: "error", message: getErrorMessage(error) });
@@ -892,7 +959,7 @@ export default function NewLibraryPage() {
     }, SEARCH_DEBOUNCE_MS);
 
     return () => window.clearTimeout(timeoutId);
-  }, [searchQuery, showSearchMode, subjectFilter]);
+  }, [libraryView, searchQuery, showSearchMode, subjectFilter]);
 
   async function handleUpload(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -946,7 +1013,7 @@ export default function NewLibraryPage() {
 
     setEditTouched({
       title: true,
-      subject: true,
+      subject: canEditSubject,
       description: true,
     });
 
@@ -959,12 +1026,13 @@ export default function NewLibraryPage() {
     setFeedback(null);
 
     try {
-      let subjectId = editingDocument.subjectId;
+      let subjectId = canEditSubject ? editingDocument.subjectId : undefined;
       const currentSubjectName =
         typeof editingDocument.subject === "object"
           ? editingDocument.subject?.name
           : editingDocument.subject;
       if (
+        canEditSubject &&
         editForm.subject.trim() &&
         editForm.subject.trim().toLowerCase() !==
           (currentSubjectName ?? "").trim().toLowerCase()
@@ -974,7 +1042,7 @@ export default function NewLibraryPage() {
 
       const updatedDocument = await updateDocument(editingDocument.id, {
         description: editForm.description.trim(),
-        subjectId,
+        ...(canEditSubject ? { subjectId } : {}),
         title: editForm.title.trim(),
       });
       setDocuments((current) =>
@@ -1057,12 +1125,40 @@ export default function NewLibraryPage() {
     setIsEditOpen(true);
   }
 
+  function handleSharedProfileUpdated(updatedDocument: DocumentItem) {
+    setDocuments((current) =>
+      current.map((document) =>
+        document.id === updatedDocument.id ? updatedDocument : document,
+      ),
+    );
+    setFeedback({
+      tone: "success",
+      message: "Shared document subject updated",
+    });
+  }
+
   function openFile(document: DocumentItem) {
     navigate(`/library?preview=${encodeURIComponent(document.id)}`);
   }
 
   function openDetails(document: DocumentItem) {
     navigate(`/documents/${document.id}`);
+  }
+
+  function setLibraryView(view: "mine" | "shared") {
+    const nextParams = new URLSearchParams(searchParams);
+    if (view === "shared") {
+      nextParams.set("view", "shared");
+    } else {
+      nextParams.delete("view");
+    }
+    nextParams.delete("preview");
+    setSelectedIds([]);
+    setSearchParams(nextParams, { replace: true });
+  }
+
+  function openShare(document: DocumentItem) {
+    setSharingDocument(document);
   }
 
   const previewParam = urlParams.get("preview");
@@ -1098,6 +1194,34 @@ export default function NewLibraryPage() {
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
+                <div
+                  aria-label="Library view"
+                  className="inline-flex rounded-lg border border-border bg-muted/40 p-1"
+                  role="tablist"
+                >
+                  <Button
+                    aria-selected={libraryView === "mine"}
+                    onClick={() => setLibraryView("mine")}
+                    role="tab"
+                    size="sm"
+                    type="button"
+                    variant={libraryView === "mine" ? "default" : "ghost"}
+                  >
+                    <FileText data-icon="inline-start" aria-hidden="true" />
+                    My documents
+                  </Button>
+                  <Button
+                    aria-selected={libraryView === "shared"}
+                    onClick={() => setLibraryView("shared")}
+                    role="tab"
+                    size="sm"
+                    type="button"
+                    variant={libraryView === "shared" ? "default" : "ghost"}
+                  >
+                    <Users data-icon="inline-start" aria-hidden="true" />
+                    Shared with me
+                  </Button>
+                </div>
                 <Button variant="secondary" size="sm" className="rounded-full">
                   <Clock3 data-icon="inline-start" aria-hidden="true" />
                   Newest first
@@ -1105,6 +1229,7 @@ export default function NewLibraryPage() {
               </div>
             </div>
 
+            {libraryView === "mine" ? (
             <div className="flex items-center gap-2 self-end xl:self-auto">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -1129,6 +1254,7 @@ export default function NewLibraryPage() {
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
+            ) : null}
           </div>
 
           <div className="flex flex-col gap-3 border-y border-border/70 py-4">
@@ -1337,6 +1463,11 @@ export default function NewLibraryPage() {
                               <div className="truncate text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
                                 {document.fileName}
                               </div>
+                              {document.isShared && (
+                                <Badge className="mt-1 w-fit" variant="secondary">
+                                  Shared
+                                </Badge>
+                              )}
                             </div>
                           </button>
                         </TableCell>
@@ -1403,13 +1534,29 @@ export default function NewLibraryPage() {
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onSelect={() => {
-                                  window.location.href = document.fileUrl;
+                                  void downloadDocumentFile(document);
                                 }}
                               >
                                 <Download />
                                 Download
                               </DropdownMenuItem>
-                              {currentUser && (document.ownerId === currentUser.id || document.uploadedBy === currentUser.id || currentUser.role === "admin") && (
+                              {document.isShared && !canManageDocument(document) && (
+                                <DropdownMenuItem
+                                  onSelect={() => setClassifyingDocument(document)}
+                                >
+                                  <BookOpen />
+                                  Assign subject
+                                </DropdownMenuItem>
+                              )}
+                              {canManageDocument(document) && (
+                                <DropdownMenuItem
+                                  onSelect={() => openShare(document)}
+                                >
+                                  <Users />
+                                  Share
+                                </DropdownMenuItem>
+                              )}
+                              {canEditDocument(document) && (
                                 <>
                                   <DropdownMenuItem
                                     onSelect={() => openEdit(document)}
@@ -1417,7 +1564,8 @@ export default function NewLibraryPage() {
                                     <Pencil />
                                     Edit details
                                   </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
+                                  {canManageDocument(document) && <DropdownMenuSeparator />}
+                                  {canManageDocument(document) && (
                                   <DropdownMenuItem
                                     disabled={isDeletingId === document.id}
                                     onSelect={(event) => {
@@ -1431,6 +1579,7 @@ export default function NewLibraryPage() {
                                       ? "Confirm delete"
                                       : "Delete"}
                                   </DropdownMenuItem>
+                                  )}
                                 </>
                               )}
                             </DropdownMenuContent>
@@ -1536,6 +1685,7 @@ export default function NewLibraryPage() {
                 errors={editErrors}
                 touched={editTouched}
                 onBlur={(field) => setEditTouched((prev) => ({ ...prev, [field]: true }))}
+                showSubject={canEditSubject}
                 subjects={subjects}
               />
             </div>
@@ -1557,7 +1707,19 @@ export default function NewLibraryPage() {
             <Download className="size-3.5" />
             Download
           </Button>
-          <Button size="sm" variant="destructive" className="rounded-xl flex items-center gap-1.5" disabled={isBulkDeleting} onClick={handleBulkDelete}>
+          <Button
+            size="sm"
+            variant="destructive"
+            className="rounded-xl flex items-center gap-1.5"
+            disabled={
+              isBulkDeleting ||
+              selectedIds.some((id) => {
+                const document = documents.find((item) => item.id === id);
+                return document ? !canManageDocument(document) : false;
+              })
+            }
+            onClick={handleBulkDelete}
+          >
             <Trash2 className="size-3.5" />
             {isBulkDeleting ? "Deleting..." : "Delete"}
           </Button>
@@ -1566,6 +1728,22 @@ export default function NewLibraryPage() {
           </Button>
         </div>
       )}
+      <DocumentShareDialog
+        document={sharingDocument}
+        open={Boolean(sharingDocument)}
+        onOpenChange={(open) => {
+          if (!open) setSharingDocument(null);
+        }}
+      />
+      <SharedDocumentSubjectDialog
+        document={classifyingDocument}
+        open={Boolean(classifyingDocument)}
+        subjects={subjects}
+        onOpenChange={(open) => {
+          if (!open) setClassifyingDocument(null);
+        }}
+        onUpdated={handleSharedProfileUpdated}
+      />
     </main>
   );
 }

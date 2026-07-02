@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ArrowLeft, Download, FileText, Pencil, Trash2 } from 'lucide-react'
+import { ArrowLeft, BookOpen, Download, FileText, Pencil, Trash2, UploadCloud, Users } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import {
@@ -20,8 +20,18 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { deleteDocument, getDocument, listDocumentVersions, updateDocument } from '../services/documentApi'
+import {
+  deleteDocument,
+  downloadDocumentFile,
+  getDocument,
+  listDocumentVersions,
+  updateDocument,
+  uploadDocumentVersion,
+} from '../services/documentApi'
 import { listSubjects, type SubjectItem } from '../services/subjectApi'
+import DocumentShareDialog from '../components/documents/DocumentShareDialog'
+import SharedDocumentSubjectDialog from '../components/documents/SharedDocumentSubjectDialog'
+import { getStoredUser } from '../services/authStorage'
 import type {
   DocumentDetail,
   DocumentSubject,
@@ -87,17 +97,26 @@ function InfoCard({
 export default function DocumentDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const currentUser = getStoredUser()
   const [document, setDocument] = useState<DocumentDetail | null>(null)
   const [versions, setVersions] = useState<DocumentVersion[]>([])
   const [subjects, setSubjects] = useState<SubjectItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isEditOpen, setIsEditOpen] = useState(false)
+  const [isSubjectProfileOpen, setIsSubjectProfileOpen] = useState(false)
+  const [isShareOpen, setIsShareOpen] = useState(false)
+  const [isVersionOpen, setIsVersionOpen] = useState(false)
+  const [isUploadingVersion, setIsUploadingVersion] = useState(false)
   const [isSavingEdit, setIsSavingEdit] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [editTitle, setEditTitle] = useState('')
   const [editDescription, setEditDescription] = useState('')
   const [editSubjectId, setEditSubjectId] = useState('')
   const [editVisibility, setEditVisibility] = useState<'PUBLIC' | 'PRIVATE'>('PRIVATE')
+  const [versionFile, setVersionFile] = useState<File | null>(null)
+  const [versionMode, setVersionMode] = useState<'OVERRIDE' | 'APPEND'>('OVERRIDE')
+  const [versionReason, setVersionReason] = useState('')
+  const [makeVersionActive, setMakeVersionActive] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -152,9 +171,19 @@ export default function DocumentDetailPage() {
         ? document.subject
         : 'Unsorted'
 
+  const accessRole =
+    document?.accessRole ||
+    (currentUser &&
+    (document?.ownerId === currentUser.id || document?.uploadedBy === currentUser.id)
+      ? 'OWNER'
+      : 'VIEWER')
+  const canEdit = accessRole === 'OWNER' || accessRole === 'EDITOR'
+  const canManage = accessRole === 'OWNER'
+  const canClassifyShared = Boolean(document?.isShared && accessRole !== 'OWNER')
+
   function downloadDocument() {
-    if (document?.fileUrl) {
-      window.open(document.fileUrl, '_blank', 'noopener,noreferrer')
+    if (document) {
+      void downloadDocumentFile(document)
     }
   }
 
@@ -181,9 +210,13 @@ export default function DocumentDetailPage() {
     try {
       const updated = await updateDocument(id, {
         description: editDescription.trim(),
-        subjectId: editSubjectId || undefined,
         title,
-        visibility: editVisibility,
+        ...(canManage
+          ? {
+              subjectId: editSubjectId || undefined,
+              visibility: editVisibility,
+            }
+          : {}),
       })
       setDocument(updated as DocumentDetail)
       setIsEditOpen(false)
@@ -218,13 +251,46 @@ export default function DocumentDetailPage() {
     }
   }
 
+  async function submitVersion(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!id || !versionFile) return
+
+    setIsUploadingVersion(true)
+    setError(null)
+    try {
+      await uploadDocumentVersion(id, {
+        file: versionFile,
+        makeActive: makeVersionActive,
+        uploadMode: versionMode,
+        uploadReason: versionReason,
+      })
+      const [nextDocument, nextVersions] = await Promise.all([
+        getDocument(id),
+        listDocumentVersions(id),
+      ])
+      setDocument(nextDocument)
+      setVersions(nextVersions)
+      setVersionFile(null)
+      setVersionReason('')
+      setIsVersionOpen(false)
+    } catch (caughtError) {
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : 'Unable to upload document version',
+      )
+    } finally {
+      setIsUploadingVersion(false)
+    }
+  }
+
   return (
     <main className="botanical-page flex min-h-svh w-full min-w-0 flex-col overflow-y-auto text-foreground">
       <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-5 py-6 sm:px-8 lg:px-10">
         <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0">
             <Button asChild variant="secondary">
-              <Link to="/library">
+              <Link to={document?.isShared ? "/library?view=shared" : "/library"}>
                 <ArrowLeft data-icon="inline-start" aria-hidden="true" />
                 Back to library
               </Link>
@@ -234,18 +300,40 @@ export default function DocumentDetailPage() {
             </h1>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            {canManage && (
+              <Button disabled={!document} onClick={() => setIsShareOpen(true)} type="button" variant="secondary">
+                <Users data-icon="inline-start" aria-hidden="true" />
+                Share
+              </Button>
+            )}
+            {canClassifyShared && (
+              <Button disabled={!document} onClick={() => setIsSubjectProfileOpen(true)} type="button" variant="secondary">
+                <BookOpen data-icon="inline-start" aria-hidden="true" />
+                Assign subject
+              </Button>
+            )}
+            {canEdit && (
+            <Button disabled={!document} onClick={() => setIsVersionOpen(true)} type="button" variant="secondary">
+              <UploadCloud data-icon="inline-start" aria-hidden="true" />
+              Upload version
+            </Button>
+            )}
+            {canEdit && (
             <Button disabled={!document} onClick={openEdit} type="button" variant="secondary">
               <Pencil data-icon="inline-start" aria-hidden="true" />
               Edit details
             </Button>
+            )}
             <Button disabled={!document?.fileUrl} onClick={downloadDocument} type="button">
               <Download data-icon="inline-start" aria-hidden="true" />
               Download
             </Button>
+            {canManage && (
             <Button disabled={!document || isDeleting} onClick={confirmDelete} type="button" variant="destructive">
               <Trash2 data-icon="inline-start" aria-hidden="true" />
               {isDeleting ? 'Deleting...' : 'Delete'}
             </Button>
+            )}
           </div>
         </header>
 
@@ -365,22 +453,24 @@ export default function DocumentDetailPage() {
               />
             </label>
 
-            <label className="flex flex-col gap-2 text-sm font-semibold">
-              Subject
-              <select
-                className="h-9 w-full rounded-md border-2 border-foreground bg-background px-3 text-sm font-semibold outline-none disabled:opacity-50"
-                disabled={isSavingEdit}
-                onChange={(event) => setEditSubjectId(event.target.value)}
-                value={editSubjectId}
-              >
-                <option value="">Keep current subject</option>
-                {subjects.map((item) => (
-                  <option key={item._id} value={item._id}>
-                    {[item.code, item.name].filter(Boolean).join(' ')}
-                  </option>
-                ))}
-              </select>
-            </label>
+            {canManage ? (
+              <label className="flex flex-col gap-2 text-sm font-semibold">
+                Subject
+                <select
+                  className="h-9 w-full rounded-md border-2 border-foreground bg-background px-3 text-sm font-semibold outline-none disabled:opacity-50"
+                  disabled={isSavingEdit}
+                  onChange={(event) => setEditSubjectId(event.target.value)}
+                  value={editSubjectId}
+                >
+                  <option value="">Keep current subject</option>
+                  {subjects.map((item) => (
+                    <option key={item._id} value={item._id}>
+                      {[item.code, item.name].filter(Boolean).join(' ')}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
 
             <label className="flex flex-col gap-2 text-sm font-semibold">
               Description
@@ -392,20 +482,22 @@ export default function DocumentDetailPage() {
               />
             </label>
 
-            <label className="flex flex-col gap-2 text-sm font-semibold">
-              Visibility
-              <select
-                className="h-9 w-full rounded-md border-2 border-foreground bg-background px-3 text-sm font-semibold outline-none disabled:opacity-50"
-                disabled={isSavingEdit}
-                onChange={(event) =>
-                  setEditVisibility(event.target.value === 'PUBLIC' ? 'PUBLIC' : 'PRIVATE')
-                }
-                value={editVisibility}
-              >
-                <option value="PRIVATE">Private</option>
-                <option value="PUBLIC">Public</option>
-              </select>
-            </label>
+            {canManage ? (
+              <label className="flex flex-col gap-2 text-sm font-semibold">
+                Visibility
+                <select
+                  className="h-9 w-full rounded-md border-2 border-foreground bg-background px-3 text-sm font-semibold outline-none disabled:opacity-50"
+                  disabled={isSavingEdit}
+                  onChange={(event) =>
+                    setEditVisibility(event.target.value === 'PUBLIC' ? 'PUBLIC' : 'PRIVATE')
+                  }
+                  value={editVisibility}
+                >
+                  <option value="PRIVATE">Private</option>
+                  <option value="PUBLIC">Public</option>
+                </select>
+              </label>
+            ) : null}
 
             <DialogFooter>
               <Button disabled={isSavingEdit} type="button" variant="secondary" onClick={() => setIsEditOpen(false)}>
@@ -418,6 +510,81 @@ export default function DocumentDetailPage() {
           </form>
         </DialogContent>
       </Dialog>
+      <Dialog open={isVersionOpen} onOpenChange={setIsVersionOpen}>
+        <DialogContent>
+          <form className="flex flex-col gap-4" onSubmit={submitVersion}>
+            <DialogHeader>
+              <DialogTitle>Upload new version</DialogTitle>
+            </DialogHeader>
+            <label className="flex flex-col gap-2 text-sm font-semibold">
+              Document file
+              <Input
+                accept=".pdf,.docx,.pptx,.xlsx,.txt,.md"
+                disabled={isUploadingVersion}
+                onChange={(event) => setVersionFile(event.target.files?.[0] || null)}
+                required
+                type="file"
+              />
+            </label>
+            <label className="flex flex-col gap-2 text-sm font-semibold">
+              Upload mode
+              <select
+                className="h-9 rounded-md border border-input bg-background px-3 text-sm outline-none"
+                disabled={isUploadingVersion}
+                onChange={(event) => {
+                  const nextMode = event.target.value === 'APPEND' ? 'APPEND' : 'OVERRIDE'
+                  setVersionMode(nextMode)
+                  if (nextMode === 'OVERRIDE') setMakeVersionActive(true)
+                }}
+                value={versionMode}
+              >
+                <option value="OVERRIDE">Replace active content</option>
+                <option value="APPEND">Append to existing content</option>
+              </select>
+            </label>
+            <label className="flex flex-col gap-2 text-sm font-semibold">
+              Change note
+              <Textarea
+                disabled={isUploadingVersion || versionMode === 'OVERRIDE'}
+                maxLength={500}
+                onChange={(event) => setVersionReason(event.target.value)}
+                placeholder="What changed in this version?"
+                value={versionReason}
+              />
+            </label>
+            <label className="flex items-center gap-2 text-sm font-semibold">
+              <input
+                checked={makeVersionActive}
+                className="size-4 accent-primary"
+                disabled={isUploadingVersion}
+                onChange={(event) => setMakeVersionActive(event.target.checked)}
+                type="checkbox"
+              />
+              Make this the active version
+            </label>
+            <DialogFooter>
+              <Button disabled={isUploadingVersion} onClick={() => setIsVersionOpen(false)} type="button" variant="secondary">
+                Cancel
+              </Button>
+              <Button disabled={!versionFile || isUploadingVersion} type="submit">
+                {isUploadingVersion ? 'Uploading...' : 'Upload version'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+      <DocumentShareDialog
+        document={document}
+        open={isShareOpen}
+        onOpenChange={setIsShareOpen}
+      />
+      <SharedDocumentSubjectDialog
+        document={document}
+        open={isSubjectProfileOpen}
+        subjects={subjects}
+        onOpenChange={setIsSubjectProfileOpen}
+        onUpdated={(updatedDocument) => setDocument(updatedDocument as DocumentDetail)}
+      />
     </main>
   )
 }

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { ChangeEvent, FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import AcademicAside from '../../components/auth/AcademicAside'
 import AuthCardShell from '../../components/auth/AuthCardShell'
 import AuthScaffold from '../../components/auth/AuthScaffold'
@@ -15,6 +15,7 @@ const initialForm = {
 
 export default function LoginPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [form, setForm] = useState(initialForm)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -36,7 +37,10 @@ export default function LoginPage() {
         email: form.email,
         password: form.password,
       })
-      navigate('/dashboard', { replace: true })
+      const returnTo = searchParams.get('returnTo')
+      navigate(returnTo?.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/dashboard', {
+        replace: true,
+      })
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : 'Unable to log in')
     } finally {
