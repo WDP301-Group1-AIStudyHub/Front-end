@@ -35,6 +35,15 @@ export interface DocumentItem {
   ownerId?: string
   createdAt: string
   updatedAt: string
+  accessRole?: 'OWNER' | 'EDITOR' | 'VIEWER'
+  isShared?: boolean
+  sharedBy?: {
+    id: string
+    fullName: string
+    email: string
+  }
+  personalSubjectId?: string
+  personalSubject?: DocumentSubject | null
 }
 
 export interface DocumentVersion {
@@ -75,7 +84,32 @@ export interface UpdateDocumentPayload {
   status?: 'ACTIVE' | 'ARCHIVED'
 }
 
+export interface UpdateSharedDocumentProfilePayload {
+  subjectId?: string | null
+}
+
 export type DocumentsResponse = DocumentItem[]
+
+export type DocumentSharePermission = 'VIEW' | 'EDIT'
+
+export interface DocumentShareUser {
+  id: string
+  fullName: string
+  email: string
+  avatar?: string
+}
+
+export interface DocumentShare {
+  id: string
+  documentId: string
+  sharedWithUser: DocumentShareUser
+  permission: DocumentSharePermission
+  sharedBy: string
+  status: 'ACTIVE' | 'PENDING'
+  expiresAt?: string
+  createdAt: string
+  updatedAt: string
+}
 
 export interface UploadSession {
   id: string

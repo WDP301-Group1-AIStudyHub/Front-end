@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react'
-import { Navigate, Route, Routes, Link, useNavigate } from 'react-router-dom'
+import { Navigate, Route, Routes, Link, useLocation, useNavigate } from 'react-router-dom'
 import AppSidebarLayout from './layouts/AppSidebarLayout'
 import { LoadingState } from './components/shared/CelestialLoading'
 import BackgroundUploadWidget from './components/upload/BackgroundUploadWidget'
@@ -87,6 +87,7 @@ function ProtectedRoute({
   userOnly?: boolean
   children: (user: AuthUser) => ReactNode
 }) {
+  const location = useLocation()
   const [user, setUser] = useState<AuthUser | null>(() => getStoredUser());
   const [verified, setVerified] = useState(() =>
     Boolean(getStoredUser() && hasAuthSession())
@@ -123,7 +124,8 @@ function ProtectedRoute({
   }, []);
 
   if (redirectToLogin) {
-    return <Navigate to="/login" replace />;
+    const returnTo = `${location.pathname}${location.search}`
+    return <Navigate to={`/login?returnTo=${encodeURIComponent(returnTo)}`} replace />;
   }
 
   if (!verified || !user) {
@@ -185,6 +187,10 @@ function App() {
           <Route
             path="/documents/:id"
             element={<ProtectedRoute userOnly>{() => routeWithShell(<DocumentDetailPage />)}</ProtectedRoute>}
+          />
+          <Route
+            path="/shared-with-me"
+            element={<Navigate to="/library?view=shared" replace />}
           />
           <Route
             path="/study-materials"

@@ -7,6 +7,7 @@ export default function FloatingField({
   label,
   name,
   onChange,
+  readOnly,
   required,
   type = 'text',
   value,
@@ -17,6 +18,7 @@ export default function FloatingField({
   label: string
   name?: string
   onChange?: ChangeEventHandler<HTMLInputElement>
+  readOnly?: boolean
   required?: boolean
   type?: string
   value?: string
@@ -31,6 +33,7 @@ export default function FloatingField({
         name={name}
         onChange={onChange}
         placeholder=" "
+        readOnly={readOnly}
         required={required}
         type={type}
         value={value}

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { ChangeEvent, FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import AcademicAside from '../../components/auth/AcademicAside'
 import AuthCardShell from '../../components/auth/AuthCardShell'
 import AuthScaffold from '../../components/auth/AuthScaffold'
@@ -18,7 +18,13 @@ const initialForm = {
 
 export default function RegisterPage() {
   const navigate = useNavigate()
-  const [form, setForm] = useState(initialForm)
+  const [searchParams] = useSearchParams()
+  const inviteToken = searchParams.get('invite')?.trim() || ''
+  const invitedEmail = searchParams.get('email')?.trim() || ''
+  const [form, setForm] = useState(() => ({
+    ...initialForm,
+    email: invitedEmail,
+  }))
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -41,12 +47,18 @@ export default function RegisterPage() {
     setLoading(true)
 
     try {
-      await register({
+      const result = await register({
         email: form.email,
         fullName: form.fullName,
         password: form.password,
+        inviteToken: inviteToken || undefined,
       })
-      navigate('/dashboard', { replace: true })
+      navigate(
+        result.redirectDocumentId
+          ? `/documents/${result.redirectDocumentId}`
+          : '/dashboard',
+        { replace: true },
+      )
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : 'Unable to create account')
     } finally {
@@ -77,9 +89,15 @@ export default function RegisterPage() {
             name="email"
             onChange={handleChange}
             required
+            readOnly={Boolean(invitedEmail)}
             type="email"
             value={form.email}
           />
+          {invitedEmail ? (
+            <p className="-mt-3 text-xs leading-relaxed text-muted-foreground">
+              Hãy đăng ký bằng đúng email đã nhận lời mời chia sẻ tài liệu.
+            </p>
+          ) : null}
           <PasswordField
             autoComplete="new-password"
             disabled={loading}
