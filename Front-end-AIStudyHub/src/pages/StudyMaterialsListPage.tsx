@@ -19,9 +19,11 @@ import {
   Brain,
   HelpCircle,
   X,
+  Target,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getAllProgress, type StudyProgressData } from "../hooks/useStudyProgress";
 
 export default function StudyMaterialsListPage() {
   const location = useLocation();
@@ -30,6 +32,9 @@ export default function StudyMaterialsListPage() {
   const [materials, setMaterials] = useState<StudyMaterial[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  const [progressData, setProgressData] = useState<Record<string, StudyProgressData>>({});
+
   
   // Filters state
   const [searchTerm, setSearchTerm] = useState("");
@@ -89,9 +94,15 @@ export default function StudyMaterialsListPage() {
     };
 
     fetchMaterials();
+    
+    // Refresh progress data on focus or mount
+    const handleFocus = () => setProgressData(getAllProgress());
+    window.addEventListener("focus", handleFocus);
+    setProgressData(getAllProgress());
 
     return () => {
       isCancelled = true;
+      window.removeEventListener("focus", handleFocus);
     };
   }, []);
 
@@ -375,7 +386,20 @@ export default function StudyMaterialsListPage() {
                           {mat.title}
                         </h3>
 
-                        <p className="text-2xs text-muted-foreground">
+                        {isSuccess && progressData[mat._id || mat.id] && (
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/20 px-2 py-1.5 rounded-lg border border-border/50">
+                            <Target className="size-3.5 text-primary" />
+                            {progressData[mat._id || mat.id].isFinished ? (
+                              <span className="font-bold text-emerald-600 dark:text-emerald-400">Completed</span>
+                            ) : (
+                              <span className="font-medium text-foreground">
+                                In Progress: <span className="font-bold">{progressData[mat._id || mat.id].currentIndex}</span> / {progressData[mat._id || mat.id].totalItems}
+                              </span>
+                            )}
+                          </div>
+                        )}
+
+                        <p className="text-2xs text-muted-foreground mt-1">
                           Generated on {formatDate(mat.createdAt)}
                         </p>
                       </div>

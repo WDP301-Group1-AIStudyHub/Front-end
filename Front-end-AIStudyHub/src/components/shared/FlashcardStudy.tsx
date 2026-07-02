@@ -15,8 +15,11 @@ import {
   MoreVertical,
   Clock,
   ChevronRight,
+  Play,
+  Shuffle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useStudyProgress, type FlashcardProgressData } from "../../hooks/useStudyProgress";
 
 interface FlashcardStudyProps {
   material: StudyMaterial;
@@ -27,9 +30,10 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
   const navigate = useNavigate();
 
   // Active recall deck state (supports filtering by missed)
-  const [activeItems, setActiveItems] = useState<IFlashcardItem[]>(
-    (material.items || []) as IFlashcardItem[]
-  );
+  const [activeItems, setActiveItems] = useState<IFlashcardItem[]>(() => {
+    const items = [...(material.items || [])] as IFlashcardItem[];
+    return items.sort(() => Math.random() - 0.5);
+  });
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
 
@@ -50,6 +54,52 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
 
   // Selected follow-up topic state
   const [selectedFollowUp, setSelectedFollowUp] = useState<string | null>(null);
+
+  const {
+    savedProgress,
+    isResumed,
+    showResumePrompt,
+    resume,
+    restart,
+    saveProgress,
+  } = useStudyProgress<FlashcardProgressData>(material._id || material.id, "FLASHCARD");
+
+  // Load progress if resumed
+  useEffect(() => {
+    if (isResumed && savedProgress) {
+      if (savedProgress.orderMap) {
+        setActiveItems(savedProgress.orderMap.map(idx => (material.items || [])[idx] as IFlashcardItem));
+      }
+      setCurrentIndex(savedProgress.currentIndex || 0);
+      setRatings(savedProgress.ratings || {});
+      setElapsedTime(savedProgress.elapsedTime || 0);
+      setIsFinished(savedProgress.isFinished || false);
+      setIsFlipped(false);
+    }
+  }, [isResumed, savedProgress, material.items]);
+
+  // Sync state
+  useEffect(() => {
+    if (showResumePrompt) return;
+
+    saveProgress({
+      currentIndex,
+      ratings,
+      elapsedTime,
+      isFinished,
+      totalItems: activeItems.length,
+      orderMap: activeItems.map(item => (material.items || []).indexOf(item as any)),
+    });
+  }, [
+    currentIndex,
+    ratings,
+    elapsedTime,
+    isFinished,
+    activeItems,
+    material.items,
+    showResumePrompt,
+    saveProgress,
+  ]);
 
   // Timer Effect
   useEffect(() => {
@@ -87,6 +137,43 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
     return (
       <div className="moonlit-card p-8 text-center text-muted-foreground font-sans">
         No flashcards found.
+      </div>
+    );
+  }
+
+  // Resume Prompt UI
+  if (showResumePrompt && savedProgress) {
+    const pPercent = Math.round((savedProgress.currentIndex / activeItems.length) * 100);
+    return (
+      <div className="mx-auto max-w-lg bg-card border border-border rounded-2xl p-8 font-sans space-y-6 text-center shadow-soft">
+        <div className="inline-flex items-center justify-center p-4 bg-primary/10 rounded-full text-primary mb-2">
+          <Play className="size-8" />
+        </div>
+        <h2 className="text-2xl font-black text-foreground">Resume Deck?</h2>
+        <p className="text-muted-foreground text-sm max-w-md mx-auto">
+          You have an unfinished session for this flashcard deck. Would you like to pick up where you left off?
+        </p>
+        
+        <div className="bg-muted/30 border border-border/50 rounded-xl p-4 text-left space-y-3">
+          <div className="flex justify-between text-xs font-bold">
+            <span>Progress: {pPercent}%</span>
+            <span className="text-primary">{savedProgress.currentIndex} / {activeItems.length} cards</span>
+          </div>
+          <div className="h-1.5 w-full bg-border rounded-full overflow-hidden">
+            <div className="h-full bg-primary rounded-full" style={{ width: `${pPercent}%` }} />
+          </div>
+        </div>
+
+        <div className="flex gap-3 pt-4">
+          <Button onClick={restart} variant="outline" className="flex-1">
+            <RotateCcw className="size-4 mr-2" />
+            Start Over
+          </Button>
+          <Button onClick={resume} className="flex-1">
+            <Play className="size-4 mr-2" />
+            Resume
+          </Button>
+        </div>
       </div>
     );
   }
@@ -164,6 +251,7 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
     setElapsedTime(0);
     setIsFinished(false);
     setShowReport(false);
+    restart();
   };
 
   const restartShuffled = () => {
@@ -176,6 +264,7 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
     setElapsedTime(0);
     setIsFinished(false);
     setShowReport(false);
+    restart();
   };
 
   const restartMissed = () => {
@@ -192,6 +281,7 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
     setElapsedTime(0);
     setIsFinished(false);
     setShowReport(false);
+    restart();
   };
 
   const handleGenerateFollowUp = () => {
@@ -469,9 +559,18 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
       `}</style>
 
       {/* Header and Keyboard shortcuts */}
-      <div className="flex flex-col items-center justify-center gap-1.5 text-center text-xs text-muted-foreground/60 select-none pb-1">
+      <div className="flex flex-col items-center justify-center gap-1.5 text-center text-xs text-muted-foreground/60 select-none pb-1 relative">
         <h2 className="text-sm font-bold text-foreground">{title}</h2>
         <span>Press 'Space' to flip, '←' / '→' to navigate</span>
+        <Button
+          variant="outline"
+          size="icon"
+          className="absolute right-0 top-0 size-8 rounded-full hidden sm:flex"
+          onClick={restartShuffled}
+          title="Shuffle & Restart Deck"
+        >
+          <Shuffle className="size-4 text-muted-foreground" />
+        </Button>
       </div>
 
       {/* Interactive 3D Card (Image 3 Style) */}

@@ -706,6 +706,7 @@ export default function NewLibraryPage() {
   const [classifyingDocument, setClassifyingDocument] = useState<DocumentItem | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [subjectFilter, setSubjectFilter] = useState("");
+  const [semesterFilter, setSemesterFilter] = useState("");
   const [fileTypeFilter, setFileTypeFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [subjects, setSubjects] = useState<SubjectItem[]>([]);
@@ -835,11 +836,16 @@ export default function NewLibraryPage() {
 
   const showSearchMode = Boolean(searchQuery.trim() || subjectFilter.trim());
   const hasActiveFilters = Boolean(
-    showSearchMode || fileTypeFilter || statusFilter,
+    showSearchMode || semesterFilter || fileTypeFilter || statusFilter,
   );
 
   const subjectById = useMemo(
     () => new Map(subjects.map((subject) => [subject._id, subject])),
+    [subjects],
+  );
+
+  const uniqueSemesters = useMemo(
+    () => Array.from(new Set(subjects.map((s) => s.semester).filter(Boolean))).sort(),
     [subjects],
   );
 
@@ -871,9 +877,17 @@ export default function NewLibraryPage() {
           return false;
         }
 
+        if (semesterFilter) {
+          const documentSubjectId = typeof document.subject === "object" ? document.subject?._id : document.subjectId;
+          const subject = documentSubjectId ? subjectById.get(documentSubjectId) : null;
+          if (subject?.semester !== semesterFilter) {
+            return false;
+          }
+        }
+
         return true;
       }),
-    [fileTypeFilter, sortedDocuments, statusFilter],
+    [fileTypeFilter, sortedDocuments, statusFilter, semesterFilter, subjectById],
   );
 
   const allVisibleSelected =
@@ -883,6 +897,7 @@ export default function NewLibraryPage() {
   function clearFilters() {
     setSearchQuery("");
     setSubjectFilter("");
+    setSemesterFilter("");
     setFileTypeFilter("");
     setStatusFilter("");
     setSelectedIds([]);
@@ -1258,8 +1273,8 @@ export default function NewLibraryPage() {
           </div>
 
           <div className="flex flex-col gap-3 border-y border-border/70 py-4">
-            <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center">
-              <InputGroup className="min-w-0 bg-background lg:max-w-xl">
+            <div className="flex items-center gap-3 overflow-x-auto pb-1 -mb-1 w-full">
+              <InputGroup className="min-w-[260px] max-w-sm flex-1 bg-background">
                 <InputGroupAddon align="inline-start">
                   <SearchIcon aria-hidden="true" />
                 </InputGroupAddon>
@@ -1289,8 +1304,8 @@ export default function NewLibraryPage() {
                 )}
               </InputGroup>
 
-              <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-                <span className="inline-flex h-9 items-center gap-2 text-sm font-medium text-muted-foreground">
+              <div className="flex items-center gap-2 flex-nowrap shrink-0">
+                <span className="inline-flex h-9 items-center gap-2 text-sm font-medium text-muted-foreground whitespace-nowrap">
                   <ListFilter aria-hidden="true" className="size-4" />
                   Filters
                 </span>
@@ -1308,6 +1323,23 @@ export default function NewLibraryPage() {
                   {subjects.map((subject) => (
                     <option key={subject._id} value={subject._id}>
                       {[subject.code, subject.name].filter(Boolean).join(" ")}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  aria-label="Filter by semester"
+                  className="h-9 min-w-32 flex-1 rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 sm:flex-none"
+                  onChange={(event) => {
+                    setSemesterFilter(event.target.value);
+                    setSelectedIds([]);
+                  }}
+                  value={semesterFilter}
+                >
+                  <option value="">All semesters</option>
+                  {uniqueSemesters.map((sem) => (
+                    <option key={sem as string} value={sem as string}>
+                      Semester {sem}
                     </option>
                   ))}
                 </select>
