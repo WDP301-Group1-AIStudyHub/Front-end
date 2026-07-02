@@ -2,9 +2,12 @@ import type { ApiResponse } from '../types/auth'
 import type {
   DocumentDetail,
   DocumentItem,
+  DocumentShare,
+  DocumentSharePermission,
   DocumentSubject,
   DocumentVersion,
   DocumentsResponse,
+  UpdateSharedDocumentProfilePayload,
   UpdateDocumentPayload,
   UploadDocumentPayload,
   UploadSession,
@@ -28,7 +31,7 @@ export class DocumentApiError extends Error {
 
 type RequestOptions = {
   body?: BodyInit | unknown
-  method?: 'GET' | 'POST' | 'PUT' | 'DELETE'
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 }
 
 function authHeaders(body?: BodyInit | unknown): Headers {
@@ -136,8 +139,9 @@ function normalizeSubject(value: unknown): DocumentSubject | null {
 }
 
 function normalizeDocument(value: DocumentItem): DocumentItem {
+  const personalSubject = normalizeSubject(value.personalSubject)
   const populatedSubject =
-    normalizeSubject(value.subject) || normalizeSubject(value.subjectId)
+    personalSubject || normalizeSubject(value.subject) || normalizeSubject(value.subjectId)
   const id = value.id || value._id || ''
 
   return {
@@ -156,6 +160,11 @@ function normalizeDocument(value: DocumentItem): DocumentItem {
     uploadedBy: value.uploadedBy || '',
     createdAt: value.createdAt || '',
     updatedAt: value.updatedAt || value.createdAt || '',
+    accessRole: value.accessRole,
+    isShared: Boolean(value.isShared),
+    sharedBy: value.sharedBy,
+    personalSubjectId: value.personalSubjectId,
+    personalSubject,
   }
 }
 
@@ -166,6 +175,11 @@ function normalizeDocuments(documents: DocumentsResponse): DocumentsResponse {
 export async function listDocuments(): Promise<DocumentsResponse> {
   const response = await request<unknown>('/api/documents?limit=100')
   return normalizeDocuments(unwrapDocumentList(response, 'Document list response was empty'))
+}
+
+export async function listSharedWithMe(): Promise<DocumentsResponse> {
+  const response = await request<unknown>('/api/documents/shared-with-me?limit=100')
+  return normalizeDocuments(unwrapDocumentList(response, 'Shared document list response was empty'))
 }
 
 export async function searchDocuments({
@@ -193,7 +207,7 @@ export async function searchDocuments({
 
   const query = params.toString()
   const response = await request<unknown>(
-    query ? `/api/documents/search?${query}` : '/api/documents',
+    query ? `/api/documents?${query}&limit=100` : '/api/documents?limit=100',
   )
 
   return normalizeDocuments(unwrapDocumentList(response, 'Document search response was empty'))
@@ -214,6 +228,30 @@ export async function listDocumentVersions(
   )
 
   return unwrapData(response, 'Document versions response was empty')
+}
+
+export async function uploadDocumentVersion(
+  documentId: string,
+  payload: {
+    file: File
+    uploadMode: 'OVERRIDE' | 'APPEND'
+    uploadReason?: string
+    makeActive: boolean
+  },
+): Promise<DocumentVersion> {
+  const formData = new FormData()
+  formData.set('file', payload.file)
+  formData.set('uploadMode', payload.uploadMode)
+  formData.set('makeActive', String(payload.makeActive))
+  if (payload.uploadReason?.trim()) {
+    formData.set('uploadReason', payload.uploadReason.trim())
+  }
+
+  const response = await request<DocumentVersion>(
+    `/api/documents/${documentId}/versions`,
+    { body: formData, method: 'POST' },
+  )
+  return unwrapData(response, 'Uploaded version response was empty')
 }
 
 export async function uploadDocument({
@@ -259,8 +297,80 @@ export async function updateDocument(
   return normalizeDocument(unwrapData(response, 'Updated document response was empty'))
 }
 
+export async function updateSharedDocumentProfile(
+  documentId: string,
+  payload: UpdateSharedDocumentProfilePayload,
+): Promise<DocumentItem> {
+  const response = await request<DocumentItem>(
+    `/api/documents/${documentId}/shared-profile`,
+    {
+      body: payload,
+      method: 'PATCH',
+    },
+  )
+
+  return normalizeDocument(unwrapData(response, 'Updated shared document response was empty'))
+}
+
 export async function deleteDocument(documentId: string): Promise<void> {
   await request<void>(`/api/documents/${documentId}`, {
+    method: 'DELETE',
+  })
+}
+
+export async function getDocumentDownloadUrl(
+  documentId: string,
+): Promise<{ downloadUrl: string; fileName?: string }> {
+  const response = await request<{ downloadUrl: string; fileName?: string }>(
+    `/api/documents/${documentId}/download`,
+  )
+
+  return unwrapData(response, 'Document download response was empty')
+}
+
+export async function downloadDocumentFile(document: DocumentItem): Promise<void> {
+  const { downloadUrl } = await getDocumentDownloadUrl(document.id)
+  window.open(downloadUrl, '_blank', 'noopener,noreferrer')
+}
+
+export async function listDocumentShares(documentId: string): Promise<DocumentShare[]> {
+  const response = await request<DocumentShare[]>(`/api/documents/${documentId}/share`)
+  return unwrapData(response, 'Document shares response was empty')
+}
+
+export async function shareDocument(
+  documentId: string,
+  payload: { email: string; permission: DocumentSharePermission },
+): Promise<DocumentShare> {
+  const response = await request<DocumentShare>(`/api/documents/${documentId}/share`, {
+    body: payload,
+    method: 'POST',
+  })
+
+  return unwrapData(response, 'Document share response was empty')
+}
+
+export async function updateDocumentShare(
+  documentId: string,
+  shareId: string,
+  permission: DocumentSharePermission,
+): Promise<DocumentShare> {
+  const response = await request<DocumentShare>(
+    `/api/documents/${documentId}/share/${shareId}`,
+    {
+      body: { permission },
+      method: 'PATCH',
+    },
+  )
+
+  return unwrapData(response, 'Document share update response was empty')
+}
+
+export async function revokeDocumentShare(
+  documentId: string,
+  shareId: string,
+): Promise<void> {
+  await request<void>(`/api/documents/${documentId}/share/${shareId}`, {
     method: 'DELETE',
   })
 }
