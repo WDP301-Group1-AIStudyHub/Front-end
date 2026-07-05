@@ -20,6 +20,13 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { Thread } from "@/components/assistant-ui/thread";
 import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { CelestialInlineLoader, CelestialLoader, LoadingState } from "../components/shared/CelestialLoading";
 import { ChatApiError, askChat, getChatThreadById } from "../services/chatApi";
 import { listDocuments } from "../services/documentApi";
@@ -97,6 +104,7 @@ export default function NewAIChatboxPage() {
   const [openSubjects, setOpenSubjects] = useState<Set<string>>(new Set());
   const [contextPanelWidth, setContextPanelWidth] = useState(340);
   const [isResizingContext, setIsResizingContext] = useState(false);
+  const [isMobileContextOpen, setIsMobileContextOpen] = useState(false);
 
   // History loading
   const [historyMessages, setHistoryMessages] = useState<readonly ThreadMessageLike[]>([]);
@@ -398,11 +406,11 @@ export default function NewAIChatboxPage() {
 
   return (
     <main className="botanical-page flex h-svh min-h-0 flex-col overflow-hidden p-3 pb-24 text-foreground sm:p-5 sm:pb-24 lg:pb-5">
-      <header className="botanical-card border-border/80 px-5 py-4 sm:px-8">
+      <header className="border-b border-border px-2 pb-4 sm:px-3">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-3">
             <div>
-              <h1 className="moonlit-title text-xl font-semibold tracking-normal">
+              <h1 className="moonlit-title page-title page-title--compact">
                 AI Study Chat
               </h1>
               <p className="text-sm text-muted-foreground">
@@ -416,17 +424,26 @@ export default function NewAIChatboxPage() {
               <Button
                 variant="outline"
                 size="sm"
-                className="inline-flex items-center gap-2 px-3 py-2 border-primary/30 text-primary hover:bg-primary/10 rounded-xl"
+                className="inline-flex items-center gap-2 border-primary/30 px-3 py-2 text-primary hover:bg-primary/10"
                 onClick={() => navigate("/aichatbox")}
               >
                 <Plus className="size-4" />
-                Tạo trò chuyện mới
+                New conversation
               </Button>
             )}
             <Button
+              className="inline-flex items-center gap-2 px-3 py-2 lg:hidden"
+              onClick={() => setIsMobileContextOpen(true)}
+              size="sm"
+              variant="outline"
+            >
+              <Library className="size-4" aria-hidden="true" />
+              Sources
+            </Button>
+            <Button
               variant="outline"
               size="sm"
-              className="inline-flex items-center gap-2 px-3 py-2"
+              className="hidden items-center gap-2 px-3 py-2 lg:inline-flex"
             >
               <Library className="size-4 text-foreground" aria-hidden="true" />
               {selectedContextLabel}
@@ -434,7 +451,7 @@ export default function NewAIChatboxPage() {
             <Button
               variant="default"
               size="sm"
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl"
+              className="inline-flex items-center gap-2 px-3 py-2"
               title="DR-RAG is the active retrieval pipeline"
             >
               {isThinking ? (
@@ -479,10 +496,10 @@ export default function NewAIChatboxPage() {
           role="separator"
         />
 
-        <aside className="hidden min-h-0 border-l border-border/80 bg-card/45 p-5 lg:block">
+        <aside className="hidden min-h-0 border-l border-border bg-[#f7f8f7] p-5 lg:block">
           <div className="flex h-full flex-col gap-5 overflow-y-auto">
             {/* Document context selector */}
-            <section className="moonlit-card tone-surface tone-sapphire p-4">
+            <section className="border-b border-border pb-5">
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="text-sm font-medium text-card-foreground">
                   Study Context
@@ -609,7 +626,7 @@ export default function NewAIChatboxPage() {
                                         return (
                                           <label
                                             key={doc.id}
-                                            className={`flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors border-l-2 ${
+                                            className={`flex w-full cursor-pointer items-center gap-2 rounded-md border px-2 py-1.5 text-left transition-colors ${
                                               isSelected
                                                 ? "font-medium"
                                                 : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
@@ -619,10 +636,10 @@ export default function NewAIChatboxPage() {
                                                 ? {
                                                     backgroundColor: `color-mix(in srgb, ${subjectColor} 14%, transparent)`,
                                                     color: subjectColor,
-                                                    borderLeftColor: subjectColor,
+                                                    borderColor: `color-mix(in srgb, ${subjectColor} 55%, transparent)`,
                                                   }
                                                 : {
-                                                    borderLeftColor: "transparent",
+                                                    borderColor: "transparent",
                                                   }
                                             }
                                           >
@@ -668,7 +685,7 @@ export default function NewAIChatboxPage() {
 
             {/* Sources returned by the last response */}
             {lastSources.length > 0 && (
-              <section className="moonlit-card tone-surface tone-cyan p-4">
+              <section className="border-b border-border pb-5">
                 <div className="mb-3 flex items-center gap-2 text-sm font-medium text-card-foreground">
                   <Search className="size-4 text-foreground" aria-hidden="true" />
                   Retrieved sources
@@ -700,7 +717,7 @@ export default function NewAIChatboxPage() {
 
             {/* RAG evaluation metrics */}
             {lastEvaluation && (
-              <section className="moonlit-card tone-surface tone-gold p-4">
+              <section className="border-b border-border pb-5">
                 <div className="flex items-center gap-2 text-sm font-medium text-card-foreground">
                   <Zap className="size-4 text-foreground" aria-hidden="true" />
                   RAG evaluation
@@ -749,7 +766,7 @@ export default function NewAIChatboxPage() {
 
             {/* How-to hint shown before any response */}
             {!lastEvaluation && (
-              <section className="moonlit-card tone-surface tone-emerald p-4">
+              <section className="border-b border-border pb-5">
                 <div className="flex items-center gap-2 text-sm font-medium text-card-foreground">
                   <BookOpen
                     className="size-4 text-foreground"
@@ -769,6 +786,51 @@ export default function NewAIChatboxPage() {
           </div>
         </aside>
       </div>
+
+      <Sheet open={isMobileContextOpen} onOpenChange={setIsMobileContextOpen}>
+        <SheetContent className="w-[min(92vw,420px)] overflow-y-auto" side="right">
+          <SheetHeader>
+            <SheetTitle>Study context</SheetTitle>
+            <SheetDescription>Select the documents AI can use for this conversation.</SheetDescription>
+          </SheetHeader>
+          <div className="mt-6 space-y-2">
+            <button
+              className={`flex w-full items-center justify-between rounded-md border px-3 py-3 text-left text-sm ${
+                selectedDocIds.length === 0
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border bg-white"
+              }`}
+              onClick={() => setSelectedDocIds([])}
+              type="button"
+            >
+              <span className="font-medium">All documents</span>
+              <span className="text-xs text-muted-foreground">{documents.length}</span>
+            </button>
+            {documents.map((document) => {
+              const isSelected = selectedDocIds.includes(document.id);
+              return (
+                <label
+                  className={`flex cursor-pointer items-center gap-3 rounded-md border px-3 py-3 ${
+                    isSelected ? "border-primary bg-primary/10" : "border-border bg-white"
+                  }`}
+                  key={document.id}
+                >
+                  <input
+                    checked={isSelected}
+                    className="size-4 accent-primary"
+                    onChange={() => toggleDocumentSelection(document)}
+                    type="checkbox"
+                  />
+                  <FileText className="size-4 shrink-0 text-primary" aria-hidden="true" />
+                  <span className="min-w-0 flex-1 truncate text-sm font-medium">
+                    {document.title || document.fileName}
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        </SheetContent>
+      </Sheet>
     </main>
   );
 }

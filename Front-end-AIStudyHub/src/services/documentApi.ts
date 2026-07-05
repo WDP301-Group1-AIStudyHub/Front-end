@@ -165,6 +165,12 @@ function normalizeDocument(value: DocumentItem): DocumentItem {
     sharedBy: value.sharedBy,
     personalSubjectId: value.personalSubjectId,
     personalSubject,
+    deletedAt: value.deletedAt ?? null,
+    deletedBy: value.deletedBy ?? null,
+    trashExpiresAt: value.trashExpiresAt ?? null,
+    trashDaysRemaining: value.trashDaysRemaining ?? null,
+    isStarred: Boolean(value.isStarred),
+    starredAt: value.starredAt ?? null,
   }
 }
 
@@ -180,6 +186,16 @@ export async function listDocuments(): Promise<DocumentsResponse> {
 export async function listSharedWithMe(): Promise<DocumentsResponse> {
   const response = await request<unknown>('/api/documents/shared-with-me?limit=100')
   return normalizeDocuments(unwrapDocumentList(response, 'Shared document list response was empty'))
+}
+
+export async function listStarredDocuments(): Promise<DocumentsResponse> {
+  const response = await request<unknown>('/api/documents/starred?limit=100')
+  return normalizeDocuments(unwrapDocumentList(response, 'Starred document list response was empty'))
+}
+
+export async function listTrashDocuments(): Promise<DocumentsResponse> {
+  const response = await request<unknown>('/api/documents/trash?limit=100')
+  return normalizeDocuments(unwrapDocumentList(response, 'Trash document list response was empty'))
 }
 
 export async function searchDocuments({
@@ -318,6 +334,37 @@ export async function deleteDocument(documentId: string): Promise<void> {
   })
 }
 
+export async function restoreDocument(documentId: string): Promise<DocumentItem> {
+  const response = await request<DocumentItem>(`/api/documents/${documentId}/restore`, {
+    method: 'POST',
+  })
+  return normalizeDocument(unwrapData(response, 'Restored document response was empty'))
+}
+
+export async function deleteDocumentPermanently(documentId: string): Promise<void> {
+  await request<void>(`/api/documents/${documentId}/permanent`, {
+    method: 'DELETE',
+  })
+}
+
+export async function emptyTrash(): Promise<{ deletedCount: number }> {
+  const response = await request<{ deletedCount: number }>('/api/documents/trash/empty', {
+    method: 'DELETE',
+  })
+  return unwrapData(response, 'Empty trash response was empty')
+}
+
+export async function setDocumentStar(
+  documentId: string,
+  starred: boolean,
+): Promise<DocumentItem> {
+  const response = await request<DocumentItem>(`/api/documents/${documentId}/star`, {
+    body: { starred },
+    method: 'PATCH',
+  })
+  return normalizeDocument(unwrapData(response, 'Document star response was empty'))
+}
+
 export async function getDocumentDownloadUrl(
   documentId: string,
 ): Promise<{ downloadUrl: string; fileName?: string }> {
@@ -373,6 +420,18 @@ export async function revokeDocumentShare(
   await request<void>(`/api/documents/${documentId}/share/${shareId}`, {
     method: 'DELETE',
   })
+}
+
+export async function resendDocumentShareEmail(
+  documentId: string,
+  shareId: string,
+): Promise<DocumentShare> {
+  const response = await request<DocumentShare>(
+    `/api/documents/${documentId}/share/${shareId}/resend-email`,
+    { method: 'POST' },
+  )
+
+  return unwrapData(response, 'Resend share email response was empty')
 }
 
 export async function getUploadSession(sessionId: string): Promise<UploadSession> {

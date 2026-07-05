@@ -16,6 +16,8 @@ const ForgotPasswordPage = lazy(() => import('./pages/auth/ForgotPasswordPage'))
 const ResetPasswordPage = lazy(() => import('./pages/auth/ResetPasswordPage'));
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const NewLibraryPage = lazy(() => import('./pages/new-LibraryPage'));
+const StarredDocumentsPage = lazy(() => import('./pages/StarredDocumentsPage'));
+const TrashPage = lazy(() => import('./pages/TrashPage'));
 const DocumentDetailPage = lazy(() => import('./pages/DocumentDetailPage'));
 const StudyMaterialsPage = lazy(() => import('./pages/StudyMaterialsPage'));
 const StudyMaterialsListPage = lazy(() => import('./pages/StudyMaterialsListPage'));
@@ -183,6 +185,14 @@ function App() {
           <Route
             path="/library"
             element={<ProtectedRoute userOnly>{() => routeWithShell(<NewLibraryPage />)}</ProtectedRoute>}
+          />
+          <Route
+            path="/starred"
+            element={<ProtectedRoute userOnly>{() => routeWithShell(<StarredDocumentsPage />)}</ProtectedRoute>}
+          />
+          <Route
+            path="/trash"
+            element={<ProtectedRoute userOnly>{() => routeWithShell(<TrashPage />)}</ProtectedRoute>}
           />
           <Route
             path="/documents/:id"

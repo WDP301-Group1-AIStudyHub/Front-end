@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Archive, Bell, Database, FileText, Plus, UploadCloud, Leaf, Sparkles } from 'lucide-react'
+import { Archive, Bell, Database, FileText, Plus, UploadCloud, Sparkles } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -190,12 +190,12 @@ export default function DashboardPage() {
 
       <header className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <p className="botanical-kicker">Garden workspace</p>
-          <h1 className="moonlit-title mt-2 text-3xl leading-tight md:text-5xl">
+          <p className="botanical-kicker">Workspace overview</p>
+          <h1 className="moonlit-title page-title mt-2">
             Dashboard
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            Manage your library, ask questions against documents, and review evaluation signals in a bright botanical workspace.
+            Manage documents, continue recent study work, and review AI activity from one workspace.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -228,7 +228,7 @@ export default function DashboardPage() {
             ) : (
               <p className="text-4xl font-bold tracking-tight text-foreground">{formatStorageSize(storageUsedBytes)}</p>
             )}
-            <p className="mt-1 text-xs text-muted-foreground">of 10 GB organic limit used</p>
+            <p className="mt-1 text-xs text-muted-foreground">of 10 GB workspace storage used</p>
           </div>
 
           <div className="mt-8">
@@ -241,13 +241,6 @@ export default function DashboardPage() {
                     className="h-full rounded-full bg-primary transition-all duration-700 ease-out" 
                     style={{ width: `${storagePercent.toFixed(1)}%` }} 
                   />
-                </div>
-                {/* Sliding leaf indicator */}
-                <div 
-                  className="absolute top-1/2 -translate-y-1/2 -ml-2 transition-all duration-700 ease-out" 
-                  style={{ left: `${storagePercent.toFixed(1)}%` }}
-                >
-                  <Leaf className="size-4 text-primary bg-card rounded-full p-0.5 shadow-sm border border-border/80 rotate-[45deg]" />
                 </div>
               </div>
             )}
@@ -384,7 +377,7 @@ export default function DashboardPage() {
 
           {/* Subject clusters list */}
           <article className="botanical-bento p-5">
-            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Subject clusters</span>
+            <span className="text-xs font-semibold text-muted-foreground">Documents by subject</span>
             <div className="mt-5 space-y-2">
               {loading ? (
                 Array.from({ length: 3 }).map((_, i) => (
@@ -405,7 +398,7 @@ export default function DashboardPage() {
               )}
             </div>
             <Button asChild className="mt-5 w-full rounded-xl" variant="outline">
-              <Link to="/library">Explore all clusters</Link>
+              <Link to="/subjects">Manage subjects</Link>
             </Button>
           </article>
         </aside>

@@ -19,9 +19,11 @@ import {
   Brain,
   HelpCircle,
   X,
+  Target,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getAllProgress, type StudyProgressData } from "../hooks/useStudyProgress";
 
 export default function StudyMaterialsListPage() {
   const location = useLocation();
@@ -30,6 +32,9 @@ export default function StudyMaterialsListPage() {
   const [materials, setMaterials] = useState<StudyMaterial[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  const [progressData, setProgressData] = useState<Record<string, StudyProgressData>>({});
+
   
   // Filters state
   const [searchTerm, setSearchTerm] = useState("");
@@ -89,9 +94,15 @@ export default function StudyMaterialsListPage() {
     };
 
     fetchMaterials();
+    
+    // Refresh progress data on focus or mount
+    const handleFocus = () => setProgressData(getAllProgress());
+    window.addEventListener("focus", handleFocus);
+    setProgressData(getAllProgress());
 
     return () => {
       isCancelled = true;
+      window.removeEventListener("focus", handleFocus);
     };
   }, []);
 
@@ -225,7 +236,7 @@ export default function StudyMaterialsListPage() {
             <Brain className="size-4 text-primary" />
             AI Practice Hub
           </span>
-          <h1 className="moonlit-title break-words text-3xl font-black tracking-tight md:text-5xl">
+          <h1 className="moonlit-title page-title break-words">
             Study Materials
           </h1>
           <p className="text-sm text-muted-foreground max-w-xl leading-relaxed">
@@ -233,19 +244,18 @@ export default function StudyMaterialsListPage() {
           </p>
         </header>
 
-        {/* Action Buttons Cards (Image-2 Style) */}
-        <section className="grid gap-4 sm:grid-cols-2 mt-2">
+        <section className="flex flex-col gap-2 border-y border-border py-4 sm:flex-row">
           {/* MCQ Button */}
           <button
             onClick={() => handleOpenCustomise("MCQ")}
-            className="flex items-start gap-4 p-5 rounded-2xl border border-border bg-card text-left hover:border-primary/60 hover:shadow-md hover:bg-muted/10 transition-all group focus:outline-none focus:ring-1 focus:ring-primary"
+            className="group flex min-w-0 flex-1 items-center gap-3 rounded-md border border-border bg-white px-4 py-3 text-left transition-colors hover:border-primary/60 hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary"
           >
-            <div className="rounded-xl bg-blue-500/10 p-3 text-blue-600 dark:text-blue-400 group-hover:bg-blue-500/20 transition-colors">
-              <HelpCircle className="size-6" />
+            <div className="rounded-md bg-blue-500/10 p-2 text-blue-700 transition-colors">
+              <HelpCircle className="size-5" />
             </div>
             <div className="space-y-1">
               <h3 className="text-base font-bold text-foreground group-hover:text-primary transition-colors">Create MCQ Quiz</h3>
-              <p className="text-xs text-muted-foreground leading-relaxed">
+              <p className="line-clamp-1 text-xs leading-relaxed text-muted-foreground">
                 Generate practice quizzes with multiple-choice questions, detailed explanations, and score tracking.
               </p>
             </div>
@@ -254,14 +264,14 @@ export default function StudyMaterialsListPage() {
           {/* Flashcard Button */}
           <button
             onClick={() => handleOpenCustomise("FLASHCARD")}
-            className="flex items-start gap-4 p-5 rounded-2xl border border-border bg-card text-left hover:border-primary/60 hover:shadow-md hover:bg-muted/10 transition-all group focus:outline-none focus:ring-1 focus:ring-primary"
+            className="group flex min-w-0 flex-1 items-center gap-3 rounded-md border border-border bg-white px-4 py-3 text-left transition-colors hover:border-primary/60 hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary"
           >
-            <div className="rounded-xl bg-purple-500/10 p-3 text-purple-600 dark:text-purple-400 group-hover:bg-purple-500/20 transition-colors">
-              <Brain className="size-6" />
+            <div className="rounded-md bg-purple-500/10 p-2 text-purple-700 transition-colors">
+              <Brain className="size-5" />
             </div>
             <div className="space-y-1">
               <h3 className="text-base font-bold text-foreground group-hover:text-primary transition-colors">Create Flashcard Deck</h3>
-              <p className="text-xs text-muted-foreground leading-relaxed">
+              <p className="line-clamp-1 text-xs leading-relaxed text-muted-foreground">
                 Generate flip flashcards for active recall and studying vocabulary or key concepts.
               </p>
             </div>
@@ -375,7 +385,20 @@ export default function StudyMaterialsListPage() {
                           {mat.title}
                         </h3>
 
-                        <p className="text-2xs text-muted-foreground">
+                        {isSuccess && progressData[mat._id || mat.id] && (
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/20 px-2 py-1.5 rounded-lg border border-border/50">
+                            <Target className="size-3.5 text-primary" />
+                            {progressData[mat._id || mat.id].isFinished ? (
+                              <span className="font-bold text-emerald-600 dark:text-emerald-400">Completed</span>
+                            ) : (
+                              <span className="font-medium text-foreground">
+                                In Progress: <span className="font-bold">{progressData[mat._id || mat.id].currentIndex}</span> / {progressData[mat._id || mat.id].totalItems}
+                              </span>
+                            )}
+                          </div>
+                        )}
+
+                        <p className="text-2xs text-muted-foreground mt-1">
                           Generated on {formatDate(mat.createdAt)}
                         </p>
                       </div>

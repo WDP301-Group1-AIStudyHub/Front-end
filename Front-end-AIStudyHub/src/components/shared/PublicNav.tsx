@@ -11,13 +11,13 @@ type PublicNavProps = {
 export default function PublicNav({
   ctaHref = '/register',
   ctaLabel = 'Sign Up',
-  dashboardHref = '#dashboard',
+  dashboardHref = '/#workflow',
   showLogin = true,
 }: PublicNavProps) {
   return (
-    <nav className="public-nav fixed left-0 right-0 top-4 z-50">
-      <div className="mx-auto flex w-[calc(100%-32px)] max-w-[1180px] items-center justify-between gap-4 rounded-[20px] border border-border/80 bg-card/90 px-4 py-3 text-foreground shadow-sm backdrop-blur-md transition-all sm:px-5">
-        <a className="flex min-w-0 items-center gap-2 transition-transform hover:scale-[1.01] active:scale-[0.99]" href="/">
+    <nav className="public-nav fixed inset-x-0 top-0 z-50 border-b border-border bg-white/95">
+      <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between gap-4 px-5 text-foreground sm:px-8 lg:px-12">
+        <a className="flex min-w-0 items-center gap-2" href="/">
           <BrandLogo />
         </a>
 
@@ -29,7 +29,7 @@ export default function PublicNav({
             <a
               key={item.label}
               href={item.href}
-              className="inline-flex min-h-9 items-center rounded-full border border-transparent px-3.5 text-sm font-semibold text-muted-foreground transition-all hover:border-border/70 hover:bg-muted hover:text-foreground"
+              className="inline-flex min-h-9 items-center rounded-md border border-transparent px-3.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
               <span>{item.label}</span>
             </a>
@@ -40,14 +40,14 @@ export default function PublicNav({
           {showLogin ? (
             <a
               href="/login"
-              className="hidden rounded-xl px-3 py-2 text-sm font-medium text-muted-foreground transition-all hover:bg-muted/60 hover:text-foreground sm:inline-flex"
+              className="hidden rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:inline-flex"
             >
               Login
             </a>
           ) : null}
           <a
             href={ctaHref}
-            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-primary bg-primary px-4 text-sm font-semibold text-primary-foreground transition-all hover:bg-[color-mix(in_oklab,var(--primary),black_12%)] active:scale-[0.98] sm:px-5"
+            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-primary bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-[color-mix(in_oklab,var(--primary),black_12%)] active:translate-y-px sm:px-5"
           >
             {ctaLabel}
             <ArrowRight className="size-4" aria-hidden="true" />

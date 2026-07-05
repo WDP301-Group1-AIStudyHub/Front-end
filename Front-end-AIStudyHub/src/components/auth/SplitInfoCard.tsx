@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import AuthIcon from './AuthIcon'
+import { CheckCircle2, FileText, LockKeyhole } from 'lucide-react'
 
 export default function SplitInfoCard({
   eyebrow,
@@ -12,23 +12,20 @@ export default function SplitInfoCard({
   variant: 'lost' | 'found'
 }) {
   return (
-    <aside className="botanical-bento flex min-h-[430px] flex-col justify-between p-10 md:p-12">
-      <div className="relative z-10">
-        <span className="botanical-kicker mb-6">{eyebrow}</span>
-        <h1 className="moonlit-title m-0 mb-6 text-[clamp(42px,5vw,58px)] leading-[0.98]">{title}</h1>
+    <aside className="flex min-h-[430px] flex-col justify-between border-y border-border py-10 md:py-12">
+      <div>
+        <span className="mb-6 block text-sm font-semibold text-primary">{eyebrow}</span>
+        <h1 className="m-0 mb-6 text-4xl font-semibold leading-tight tracking-[-0.03em]">{title}</h1>
         <p className="m-0 max-w-[330px] text-lg leading-[1.6] text-muted-foreground">
           Recover access to your study library and continue working with your saved material.
         </p>
       </div>
-      <div className="moonlit-media-frame relative z-10 my-8 h-40">
-        <img
-          alt="Quiet botanical library shelf"
-          className="moonlit-image"
-          src="/landing-assets/moonlit-library-still.webp"
-        />
+      <div className="my-8 divide-y divide-border border-y border-border text-sm">
+        <div className="flex items-center gap-3 py-4"><LockKeyhole className="size-4 text-primary" /> Secure reset link</div>
+        <div className="flex items-center gap-3 py-4"><FileText className="size-4 text-primary" /> Your documents remain unchanged</div>
       </div>
-      <div className="relative z-10 flex items-center gap-[10px] text-xs font-semibold text-muted-foreground">
-        <AuthIcon name="auto_awesome" className="w-5 h-5" />
+      <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+        <CheckCircle2 className="size-4 text-primary" />
         <span>{footer}</span>
       </div>
     </aside>
