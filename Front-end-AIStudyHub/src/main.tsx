@@ -6,7 +6,6 @@ import "./styles/redesign.css";
 import App from "./App.tsx";
 import { ToastProvider } from "./hooks/useToast.tsx";
 import { ThemeProvider } from "./theme.tsx";
-import { Agentation } from "agentation";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -16,7 +15,6 @@ createRoot(document.getElementById("root")!).render(
           <App />
         </ToastProvider>
       </ThemeProvider>
-      <Agentation />
     </BrowserRouter>
   </StrictMode>,
 );
