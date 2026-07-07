@@ -1,7 +1,7 @@
 import type { ApiResponse } from '../types/auth'
 import type {
+  AgentEvent,
   AskChatPayload,
-  AskChatResponse,
   BenchmarkQuestion,
   BenchmarkQuestionsResponse,
   BenchmarkRunResult,
@@ -102,19 +102,63 @@ async function request<T>(
 }
 
 // ─── Chat ───────────────────────────────────────────────────────────────────
+// Agentic engine only: Gemini decides when and how to search the documents
+// (tool-calling loop). The web app streams events; the non-stream
+// /api/agent/ask and legacy /api/chat/ask routes still exist on the backend
+// for the mobile app and the benchmark suite.
 
-export async function askChat(
+export async function* askAgentStream(
   payload: AskChatPayload,
   signal?: AbortSignal,
-): Promise<AskChatResponse> {
-  const res = await request<AskChatResponse>('/api/chat/ask', {
+): AsyncGenerator<AgentEvent> {
+  const token = getStoredToken()
+  const response = await fetch(`${API_BASE_URL}/api/agent/ask/stream`, {
     method: 'POST',
-    body: payload,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(payload),
     signal,
   })
-  if (!res.data) throw new ChatApiError('Empty response from chat', 500)
-  return res.data
+
+  if (!response.ok) {
+    const errorPayload = await response.json().catch(() => ({}))
+    throw new ChatApiError(errorPayload.message || 'Streaming request failed', response.status)
+  }
+
+  const reader = response.body?.getReader()
+  if (!reader) throw new Error('Response body is not readable')
+
+  const decoder = new TextDecoder()
+  let buffer = ''
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n')
+      buffer = lines.pop() || ''
+
+      for (const line of lines) {
+        const trimmed = line.trim()
+        if (trimmed.startsWith('data: ')) {
+          const jsonStr = trimmed.slice(6)
+          try {
+            yield JSON.parse(jsonStr) as AgentEvent
+          } catch (e) {
+            console.error('Failed to parse SSE JSON', e)
+          }
+        }
+      }
+    }
+  } finally {
+    reader.releaseLock()
+  }
 }
+
 
 export async function getChatHistory(): Promise<ChatHistoryListResponse> {
   const res = await request<ChatHistoryListResponse | { histories: ChatHistoryItem[]; total: number }>('/api/chat/history')
@@ -137,8 +181,13 @@ export async function deleteChatHistory(id: string): Promise<void> {
   await request(`/api/chat/history/${id}`, { method: 'DELETE' })
 }
 
-export async function listChatThreads(): Promise<ChatThreadItem[]> {
-  const res = await request<ChatThreadListResponse | ChatThreadItem[]>('/api/chat/threads')
+export async function listChatThreads(
+  status?: 'ACTIVE' | 'ARCHIVED',
+): Promise<ChatThreadItem[]> {
+  const query = status ? `?status=${status}` : ''
+  const res = await request<ChatThreadListResponse | ChatThreadItem[]>(
+    `/api/chat/threads${query}`,
+  )
   if (!res.data) return []
   if (Array.isArray(res.data)) return res.data
   return res.data.threads ?? []
