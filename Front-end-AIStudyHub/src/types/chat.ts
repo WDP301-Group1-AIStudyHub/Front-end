@@ -1,4 +1,4 @@
-export type RagMode = 'dr-rag'
+export type RagMode = 'dr-rag' | 'basic' | 'corrective' | 'agentic'
 export type DrRagSelectionStrategy = 'cfs-heuristic'
 export type ChatScope = 'single_document' | 'subject_all' | 'document_set' | 'library_all'
 
@@ -68,7 +68,27 @@ export interface AskChatResponse {
   rewrittenQuery?: string
   sources: ChatSource[]
   evaluation?: ChatEvaluation
+  // Present only on /api/agent/ask responses: the agent loop's decisions
+  agent?: {
+    steps: number
+    toolCalls: AgentToolCallSummary[]
+  }
 }
+
+export interface AgentToolCallSummary {
+  tool: string
+  input?: unknown
+  resultSummary: string
+}
+
+export type AgentEvent =
+  | { type: 'agent_step'; step: number }
+  | { type: 'tool_start'; tool: string; input: unknown }
+  | { type: 'tool_end'; tool: string; resultSummary: string }
+  | { type: 'grounding_check' }
+  | { type: 'artifact_created'; artifactId: string; artifactType: string; title: string }
+  | { type: 'final'; data: AskChatResponse }
+  | { type: 'error'; message: string }
 
 export interface ChatHistoryItem {
   id: string

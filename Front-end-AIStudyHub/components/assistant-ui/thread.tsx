@@ -48,55 +48,73 @@ import {
   RefreshCwIcon,
   SquareIcon,
   XIcon,
+  BookOpenIcon,
 } from "lucide-react";
+import { createContext, useContext } from "react";
 import type { FC } from "react";
 
 type SelectedDocInfo = {
   fileName: string;
-  subject?: string | { _id: string; name: string; description?: string; color?: string; code?: string };
+  subject?:
+    | string
+    | {
+        _id: string;
+        name: string;
+        description?: string;
+        color?: string;
+        code?: string;
+      };
   subjectColor?: string;
   semester?: string;
 };
 
+const SourcesCountContext = createContext<number>(0);
+
 export const Thread: FC<{
   selectedDoc?: SelectedDocInfo;
   onClearSelectedDoc?: () => void;
-}> = ({ selectedDoc, onClearSelectedDoc }) => {
+  sourcesCount?: number;
+}> = ({ selectedDoc, onClearSelectedDoc, sourcesCount = 0 }) => {
   return (
-    <ThreadPrimitive.Root
-      className="aui-root aui-thread-root @container flex h-full flex-col bg-background"
-      style={{
-        ["--thread-max-width" as string]: "44rem",
-        ["--composer-radius" as string]: "24px",
-        ["--composer-padding" as string]: "10px",
-      }}
-    >
-      <ThreadPrimitive.Viewport
-        turnAnchor="top"
-        data-slot="aui_thread-viewport"
-        className="relative flex flex-1 flex-col overflow-x-auto overflow-y-scroll scroll-smooth"
+    <SourcesCountContext.Provider value={sourcesCount}>
+      <ThreadPrimitive.Root
+        className="aui-root aui-thread-root @container flex h-full flex-col bg-background"
+        style={{
+          ["--thread-max-width" as string]: "44rem",
+          ["--composer-radius" as string]: "24px",
+          ["--composer-padding" as string]: "10px",
+        }}
       >
-        <div className="mx-auto flex w-full max-w-(--thread-max-width) flex-1 flex-col px-4 pt-4">
-          <AuiIf condition={(s) => s.thread.isEmpty}>
-            <ThreadWelcome />
-          </AuiIf>
+        <ThreadPrimitive.Viewport
+          turnAnchor="top"
+          data-slot="aui_thread-viewport"
+          className="relative flex flex-1 flex-col overflow-x-auto overflow-y-scroll scroll-smooth"
+        >
+          <div className="mx-auto flex w-full max-w-(--thread-max-width) flex-1 flex-col px-4 pt-4">
+            <AuiIf condition={(s) => s.thread.isEmpty}>
+              <ThreadWelcome />
+            </AuiIf>
 
-          <div
-            data-slot="aui_message-group"
-            className="mb-10 flex flex-col gap-y-8 empty:hidden"
-          >
-            <ThreadPrimitive.Messages>
-              {() => <ThreadMessage />}
-            </ThreadPrimitive.Messages>
+            <div
+              data-slot="aui_message-group"
+              className="mb-10 flex flex-col gap-y-8 empty:hidden"
+            >
+              <ThreadPrimitive.Messages>
+                {() => <ThreadMessage />}
+              </ThreadPrimitive.Messages>
+            </div>
+
+            <ThreadPrimitive.ViewportFooter className="aui-thread-viewport-footer sticky bottom-0 mt-auto flex flex-col gap-4 overflow-visible rounded-t-(--composer-radius) bg-background pb-4 md:pb-6">
+              <ThreadScrollToBottom />
+              <Composer
+                onClearSelectedDoc={onClearSelectedDoc}
+                selectedDoc={selectedDoc}
+              />
+            </ThreadPrimitive.ViewportFooter>
           </div>
-
-          <ThreadPrimitive.ViewportFooter className="aui-thread-viewport-footer sticky bottom-0 mt-auto flex flex-col gap-4 overflow-visible rounded-t-(--composer-radius) bg-background pb-4 md:pb-6">
-            <ThreadScrollToBottom />
-            <Composer onClearSelectedDoc={onClearSelectedDoc} selectedDoc={selectedDoc} />
-          </ThreadPrimitive.ViewportFooter>
-        </div>
-      </ThreadPrimitive.Viewport>
-    </ThreadPrimitive.Root>
+        </ThreadPrimitive.Viewport>
+      </ThreadPrimitive.Root>
+    </SourcesCountContext.Provider>
   );
 };
 
@@ -127,12 +145,20 @@ const ThreadWelcome: FC = () => {
   return (
     <div className="aui-thread-welcome-root my-auto flex grow flex-col">
       <div className="aui-thread-welcome-center flex w-full grow flex-col items-center justify-center">
-        <div className="aui-thread-welcome-message flex size-full flex-col justify-center px-4">
-          <h1 className="aui-thread-welcome-message-inner fade-in slide-in-from-bottom-1 animate-in fill-mode-both font-semibold text-2xl duration-200">
+        <div className="aui-thread-welcome-message flex size-full flex-col items-center justify-center px-4 text-center">
+          {/* Glowing icon aura */}
+          <div className="fade-in animate-in fill-mode-both duration-500 relative mb-6">
+            <div className="absolute inset-0 rounded-full bg-primary/10 blur-xl scale-150" />
+            <div className="relative flex size-16 items-center justify-center rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 to-primary/15 shadow-sm">
+              <BookOpenIcon className="size-7 text-primary" />
+            </div>
+          </div>
+          <h1 className="aui-thread-welcome-message-inner fade-in slide-in-from-bottom-2 animate-in fill-mode-both font-semibold text-2xl duration-300">
             Start a study session
           </h1>
-          <p className="aui-thread-welcome-message-inner fade-in slide-in-from-bottom-1 animate-in fill-mode-both text-muted-foreground text-xl delay-75 duration-200">
-            Ask a question or choose a prompt from your library context.
+          <p className="aui-thread-welcome-message-inner fade-in slide-in-from-bottom-2 animate-in fill-mode-both text-muted-foreground text-base mt-2 max-w-md delay-75 duration-300">
+            Ask a question about your notes, generate practice problems, or
+            explore topics from your uploaded documents.
           </p>
         </div>
       </div>
@@ -143,7 +169,7 @@ const ThreadWelcome: FC = () => {
 
 const ThreadSuggestions: FC = () => {
   return (
-    <div className="aui-thread-welcome-suggestions grid w-full @md:grid-cols-2 gap-2 pb-4">
+    <div className="aui-thread-welcome-suggestions grid w-full @md:grid-cols-2 gap-2.5 pb-4 px-1">
       <ThreadPrimitive.Suggestions>
         {() => <ThreadSuggestionItem />}
       </ThreadPrimitive.Suggestions>
@@ -153,13 +179,13 @@ const ThreadSuggestions: FC = () => {
 
 const ThreadSuggestionItem: FC = () => {
   return (
-    <div className="aui-thread-welcome-suggestion-display fade-in slide-in-from-bottom-2 @md:nth-[n+3]:block nth-[n+3]:hidden animate-in fill-mode-both duration-200">
+    <div className="aui-thread-welcome-suggestion-display fade-in slide-in-from-bottom-3 @md:nth-[n+3]:block nth-[n+3]:hidden animate-in fill-mode-both duration-300">
       <SuggestionPrimitive.Trigger send asChild>
         <Button
           variant="ghost"
-            className="aui-thread-welcome-suggestion h-auto w-full @md:flex-col flex-wrap items-start justify-start gap-1 rounded-[20px] border border-border bg-card px-4 py-3 text-start text-sm transition-colors hover:bg-muted"
+          className="aui-thread-welcome-suggestion group/suggestion h-auto w-full @md:flex-col flex-wrap items-start justify-start gap-1 rounded-xl border border-border/80 bg-card px-4 py-3.5 text-start text-sm transition-all hover:bg-muted hover:border-primary/30 hover:shadow-sm"
         >
-          <SuggestionPrimitive.Title className="aui-thread-welcome-suggestion-text-1 font-medium" />
+          <SuggestionPrimitive.Title className="aui-thread-welcome-suggestion-text-1 font-medium group-hover/suggestion:text-primary transition-colors" />
           <SuggestionPrimitive.Description className="aui-thread-welcome-suggestion-text-2 text-muted-foreground empty:hidden truncate max-w-full" />
         </Button>
       </SuggestionPrimitive.Trigger>
@@ -196,9 +222,9 @@ const Composer: FC<{
               className="subject-meta-pill"
               style={
                 subjectColor
-                  ? {
+                  ? ({
                       "--subject-color": subjectColor,
-                    } as React.CSSProperties
+                    } as React.CSSProperties)
                   : undefined
               }
             >
@@ -282,23 +308,27 @@ const AssistantMessage: FC = () => {
   const isLast = useAuiState((s) => s.message.isLast);
   const content = useAuiState((s) => s.message.content);
 
-  const isThinking = isLast && isRunning && (content.length === 0 || (content.length === 1 && content[0].type === "text" && !content[0].text));
+  const isThinking =
+    isLast &&
+    isRunning &&
+    (content.length === 0 ||
+      (content.length === 1 && content[0].type === "text" && !content[0].text));
 
   // reserves space for action bar and compensates with `-mb` for consistent msg spacing
   // keeps hovered action bar from shifting layout (autohide doesn't support absolute positioning well)
   // for pt-[n] use -mb-[n + 6] & min-h-[n + 6] to preserve compensation
   const ACTION_BAR_PT = "pt-1.5";
-  const ACTION_BAR_HEIGHT = `-mb-7.5 min-h-7.5 ${ACTION_BAR_PT}`;
+  const ACTION_BAR_HEIGHT = `min-h-8 ${ACTION_BAR_PT}`;
 
   return (
     <MessagePrimitive.Root
       data-slot="aui_assistant-message-root"
       data-role="assistant"
-      className="fade-in slide-in-from-bottom-1 relative animate-in duration-150 [contain-intrinsic-size:auto_300px] [content-visibility:auto]"
+      className="fade-in slide-in-from-bottom-1 relative animate-in duration-150 [contain-intrinsic-size:auto_300px] [content-visibility:auto] group"
     >
       <div
         data-slot="aui_assistant-message-content"
-        className="wrap-break-word rounded-2xl rounded-tl-none bg-muted/40 border border-border/80 px-4 py-3 text-foreground leading-relaxed shadow-xs"
+        className="wrap-break-word text-foreground leading-relaxed py-1"
       >
         {isThinking ? (
           <div className="flex items-center gap-2 py-1">
@@ -334,7 +364,7 @@ const AssistantMessage: FC = () => {
                 case "group-reasoning": {
                   const running = part.status.type === "running";
                   return (
-                    <ReasoningRoot defaultOpen={running}>
+                    <ReasoningRoot defaultOpen={running} variant="ghost">
                       <ReasoningTrigger active={running} />
                       <ReasoningContent aria-busy={running}>
                         <ReasoningText>{children}</ReasoningText>
@@ -344,7 +374,7 @@ const AssistantMessage: FC = () => {
                 }
                 case "group-tool":
                   return (
-                    <ToolGroupRoot>
+                    <ToolGroupRoot variant="ghost" className="mb-4">
                       <ToolGroupTrigger
                         count={part.indices.length}
                         active={part.status.type === "running"}
@@ -379,11 +409,14 @@ const AssistantMessage: FC = () => {
 };
 
 const AssistantActionBar: FC = () => {
+  const isLast = useAuiState((s) => s.message.isLast);
+  const sourcesCount = useContext(SourcesCountContext);
+
   return (
     <ActionBarPrimitive.Root
       hideWhenRunning
       autohide="not-last"
-      className="aui-assistant-action-bar-root col-start-3 row-start-2 -ms-1 flex gap-1 text-muted-foreground"
+      className="aui-assistant-action-bar-root col-start-3 row-start-2 -ms-1 flex gap-1 items-center text-muted-foreground"
     >
       <ActionBarPrimitive.Copy asChild>
         <TooltipIconButton tooltip="Copy">
@@ -422,6 +455,13 @@ const AssistantActionBar: FC = () => {
           </ActionBarPrimitive.ExportMarkdown>
         </ActionBarMorePrimitive.Content>
       </ActionBarMorePrimitive.Root>
+
+      {isLast && sourcesCount > 0 && (
+        <div className="inline-flex items-center gap-1 rounded-full bg-muted/60 px-2 py-1 text-sm font-medium text-muted-foreground border border-border/40 select-none ml-2">
+          <BookOpenIcon className="size-3 shrink-0" />
+          {sourcesCount} {sourcesCount === 1 ? "source" : "sources"}
+        </div>
+      )}
     </ActionBarPrimitive.Root>
   );
 };
@@ -430,7 +470,7 @@ const UserMessage: FC = () => {
   return (
     <MessagePrimitive.Root
       data-slot="aui_user-message-root"
-      className="fade-in slide-in-from-bottom-1 grid animate-in auto-rows-auto grid-cols-[minmax(72px,1fr)_auto] content-start gap-y-2 px-2 duration-150 [contain-intrinsic-size:auto_60px] [content-visibility:auto] [&:where(>*)]:col-start-2"
+      className="fade-in slide-in-from-bottom-1 grid animate-in auto-rows-auto grid-cols-[minmax(72px,1fr)_auto] content-start gap-y-2 px-2 duration-150 [contain-intrinsic-size:auto_60px] [content-visibility:auto] [&:where(>*)]:col-start-2 group"
       data-role="user"
     >
       <UserMessageAttachments />

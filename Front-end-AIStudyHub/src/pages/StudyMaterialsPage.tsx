@@ -190,7 +190,7 @@ export default function StudyMaterialsPage() {
 
         <div className="flex-1 flex items-center justify-center py-6">
           {material.type === "MCQ" ? (
-            <McqQuiz items={material.items as any[]} title={material.title} />
+            <McqQuiz materialId={material._id || material.id} items={material.items as any[]} title={material.title} />
           ) : (
             <FlashcardStudy material={material} title={material.title} />
           )}
