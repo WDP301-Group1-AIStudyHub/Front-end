@@ -16,7 +16,6 @@ import {
   ShieldCheck,
   Timer,
   Zap,
-  CircleAlert,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
