@@ -19,6 +19,8 @@ export interface ChatSource {
   chapterOrdinal?: string
   contentPreview: string
   relevanceScore?: number
+  sourceStatus?: 'ACTIVE' | 'DELETED'
+  sourceDeletedAt?: string
 }
 
 export interface ChatEvaluation {
@@ -103,6 +105,8 @@ export interface ChatHistoryItem {
   evaluation?: ChatEvaluation
   createdAt: string
   updatedAt: string
+  sourceStatus?: 'ACTIVE' | 'DELETED'
+  sourceDeletedAt?: string
 }
 
 export type ChatHistoryListResponse = ChatHistoryItem[]
@@ -121,6 +125,8 @@ export interface ChatThreadItem {
   mode?: RagMode
   createdAt: string
   updatedAt: string
+  sourceStatus?: 'ACTIVE' | 'DELETED'
+  sourceDeletedAt?: string
 }
 
 export interface ChatThreadDetail {

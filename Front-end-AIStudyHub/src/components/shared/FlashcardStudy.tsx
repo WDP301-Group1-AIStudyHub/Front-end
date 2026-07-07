@@ -385,7 +385,7 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
     const topicsList = material.topicsCovered && material.topicsCovered.length > 0
       ? material.topicsCovered
       : ["General facts and concepts"];
-    const followUps = material.followUpTopics && material.followUpTopics.length > 0
+    const followUps = material.sourceStatus !== "DELETED" && material.followUpTopics && material.followUpTopics.length > 0
       ? material.followUpTopics
       : ["Advanced applications", "Key vocabulary terms", "Formulas and practices"];
 

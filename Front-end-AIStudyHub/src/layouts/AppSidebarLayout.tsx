@@ -18,7 +18,6 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import { getStoredUser } from '@/src/services/authStorage'
 import { cn } from '@/lib/utils'
 import StudyMaterialNotificationTray from '../components/shared/StudyMaterialNotificationTray'
-import AppTopbar from '../components/layout/AppTopbar'
 
 type AppSidebarLayoutProps = {
   children: ReactNode
@@ -92,7 +91,6 @@ export default function AppSidebarLayout({ children }: AppSidebarLayoutProps) {
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset className="relative z-10 flex min-h-svh w-0 min-w-0 flex-1 flex-col overflow-hidden bg-background">
-          <AppTopbar />
           <div className="app-shell-content min-h-0 flex-1 overflow-hidden">
             {children}
           </div>

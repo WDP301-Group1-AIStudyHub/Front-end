@@ -56,6 +56,8 @@ export default function RegisterPage() {
       navigate(
         result.redirectDocumentId
           ? `/documents/${result.redirectDocumentId}`
+          : result.redirectSubjectId
+            ? `/subjects?subjectId=${result.redirectSubjectId}`
           : '/dashboard',
         { replace: true },
       )
@@ -95,7 +97,7 @@ export default function RegisterPage() {
           />
           {invitedEmail ? (
             <p className="-mt-3 text-xs leading-relaxed text-muted-foreground">
-              Hãy đăng ký bằng đúng email đã nhận lời mời chia sẻ tài liệu.
+              Hãy đăng ký bằng đúng email đã nhận lời mời để hệ thống tự cấp quyền truy cập.
             </p>
           ) : null}
           <PasswordField
