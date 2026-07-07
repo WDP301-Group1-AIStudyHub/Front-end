@@ -29,18 +29,15 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import BrandLogo from "@/src/components/shared/BrandLogo"
+import { groupThreadsByDate } from "@/src/lib/groupChatThreads"
 import { logout } from "@/src/services/authApi"
 import { getStoredUser } from "@/src/services/authStorage"
-import { deleteChatThread, listChatThreads } from "@/src/services/chatApi"
-
-export interface ChatSessionItem {
-  id: string
-  name: string
-  url: string
-  emoji: string
-  dateLabel: string
-  itemIds: string[]
-}
+import {
+  deleteChatThread,
+  listChatThreads,
+  updateChatThread,
+} from "@/src/services/chatApi"
+import type { ChatThreadNavItem } from "@/components/nav-chats"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { state: sidebarState } = useSidebar()
@@ -57,42 +54,108 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   }
 
   // Real chat threads from the backend.
-  const [chatSessions, setChatSessions] = React.useState<ChatSessionItem[]>([])
+  const [chatSessions, setChatSessions] = React.useState<ChatThreadNavItem[]>([])
+  const [archivedSessions, setArchivedSessions] = React.useState<
+    ChatThreadNavItem[]
+  >([])
+  const [archivedLoaded, setArchivedLoaded] = React.useState(false)
+
+  const toNavItem = React.useCallback(
+    (thread: { id: string; title: string; lastMessageAt: string }): ChatThreadNavItem => ({
+      id: thread.id,
+      title: thread.title,
+      url: `/aichatbox?threadId=${thread.id}`,
+      lastMessageAt: thread.lastMessageAt,
+    }),
+    [],
+  )
 
   React.useEffect(() => {
     if (isAdmin) return
     const loadThreads = () => {
       listChatThreads()
-        .then((threads) =>
-        setChatSessions(
-          threads.map((thread) => ({
-            id: thread.id,
-            name: thread.title,
-            url: `/aichatbox?threadId=${thread.id}`,
-            emoji: "",
-            dateLabel: new Date(thread.lastMessageAt).toLocaleDateString(),
-            itemIds: [thread.id],
-          })),
-        )
-      )
+        .then((threads) => setChatSessions(threads.map(toNavItem)))
         .catch(() => setChatSessions([]))
     }
 
     loadThreads()
     window.addEventListener("chat-threads:refresh", loadThreads)
     return () => window.removeEventListener("chat-threads:refresh", loadThreads)
-  }, [isAdmin])
+  }, [isAdmin, toNavItem])
 
-  const handleDeleteChat = async (sessionId: string) => {
-    const session = chatSessions.find((s) => s.id === sessionId)
-    if (!session) return
+  const handleLoadArchived = async () => {
     try {
-      await deleteChatThread(session.id)
-      setChatSessions((prev) => prev.filter((s) => s.id !== sessionId))
+      const threads = await listChatThreads("ARCHIVED")
+      setArchivedSessions(threads.map(toNavItem))
     } catch {
-      // silently ignore
+      setArchivedSessions([])
+    } finally {
+      setArchivedLoaded(true)
     }
   }
+
+  const handleRenameChat = async (sessionId: string, title: string) => {
+    const previous = chatSessions
+    setChatSessions((prev) =>
+      prev.map((s) => (s.id === sessionId ? { ...s, title } : s)),
+    )
+    try {
+      await updateChatThread(sessionId, { title })
+    } catch {
+      setChatSessions(previous)
+    }
+  }
+
+  const handleArchiveChat = async (sessionId: string) => {
+    const session = chatSessions.find((s) => s.id === sessionId)
+    if (!session) return
+    setChatSessions((prev) => prev.filter((s) => s.id !== sessionId))
+    if (archivedLoaded) {
+      setArchivedSessions((prev) => [session, ...prev])
+    }
+    try {
+      await deleteChatThread(sessionId)
+      // Leaving the archived thread open would 404 on the next history load.
+      if (activeSearchParams.get("threadId") === sessionId) {
+        navigate("/aichatbox")
+      }
+    } catch {
+      setChatSessions((prev) =>
+        [session, ...prev].sort(
+          (a, b) =>
+            new Date(b.lastMessageAt).getTime() -
+            new Date(a.lastMessageAt).getTime(),
+        ),
+      )
+      if (archivedLoaded) {
+        setArchivedSessions((prev) => prev.filter((s) => s.id !== sessionId))
+      }
+    }
+  }
+
+  const handleRestoreChat = async (sessionId: string) => {
+    const session = archivedSessions.find((s) => s.id === sessionId)
+    if (!session) return
+    setArchivedSessions((prev) => prev.filter((s) => s.id !== sessionId))
+    setChatSessions((prev) =>
+      [session, ...prev].sort(
+        (a, b) =>
+          new Date(b.lastMessageAt).getTime() -
+          new Date(a.lastMessageAt).getTime(),
+      ),
+    )
+    try {
+      await updateChatThread(sessionId, { status: "ACTIVE" })
+    } catch {
+      setChatSessions((prev) => prev.filter((s) => s.id !== sessionId))
+      setArchivedSessions((prev) => [session, ...prev])
+    }
+  }
+
+  const chatGroups = React.useMemo(
+    () => groupThreadsByDate(chatSessions),
+    [chatSessions],
+  )
 
   const isDocumentNavActive =
     activePath === "/library" ||
@@ -205,7 +268,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain items={isAdmin ? adminNav : baseNav} />
       </SidebarHeader>
       <SidebarContent>
-      {!isAdmin && <NavChats onDelete={handleDeleteChat} recentChats={chatSessions} />}
+      {!isAdmin && (
+        <NavChats
+          archived={archivedSessions}
+          archivedLoaded={archivedLoaded}
+          groups={chatGroups}
+          onArchive={handleArchiveChat}
+          onLoadArchived={handleLoadArchived}
+          onRename={handleRenameChat}
+          onRestore={handleRestoreChat}
+        />
+      )}
       </SidebarContent>
       <SidebarFooter className="sidebar-account-zone mt-auto border-t border-sidebar-border bg-card p-3 group-data-[collapsible=icon]:p-2">
         <NavUser onLogout={handleLogout} user={user} />
