@@ -14,6 +14,7 @@ import {
   Plus,
   Search,
   Zap,
+  CircleAlert,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -700,6 +701,12 @@ export default function NewAIChatboxPage() {
                         <span className="truncate font-medium text-card-foreground">
                           {source.title}
                         </span>
+                        {source.sourceStatus === "DELETED" ? (
+                          <span className="flex shrink-0 items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
+                            <CircleAlert className="size-3" aria-hidden="true" />
+                            Source deleted
+                          </span>
+                        ) : null}
                         <span className="shrink-0 text-[10px] text-muted-foreground">
                           {typeof source.relevanceScore === "number"
                             ? `${Math.round(source.relevanceScore * 100)}%`

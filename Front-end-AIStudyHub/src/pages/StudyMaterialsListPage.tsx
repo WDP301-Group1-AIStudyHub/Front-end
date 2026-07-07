@@ -168,7 +168,7 @@ export default function StudyMaterialsListPage() {
       // Register task with the global Zustand polling manager
       addTask({
         id: result._id || result.id,
-        documentId: result.documentId,
+        documentId: result.documentId || selectedDocId,
         title: result.title,
         type: result.type,
         status: result.status,
@@ -366,6 +366,13 @@ export default function StudyMaterialsListPage() {
                             <span className="flex items-center gap-1 text-2xs text-red-700 dark:text-red-400 bg-red-500/10 px-2 py-0.5 rounded-full">
                               <AlertCircle className="size-3" />
                               Failed
+                            </span>
+                          )}
+
+                          {mat.sourceStatus === "DELETED" && (
+                            <span className="flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-2xs font-semibold text-muted-foreground">
+                              <AlertCircle className="size-3" />
+                              Source deleted
                             </span>
                           )}
                         </div>

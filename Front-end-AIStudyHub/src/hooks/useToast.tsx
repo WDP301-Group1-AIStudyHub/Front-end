@@ -21,10 +21,10 @@ type ToastContextValue = {
 const ToastContext = createContext<ToastContextValue | null>(null)
 
 const toneStyles: Record<ToastTone, string> = {
-  error: 'border-destructive/30 bg-destructive/10 text-destructive',
-  info: 'border-sky-400/30 bg-sky-500/10 text-sky-200',
-  success: 'border-primary/25 bg-primary/10 text-primary',
-  warning: 'border-border bg-muted text-muted-foreground',
+  error: 'border-destructive/35 bg-background text-destructive',
+  info: 'border-sky-300 bg-background text-sky-700',
+  success: 'border-primary/35 bg-background text-primary',
+  warning: 'border-amber-300 bg-background text-amber-800',
 }
 
 const toneIcons = {
@@ -61,7 +61,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
           return (
             <div
-              className={`pointer-events-auto flex items-start gap-3 rounded-lg border px-3 py-3 text-sm shadow-lg backdrop-blur ${toneStyles[toast.tone]}`}
+              className={`pointer-events-auto flex items-start gap-3 rounded-lg border px-3 py-3 text-sm shadow-md ${toneStyles[toast.tone]}`}
               key={toast.id}
               role={toast.tone === 'error' ? 'alert' : 'status'}
             >

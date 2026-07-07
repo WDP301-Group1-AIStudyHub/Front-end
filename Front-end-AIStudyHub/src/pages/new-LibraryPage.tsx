@@ -787,12 +787,18 @@ export default function NewLibraryPage() {
     setIsBulkDeleting(true);
     setFeedback({ tone: "info", message: `Moving ${selectedIds.length} selected document(s) to trash...` });
     try {
-      await Promise.all(deletableDocuments.map((document) => deleteDocument(document.id)));
+      const results = await Promise.all(deletableDocuments.map((document) => deleteDocument(document.id)));
       setDocuments((current) =>
         current.filter((item) => !deletableDocuments.some((document) => document.id === item.id)),
       );
       setSelectedIds([]);
-      setFeedback({ tone: "success", message: "Selected documents moved to trash." });
+      const pendingCleanup = results.filter((result) => result.ragStatus === 'DELETE_PENDING').length;
+      setFeedback({
+        tone: pendingCleanup > 0 ? "info" : "success",
+        message: pendingCleanup > 0
+          ? `Selected documents moved to trash; AI cleanup is retrying for ${pendingCleanup}.`
+          : "Selected documents moved to trash.",
+      });
     } catch {
       setFeedback({ tone: "error", message: "Error moving some documents to trash. Please refresh." });
     } finally {
@@ -1124,14 +1130,14 @@ export default function NewLibraryPage() {
     setFeedback(null);
 
     try {
-      await deleteDocument(document.id);
+      const deleteResult = await deleteDocument(document.id);
       setDocuments((current) =>
         current.filter((item) => item.id !== document.id),
       );
       setPendingDeleteId(null);
       setFeedback({
         tone: "success",
-        message: "Document moved to trash.",
+        message: deleteResult.warning || "Document moved to trash.",
         action: {
           label: "Undo",
           onClick: async () => {

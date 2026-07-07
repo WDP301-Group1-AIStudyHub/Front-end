@@ -21,6 +21,9 @@ export interface DocumentItem {
   totalVersions?: number
   totalChunks?: number
   lastIndexedAt?: string | null
+  ragStatus?: 'INDEXED' | 'DELETE_PENDING' | 'DELETED' | 'INDEXING' | 'FAILED' | 'NOT_AVAILABLE'
+  ragError?: string
+  ragStatusUpdatedAt?: string | null
   deletedAt?: string | null
   deletedBy?: string | null
   trashExpiresAt?: string | null
