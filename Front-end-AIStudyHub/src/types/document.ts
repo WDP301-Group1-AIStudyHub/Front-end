@@ -51,6 +51,7 @@ export interface DocumentItem {
   }
   personalSubjectId?: string
   personalSubject?: DocumentSubject | null
+  shareContext?: 'SUBJECT_WORKSPACE' | 'PERSONAL_SHARE'
   isStarred?: boolean
   starredAt?: string | null
 }

@@ -205,16 +205,6 @@ function permissionLabel(permission: SubjectDocumentPermission): string {
   return permission === "EDIT" ? "Editor" : "Viewer";
 }
 
-function documentStatusLabel(document: DocumentItem): string {
-  const status = document.ragStatus || document.extractionStatus || document.status || "ACTIVE";
-  if (status === "NOT_AVAILABLE") return "Not indexed";
-  if (status === "INDEXED") return "Indexed";
-  if (status === "INDEXING") return "Indexing";
-  if (status === "FAILED") return "Index failed";
-  if (status === "DELETE_PENDING") return "Deleting index";
-  return status;
-}
-
 function isArchivedDocument(document: DocumentItem): boolean {
   return document.status === "ARCHIVED" || document.status === "DELETED" || Boolean(document.deletedAt);
 }
@@ -423,9 +413,6 @@ function SubjectDocumentGrid({
               <Badge className={`rounded-full border ${accessTone(document.accessRole)}`} variant="outline">
                 {accessLabel(document)}
               </Badge>
-              <Badge className="rounded-full border border-slate-200 bg-white text-slate-600" variant="outline">
-                {documentStatusLabel(document)}
-              </Badge>
             </div>
             <div className="mt-5 grid grid-cols-2 gap-3 text-xs text-muted-foreground">
               <span>{formatFileSize(document.fileSize)}</span>
@@ -497,7 +484,6 @@ function SubjectDocumentList({
             <TableHead>Type</TableHead>
             <TableHead>Size</TableHead>
             <TableHead>Updated</TableHead>
-            <TableHead>Status</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -542,7 +528,6 @@ function SubjectDocumentList({
                 <TableCell>{readableFileType(document)}</TableCell>
                 <TableCell>{formatFileSize(document.fileSize)}</TableCell>
                 <TableCell>{formatDate(document.updatedAt)}</TableCell>
-                <TableCell>{documentStatusLabel(document)}</TableCell>
                 <TableCell onClick={(event) => event.stopPropagation()}>
                   <div className="flex justify-end gap-2">
                     <Button
@@ -666,10 +651,6 @@ function SubjectDetailsPanel({
         <div className="grid grid-cols-[112px_minmax(0,1fr)] items-start gap-3">
           <dt className="text-muted-foreground">Updated</dt>
           <dd className="min-w-0 break-words text-right font-semibold">{formatDate(document.updatedAt)}</dd>
-        </div>
-        <div className="grid grid-cols-[112px_minmax(0,1fr)] items-start gap-3">
-          <dt className="text-muted-foreground">RAG status</dt>
-          <dd className="min-w-0 break-words text-right font-semibold">{documentStatusLabel(document)}</dd>
         </div>
         <div className="grid grid-cols-[112px_minmax(0,1fr)] items-start gap-3">
           <dt className="text-muted-foreground">Versions</dt>
@@ -804,9 +785,6 @@ function SubjectDocumentPreviewDialog({
             <div className="flex flex-wrap gap-2">
               <Badge className={`rounded-full border ${accessTone(document.accessRole)}`} variant="outline">
                 {accessLabel(document)}
-              </Badge>
-              <Badge className="rounded-full border border-slate-200 bg-white text-slate-600" variant="outline">
-                {documentStatusLabel(document)}
               </Badge>
             </div>
           </div>
