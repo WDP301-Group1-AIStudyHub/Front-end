@@ -181,6 +181,13 @@ export default function StudyMaterialsPage() {
           </Button>
         </header>
 
+        {material.sourceStatus === "DELETED" ? (
+          <div className="flex items-center gap-2 rounded-md border border-border bg-muted px-4 py-3 text-sm text-muted-foreground" role="status">
+            <AlertCircle className="size-4 shrink-0" aria-hidden="true" />
+            Source document deleted. This study set remains available, but it cannot generate new AI content.
+          </div>
+        ) : null}
+
         <div className="flex-1 flex items-center justify-center py-6">
           {material.type === "MCQ" ? (
             <McqQuiz materialId={material._id || material.id} items={material.items as any[]} title={material.title} />

@@ -21,6 +21,9 @@ export interface DocumentItem {
   totalVersions?: number
   totalChunks?: number
   lastIndexedAt?: string | null
+  ragStatus?: 'INDEXED' | 'DELETE_PENDING' | 'DELETED' | 'INDEXING' | 'FAILED' | 'NOT_AVAILABLE'
+  ragError?: string
+  ragStatusUpdatedAt?: string | null
   deletedAt?: string | null
   deletedBy?: string | null
   trashExpiresAt?: string | null
@@ -48,6 +51,7 @@ export interface DocumentItem {
   }
   personalSubjectId?: string
   personalSubject?: DocumentSubject | null
+  shareContext?: 'SUBJECT_WORKSPACE' | 'PERSONAL_SHARE'
   isStarred?: boolean
   starredAt?: string | null
 }

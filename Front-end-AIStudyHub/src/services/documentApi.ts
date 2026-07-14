@@ -328,10 +328,11 @@ export async function updateSharedDocumentProfile(
   return normalizeDocument(unwrapData(response, 'Updated shared document response was empty'))
 }
 
-export async function deleteDocument(documentId: string): Promise<void> {
-  await request<void>(`/api/documents/${documentId}`, {
+export async function deleteDocument(documentId: string): Promise<{ ragStatus: string; warning?: string }> {
+  const response = await request<{ ragStatus: string; warning?: string }>(`/api/documents/${documentId}`, {
     method: 'DELETE',
   })
+  return unwrapData(response, 'Move to Trash response was empty')
 }
 
 export async function restoreDocument(documentId: string): Promise<DocumentItem> {
@@ -347,8 +348,16 @@ export async function deleteDocumentPermanently(documentId: string): Promise<voi
   })
 }
 
-export async function emptyTrash(): Promise<{ deletedCount: number }> {
-  const response = await request<{ deletedCount: number }>('/api/documents/trash/empty', {
+export async function emptyTrash(): Promise<{
+  deletedCount: number
+  failedCount: number
+  failures: Array<{ documentId: string; stage: string; message: string }>
+}> {
+  const response = await request<{
+    deletedCount: number
+    failedCount: number
+    failures: Array<{ documentId: string; stage: string; message: string }>
+  }>('/api/documents/trash/empty', {
     method: 'DELETE',
   })
   return unwrapData(response, 'Empty trash response was empty')

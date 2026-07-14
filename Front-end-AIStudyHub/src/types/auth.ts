@@ -24,6 +24,7 @@ export interface AuthResponse {
   user: AuthUser
   accessToken: string
   redirectDocumentId?: string
+  redirectSubjectId?: string
 }
 
 export interface LoginPayload {

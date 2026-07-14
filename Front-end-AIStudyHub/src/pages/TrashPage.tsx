@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { FileText, RotateCcw, Trash2 } from 'lucide-react'
+import { AlertTriangle, FileText, LoaderCircle, RotateCcw, Trash2 } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -56,6 +56,12 @@ function daysRemainingLabel(days?: number | null): string {
   if (days === null || days === undefined) return 'Unknown'
   if (days <= 0) return 'Expires today'
   return `${days} day${days === 1 ? '' : 's'} left`
+}
+
+function ragStatusLabel(document: DocumentItem): string {
+  if (document.ragStatus === 'DELETE_PENDING') return 'Cleaning AI data'
+  if (document.ragStatus === 'FAILED') return 'AI cleanup failed'
+  return 'Ready to restore'
 }
 
 export default function TrashPage() {
@@ -122,8 +128,12 @@ export default function TrashPage() {
     setError(null)
     try {
       const result = await emptyTrash()
-      setDocuments([])
-      setFeedback(`${result.deletedCount} document(s) permanently deleted.`)
+      await loadTrash()
+      setFeedback(
+        result.failedCount > 0
+          ? `${result.deletedCount} deleted; ${result.failedCount} could not be deleted.`
+          : `${result.deletedCount} document(s) permanently deleted.`,
+      )
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : 'Unable to empty trash')
     } finally {
@@ -202,6 +212,17 @@ export default function TrashPage() {
                           <Badge className="h-5 rounded-full px-1.5 text-[0.65rem]" variant="secondary">
                             In trash
                           </Badge>
+                          <Badge
+                            className="h-5 rounded-full px-1.5 text-[0.65rem]"
+                            variant={document.ragStatus === 'FAILED' ? 'destructive' : 'outline'}
+                          >
+                            {document.ragStatus === 'DELETE_PENDING' ? (
+                              <LoaderCircle className="mr-1 size-3 animate-spin" aria-hidden="true" />
+                            ) : document.ragStatus === 'FAILED' ? (
+                              <AlertTriangle className="mr-1 size-3" aria-hidden="true" />
+                            ) : null}
+                            {ragStatusLabel(document)}
+                          </Badge>
                         </div>
                       </div>
                     </div>
@@ -220,7 +241,7 @@ export default function TrashPage() {
                         variant="secondary"
                       >
                         <RotateCcw data-icon="inline-start" aria-hidden="true" />
-                        Restore
+                        {busyId === document.id ? 'Restoring AI index...' : 'Restore'}
                       </Button>
                       <Button
                         disabled={busyId === document.id}
