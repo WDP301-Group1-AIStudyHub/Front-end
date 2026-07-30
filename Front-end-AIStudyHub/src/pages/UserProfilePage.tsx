@@ -7,10 +7,10 @@ import {
   ShieldCheck,
   UserRound,
 } from 'lucide-react'
-import { CelestialInlineLoader } from '../components/shared/CelestialLoading'
+import { CelestialInlineLoader } from '@/components/shared/CelestialLoading'
 import { Button } from '@/components/ui/button'
-import { updateProfile } from '../services/authApi'
-import { getStoredToken, getStoredUser, storeAuthSession } from '../services/authStorage'
+import { updateProfile } from '@/services/authApi'
+import { getStoredToken, getStoredUser, storeAuthSession } from '@/services/authStorage'
 
 function Field({
   disabled,

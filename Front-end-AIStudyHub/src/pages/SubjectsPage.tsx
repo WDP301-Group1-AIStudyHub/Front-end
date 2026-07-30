@@ -51,7 +51,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { downloadDocumentFile, getDocumentDownloadUrl } from "../services/documentApi";
+import { downloadDocumentFile, getDocumentDownloadUrl } from "@/services/documentApi";
 import { toast } from "sonner";
 import {
   addSubjectMember,
@@ -73,7 +73,7 @@ import {
   updateSubject,
   updateSubjectDocumentAccess,
   updateSubjectMemberRole,
-} from "../services/subjectApi";
+} from "@/services/subjectApi";
 import type {
   SubjectAccessGrant,
   SubjectDocumentPermission,
@@ -83,12 +83,12 @@ import type {
   SubjectPayload,
   SubjectTeam,
   SubjectWorkspaceRole,
-} from "../services/subjectApi";
-import type { DocumentItem, DocumentSubject } from "../types/document";
+} from "@/services/subjectApi";
+import type { DocumentItem, DocumentSubject } from "@/types/document";
 import {
   DEFAULT_SUBJECT_COLOR,
   normalizeSubjectColor,
-} from "../utils/subjectColor";
+} from "@/utils/subjectColor";
 
 type SubjectForm = {
   name: string;
@@ -1517,7 +1517,7 @@ function WorkspaceDetail({
                           <div className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-3">
                             {recentDocuments.map((document) => (
                               <button
-                                className="flex min-w-0 items-center gap-3 rounded-lg border border-border bg-white p-3 text-left transition-colors hover:border-primary/50"
+                                className="flex min-w-0 items-center gap-3 rounded-lg border border-border bg-white p-3 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50 transition-colors hover:border-primary/50"
                                 key={documentKey(document)}
                                 onClick={() => openPreview(document)}
                                 type="button"
@@ -1785,13 +1785,9 @@ function WorkspaceDetail({
                             {team.members.map((member) => (
                               <Badge className="gap-2 rounded-full border border-border bg-white" key={member.id} variant="outline">
                                 {member.fullName}
-                                <button
-                                  aria-label={`Remove ${member.fullName} from ${team.name}`}
-                                  onClick={() => void removeMemberFromTeam(team, member.id)}
-                                  type="button"
-                                >
+                                <Button aria-label={`Remove ${member.fullName} from ${team.name}`} onClick={() => void removeMemberFromTeam(team, member.id)} type="button" className="size-4 rounded-full text-muted-foreground hover:text-destructive" size="icon-xs" variant="ghost">
                                   <X className="size-3" aria-hidden="true" />
-                                </button>
+                                </Button>
                               </Badge>
                             ))}
                             {team.pendingMembers?.map((member) => (

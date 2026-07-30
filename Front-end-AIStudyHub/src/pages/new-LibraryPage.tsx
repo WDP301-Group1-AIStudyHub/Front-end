@@ -77,7 +77,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   CelestialInlineLoader,
   CelestialProgress,
-} from "../components/shared/CelestialLoading";
+} from "@/components/shared/CelestialLoading";
 import {
   Tooltip,
   TooltipContent,
@@ -92,20 +92,20 @@ import {
   searchDocuments,
   setDocumentStar,
   updateDocument,
-} from "../services/documentApi";
+} from "@/services/documentApi";
 import {
   findOrCreateSubjectByName,
   listSubjects,
-} from "../services/subjectApi";
-import type { SubjectItem } from "../services/subjectApi";
-import { useUploadStore } from "../store/useUploadStore";
-import { getStoredUser } from "../services/authStorage";
-import type { DocumentItem } from "../types/document";
-import DocumentShareDialog from "../components/documents/DocumentShareDialog";
-import SharedDocumentSubjectDialog from "../components/documents/SharedDocumentSubjectDialog";
+} from "@/services/subjectApi";
+import type { SubjectItem } from "@/services/subjectApi";
+import { useUploadStore } from "@/store/useUploadStore";
+import { getStoredUser } from "@/services/authStorage";
+import type { DocumentItem } from "@/types/document";
+import DocumentShareDialog from "@/components/documents/DocumentShareDialog";
+import SharedDocumentSubjectDialog from "@/components/documents/SharedDocumentSubjectDialog";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { IconTile } from '../components/shared/IconTile'
+import { IconTile } from '@/components/shared/IconTile'
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const SEARCH_DEBOUNCE_MS = 350;
@@ -1336,12 +1336,11 @@ export default function NewLibraryPage() {
                 <div
                   aria-label="My Document view"
                   className="inline-flex rounded-lg border border-border bg-muted/40 p-1"
-                  role="tablist"
+                  role="group"
                 >
                   <Button
-                    aria-selected={libraryView === "mine"}
+                    aria-pressed={libraryView === "mine"}
                     onClick={() => setLibraryView("mine")}
-                    role="tab"
                     size="sm"
                     type="button"
                     variant={libraryView === "mine" ? "default" : "ghost"}
@@ -1350,9 +1349,8 @@ export default function NewLibraryPage() {
                     My documents
                   </Button>
                   <Button
-                    aria-selected={libraryView === "shared"}
+                    aria-pressed={libraryView === "shared"}
                     onClick={() => setLibraryView("shared")}
-                    role="tab"
                     size="sm"
                     type="button"
                     variant={libraryView === "shared" ? "default" : "ghost"}
@@ -1650,7 +1648,7 @@ export default function NewLibraryPage() {
                               />
                             </Button>
                             <button
-                              className="flex min-w-0 items-center gap-3 text-left group"
+                              className="flex min-w-0 items-center gap-3 text-left group outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                               onClick={() => openFile(document)}
                               type="button"
                             >

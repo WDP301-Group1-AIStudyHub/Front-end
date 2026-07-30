@@ -1,6 +1,6 @@
 import { BookOpenCheck, Brain, Compass, Library } from 'lucide-react'
-import { IconTile } from '../components/shared/IconTile'
-import PublicNav from '../components/shared/PublicNav'
+import { IconTile } from '@/components/shared/IconTile'
+import PublicNav from '@/components/shared/PublicNav'
 
 const stats = [
   ['Multi-format', 'Document support'],

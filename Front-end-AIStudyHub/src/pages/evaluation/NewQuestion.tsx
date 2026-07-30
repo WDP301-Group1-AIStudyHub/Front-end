@@ -6,6 +6,7 @@ import {
   type ReactNode,
 } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import {
   AlertCircle,
   BookOpen,
@@ -19,7 +20,7 @@ import {
 import {
   createBenchmarkQuestion,
   getBenchmarkQuestions,
-} from "../../services/chatApi";
+} from "@/services/chatApi";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import {
@@ -29,13 +30,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { listDocuments } from "../../services/documentApi";
+import { listDocuments } from "@/services/documentApi";
 import type {
   BenchmarkDifficulty,
   BenchmarkQuestion,
   CreateBenchmarkQuestionPayload,
-} from "../../types/chat";
-import type { DocumentItem } from "../../types/document";
+} from "@/types/chat";
+import type { DocumentItem } from "@/types/document";
 
 type ScopeMode = "document" | "subject";
 
@@ -285,10 +286,12 @@ export default function NewQuestion() {
               <ChevronLeft className="size-4" />
               Cancel
             </Link>
-            <button
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-border bg-background/60 px-4 text-sm font-semibold transition hover:border-primary"
+            <Button
+              className="px-4"
               onClick={saveDraft}
+              size="lg"
               type="button"
+              variant="outline"
             >
               {draftSaved ? (
                 <Check className="size-4" />
@@ -296,10 +299,11 @@ export default function NewQuestion() {
                 <Save className="size-4" />
               )}
               {draftSaved ? "Draft saved" : "Save draft"}
-            </button>
-            <button
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-60"
+            </Button>
+            <Button
+              className="px-4"
               disabled={saving}
+              size="lg"
               type="submit"
             >
               {saving ? (
@@ -308,7 +312,7 @@ export default function NewQuestion() {
                 <Play className="size-4" />
               )}
               Save & run
-            </button>
+            </Button>
           </div>
         </header>
 
@@ -370,12 +374,10 @@ export default function NewQuestion() {
 
             <div className="grid grid-cols-2 gap-2 rounded-lg border border-border/70 bg-muted/20 p-1">
               {(["document", "subject"] as ScopeMode[]).map((scope) => (
-                <button
-                  className={`inline-flex h-10 items-center justify-center gap-2 rounded-md text-sm font-semibold transition ${
-                    form.scope === scope
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
+                <Button
+                  aria-pressed={form.scope === scope}
+                  size="lg"
+                  variant={form.scope === scope ? "default" : "ghost"}
                   key={scope}
                   onClick={() =>
                     setForm((current) => ({
@@ -391,7 +393,7 @@ export default function NewQuestion() {
                     <BookOpen className="size-4" />
                   )}
                   {scope === "document" ? "Document" : "Subject"}
-                </button>
+                </Button>
               ))}
             </div>
 
@@ -461,12 +463,14 @@ export default function NewQuestion() {
 
             <div className="grid gap-2">
               {difficultyOptions.map((option) => (
-                <button
-                  className={`flex h-11 items-center justify-between rounded-lg border px-3 text-sm font-semibold transition ${
+                <Button
+                  aria-pressed={form.difficulty === option.value}
+                  className={`h-11 justify-between px-3 ${
                     form.difficulty === option.value
                       ? "border-primary bg-primary/10 text-primary"
-                      : "border-border text-muted-foreground hover:text-foreground"
+                      : "text-muted-foreground"
                   }`}
+                  variant="outline"
                   key={option.value}
                   onClick={() =>
                     setForm((current) => ({
@@ -480,7 +484,7 @@ export default function NewQuestion() {
                   {form.difficulty === option.value && (
                     <Check className="size-4" />
                   )}
-                </button>
+                </Button>
               ))}
             </div>
 

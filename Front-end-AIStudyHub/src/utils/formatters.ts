@@ -1,4 +1,4 @@
-import type { UploadSession } from '../types/document'
+import type { UploadSession } from '@/types/document'
 
 export function formatFileSize(bytes: number): string {
   if (!Number.isFinite(bytes) || bytes <= 0) {
@@ -28,16 +28,6 @@ export function formatDate(value: string | undefined): string {
     month: 'short',
     year: 'numeric',
   }).format(date)
-}
-
-export function getFileBadgeClass(fileName: string | undefined): string {
-  if (!fileName) return "file-txt-badge";
-  const ext = fileName.split(".").pop()?.toLowerCase();
-  if (ext === "pdf") return "file-pdf-badge";
-  if (ext === "docx" || ext === "doc") return "file-docx-badge";
-  if (ext === "xlsx" || ext === "xls") return "file-xlsx-badge";
-  if (ext === "pptx" || ext === "ppt") return "file-pptx-badge";
-  return "file-txt-badge";
 }
 
 // Data-driven extension colors (PDF red, DOCX blue, XLSX green, PPTX orange).

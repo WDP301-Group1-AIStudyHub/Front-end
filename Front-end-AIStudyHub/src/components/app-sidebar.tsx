@@ -28,15 +28,15 @@ import {
   SidebarRail,
   useSidebar,
 } from "@/components/ui/sidebar"
-import BrandLogo from "@/src/components/shared/BrandLogo"
-import { groupThreadsByDate } from "@/src/lib/groupChatThreads"
-import { logout } from "@/src/services/authApi"
-import { getStoredUser } from "@/src/services/authStorage"
+import BrandLogo from "@/components/shared/BrandLogo"
+import { groupThreadsByDate } from "@/lib/groupChatThreads"
+import { logout } from "@/services/authApi"
+import { getStoredUser } from "@/services/authStorage"
 import {
   deleteChatThread,
   listChatThreads,
   updateChatThread,
-} from "@/src/services/chatApi"
+} from "@/services/chatApi"
 import type { ChatThreadNavItem } from "@/components/nav-chats"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -280,7 +280,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         />
       )}
       </SidebarContent>
-      <SidebarFooter className="sidebar-account-zone mt-auto border-t border-sidebar-border bg-card p-3 group-data-[collapsible=icon]:p-2">
+      <SidebarFooter className="mt-auto border-t border-sidebar-border bg-card p-3 group-data-[collapsible=icon]:p-2">
         <NavUser onLogout={handleLogout} user={user} />
       </SidebarFooter>
       <SidebarRail />

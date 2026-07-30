@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { getStudyMaterialById } from "../services/studyMaterialApi";
-import type { StudyMaterial } from "../services/studyMaterialApi";
-import { LoadingState } from "../components/shared/CelestialLoading";
-import FlashcardStudy from "../components/shared/FlashcardStudy";
-import McqQuiz from "../components/shared/McqQuiz";
+import { getStudyMaterialById } from "@/services/studyMaterialApi";
+import type { StudyMaterial } from "@/services/studyMaterialApi";
+import { LoadingState } from "@/components/shared/CelestialLoading";
+import FlashcardStudy from "@/components/shared/FlashcardStudy";
+import McqQuiz from "@/components/shared/McqQuiz";
 import { ArrowLeft, BookOpen, AlertCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 

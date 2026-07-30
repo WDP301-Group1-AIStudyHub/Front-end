@@ -11,7 +11,8 @@ import {
   UploadCloud,
 } from 'lucide-react'
 
-import PublicNav from './components/shared/PublicNav'
+import { Button } from '@/components/ui/button'
+import PublicNav from '@/components/shared/PublicNav'
 
 const productRows = [
   { access: 'Owner', name: 'Machine Learning Notes', subject: 'CSE301', type: 'PDF' },
@@ -49,10 +50,10 @@ function ProductPreview() {
           <p className="text-sm font-semibold">My Document</p>
           <p className="text-xs text-muted-foreground">18 documents</p>
         </div>
-        <button className="ml-auto inline-flex h-9 items-center gap-2 rounded-md bg-primary px-3 text-sm font-semibold text-white" type="button">
-          <UploadCloud className="size-4" aria-hidden="true" />
+        <Button className="ml-auto" type="button">
+          <UploadCloud data-icon="inline-start" aria-hidden="true" />
           Upload
-        </button>
+        </Button>
       </div>
 
       <div className="flex items-center gap-3 border-b border-border bg-sidebar px-5 py-3">

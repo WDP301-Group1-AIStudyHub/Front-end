@@ -17,8 +17,8 @@ import {
 } from "@/components/assistant-ui/tool-group";
 import { ToolFallback } from "@/components/assistant-ui/tool-fallback";
 import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
-import { TextShimmerWave } from "@/src/components/shared/TextShimmerWave";
-import { normalizeSubjectColor } from "@/src/utils/subjectColor";
+import { TextShimmerWave } from "@/components/shared/TextShimmerWave";
+import { normalizeSubjectColor } from "@/utils/subjectColor";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -219,7 +219,7 @@ const Composer: FC<{
  <ComposerAttachments />
  {selectedDoc && (
  <div
- className="subject-meta-pill"
+ className="inline-flex max-w-56 items-center gap-2 rounded-full border-[1.5px] border-[var(--subject-color,var(--primary))] bg-[color-mix(in_srgb,var(--subject-color,var(--primary))_12%,var(--card))] px-2.5 py-1.5 text-xs font-bold leading-none text-foreground"
  style={
  subjectColor
  ? ({
@@ -234,14 +234,9 @@ const Composer: FC<{
  {subjectName ? `${subjectName} - ` : ""}
  {selectedDoc.fileName}
  </span>
- <button
- aria-label="Clear selected documents"
- className="grid size-5 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-background/70 hover:text-foreground"
- onClick={onClearSelectedDoc}
- type="button"
- >
+ <Button aria-label="Clear selected documents" onClick={onClearSelectedDoc} type="button" className="size-5 shrink-0 rounded-full text-muted-foreground" size="icon-xs" variant="ghost">
  <XIcon className="size-3" />
- </button>
+ </Button>
  </div>
  )}
  <ComposerPrimitive.Input

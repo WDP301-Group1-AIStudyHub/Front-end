@@ -1,37 +1,37 @@
 import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react'
 import { Navigate, Route, Routes, Link, useLocation, useNavigate } from 'react-router-dom'
-import AppSidebarLayout from './layouts/AppSidebarLayout'
-import { LoadingState } from './components/shared/CelestialLoading'
-import BackgroundUploadWidget from './components/upload/BackgroundUploadWidget'
-import ConflictModal from './components/upload/ConflictModal'
-import { getCurrentUser } from './services/authApi'
-import { getStoredToken, getStoredUser, hasAuthSession, storeAuthSession } from './services/authStorage'
-import type { AuthUser } from './types/auth'
+import AppSidebarLayout from '@/layouts/AppSidebarLayout'
+import { LoadingState } from '@/components/shared/CelestialLoading'
+import BackgroundUploadWidget from '@/components/upload/BackgroundUploadWidget'
+import ConflictModal from '@/components/upload/ConflictModal'
+import { getCurrentUser } from '@/services/authApi'
+import { getStoredToken, getStoredUser, hasAuthSession, storeAuthSession } from '@/services/authStorage'
+import type { AuthUser } from '@/types/auth'
 
 const LandingPage = lazy(() => import('./landingpage'));
-const AboutPage = lazy(() => import('./pages/AboutPage'));
-const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
-const RegisterPage = lazy(() => import('./pages/auth/RegisterPage'));
-const ForgotPasswordPage = lazy(() => import('./pages/auth/ForgotPasswordPage'));
-const ResetPasswordPage = lazy(() => import('./pages/auth/ResetPasswordPage'));
-const DashboardPage = lazy(() => import('./pages/DashboardPage'));
-const NewLibraryPage = lazy(() => import('./pages/new-LibraryPage'));
-const StarredDocumentsPage = lazy(() => import('./pages/StarredDocumentsPage'));
-const TrashPage = lazy(() => import('./pages/TrashPage'));
-const DocumentDetailPage = lazy(() => import('./pages/DocumentDetailPage'));
-const StudyMaterialsPage = lazy(() => import('./pages/StudyMaterialsPage'));
-const StudyMaterialsListPage = lazy(() => import('./pages/StudyMaterialsListPage'));
-const SubjectsPage = lazy(() => import('./pages/SubjectsPage'));
-const NewAIChatboxPage = lazy(() => import('./pages/new-AIChatboxPage'));
-const EvaluationPage = lazy(() => import('./pages/evaluation/EvaluationPage'));
-const NewQuestion = lazy(() => import('./pages/evaluation/NewQuestion'));
-const RunBenchmark = lazy(() => import('./pages/evaluation/RunBenchmark'));
-const Summary = lazy(() => import('./pages/evaluation/Summary'));
-const UserProfilePage = lazy(() => import('./pages/UserProfilePage'));
-const AdminDashboardPage = lazy(() => import('./pages/admin/AdminDashboardPage'));
-const AdminUsersPage = lazy(() => import('./pages/admin/AdminUsersPage'));
-const AdminDocumentsPage = lazy(() => import('./pages/admin/AdminDocumentsPage'));
-const AdminActivityPage = lazy(() => import('./pages/admin/AdminActivityPage'));
+const AboutPage = lazy(() => import('@/pages/AboutPage'));
+const LoginPage = lazy(() => import('@/pages/auth/LoginPage'));
+const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage'));
+const ForgotPasswordPage = lazy(() => import('@/pages/auth/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('@/pages/auth/ResetPasswordPage'));
+const DashboardPage = lazy(() => import('@/pages/DashboardPage'));
+const NewLibraryPage = lazy(() => import('@/pages/new-LibraryPage'));
+const StarredDocumentsPage = lazy(() => import('@/pages/StarredDocumentsPage'));
+const TrashPage = lazy(() => import('@/pages/TrashPage'));
+const DocumentDetailPage = lazy(() => import('@/pages/DocumentDetailPage'));
+const StudyMaterialsPage = lazy(() => import('@/pages/StudyMaterialsPage'));
+const StudyMaterialsListPage = lazy(() => import('@/pages/StudyMaterialsListPage'));
+const SubjectsPage = lazy(() => import('@/pages/SubjectsPage'));
+const NewAIChatboxPage = lazy(() => import('@/pages/new-AIChatboxPage'));
+const EvaluationPage = lazy(() => import('@/pages/evaluation/EvaluationPage'));
+const NewQuestion = lazy(() => import('@/pages/evaluation/NewQuestion'));
+const RunBenchmark = lazy(() => import('@/pages/evaluation/RunBenchmark'));
+const Summary = lazy(() => import('@/pages/evaluation/Summary'));
+const UserProfilePage = lazy(() => import('@/pages/UserProfilePage'));
+const AdminDashboardPage = lazy(() => import('@/pages/admin/AdminDashboardPage'));
+const AdminUsersPage = lazy(() => import('@/pages/admin/AdminUsersPage'));
+const AdminDocumentsPage = lazy(() => import('@/pages/admin/AdminDocumentsPage'));
+const AdminActivityPage = lazy(() => import('@/pages/admin/AdminActivityPage'));
 
 const demoAdminUser: AuthUser = {
   id: "admin-001",

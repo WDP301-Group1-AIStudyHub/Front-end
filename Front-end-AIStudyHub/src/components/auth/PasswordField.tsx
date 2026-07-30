@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { ChangeEventHandler } from 'react'
 import AuthIcon from './AuthIcon'
+import { Button } from '@/components/ui/button'
 import { Field, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 
@@ -43,15 +44,9 @@ export default function PasswordField({
           value={value}
           className="pr-10"
         />
-        <button
-          aria-label={visible ? 'Hide password' : 'Show password'}
-          disabled={disabled}
-          onClick={() => setVisible((current) => !current)}
-          type="button"
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-        >
+        <Button aria-label={visible ? 'Hide password' : 'Show password'} disabled={disabled} onClick={() => setVisible((current) => !current)} type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" size="icon-sm" variant="ghost">
           <AuthIcon name={visible ? 'visibility_off' : 'visibility'} className="size-4" />
-        </button>
+        </Button>
       </div>
     </Field>
   )

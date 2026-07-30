@@ -1,4 +1,4 @@
-import { useStudyMaterialStore } from "../../store/useStudyMaterialStore";
+import { useStudyMaterialStore } from "@/store/useStudyMaterialStore";
 import { Link } from "react-router-dom";
 import { CheckCircle2, AlertCircle, X, ArrowRight, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -38,12 +38,9 @@ export default function StudyMaterialNotificationTray() {
  <Brain className="size-3 text-primary" />
  AI Study Assistant
  </span>
- <button
- onClick={() => dismissNotification(notif.id)}
- className="text-muted-foreground hover:text-foreground p-0.5 rounded-lg transition-colors"
- >
+ <Button onClick={() => dismissNotification(notif.id)} aria-label="Dismiss" className="text-muted-foreground" size="icon-xs" variant="ghost">
  <X className="size-3.5" />
- </button>
+ </Button>
  </div>
 
  <h4 className="text-sm font-bold text-foreground truncate">

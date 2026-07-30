@@ -22,7 +22,7 @@ import {
 import { ArrowLeft, BookOpen, Download, FileText, Pencil, Star, Trash2, UploadCloud, Users } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { StatusBadge } from './admin/adminPageUtils'
+import { StatusBadge } from '@/pages/admin/adminPageUtils'
 import {
   Dialog,
   DialogContent,
@@ -49,16 +49,16 @@ import {
   setDocumentStar,
   updateDocument,
   uploadDocumentVersion,
-} from '../services/documentApi'
-import { listSubjects, type SubjectItem } from '../services/subjectApi'
-import DocumentShareDialog from '../components/documents/DocumentShareDialog'
-import SharedDocumentSubjectDialog from '../components/documents/SharedDocumentSubjectDialog'
-import { getStoredUser } from '../services/authStorage'
+} from '@/services/documentApi'
+import { listSubjects, type SubjectItem } from '@/services/subjectApi'
+import DocumentShareDialog from '@/components/documents/DocumentShareDialog'
+import SharedDocumentSubjectDialog from '@/components/documents/SharedDocumentSubjectDialog'
+import { getStoredUser } from '@/services/authStorage'
 import type {
   DocumentDetail,
   DocumentSubject,
   DocumentVersion,
-} from '../types/document'
+} from '@/types/document'
 
 function formatDate(value?: string | null): string {
   if (!value) return 'Unknown'

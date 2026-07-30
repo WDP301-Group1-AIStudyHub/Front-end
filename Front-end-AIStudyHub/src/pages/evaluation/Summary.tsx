@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { IconTile } from '../../components/shared/IconTile'
+import { Button } from "@/components/ui/button";
+import { IconTile } from '@/components/shared/IconTile'
 import {
   AlertCircle,
   ArrowDownToLine,
@@ -10,8 +11,8 @@ import {
   RefreshCw,
   Sigma,
 } from "lucide-react";
-import { getBenchmarkSummary } from "../../services/chatApi";
-import type { BenchmarkScores, BenchmarkSummary } from "../../types/chat";
+import { getBenchmarkSummary } from "@/services/chatApi";
+import type { BenchmarkScores, BenchmarkSummary } from "@/types/chat";
 
 type MetricKey = keyof Omit<BenchmarkScores, "totalScore">;
 
@@ -224,14 +225,16 @@ export default function Summary() {
             </p>
           </div>
 
-          <button
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-border bg-background/60 px-4 text-sm font-semibold transition hover:border-primary"
+          <Button
+            className="px-4"
             onClick={exportJson}
+            size="lg"
             type="button"
+            variant="outline"
           >
-            <ArrowDownToLine className="size-4" />
+            <ArrowDownToLine data-icon="inline-start" aria-hidden="true" />
             Export
-          </button>
+          </Button>
         </header>
 
         {error && (
@@ -240,14 +243,16 @@ export default function Summary() {
               <AlertCircle className="size-4" />
               {error}
             </span>
-            <button
-              className="inline-flex items-center justify-center gap-2 rounded-md border border-destructive/40 px-3 py-2 font-semibold"
+            <Button
+              className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
               onClick={loadSummary}
+              size="sm"
               type="button"
+              variant="outline"
             >
-              <RefreshCw className="size-4" />
+              <RefreshCw data-icon="inline-start" aria-hidden="true" />
               Retry
-            </button>
+            </Button>
           </div>
         )}
 

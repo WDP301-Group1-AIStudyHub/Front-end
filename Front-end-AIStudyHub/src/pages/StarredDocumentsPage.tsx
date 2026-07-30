@@ -17,9 +17,9 @@ import {
   downloadDocumentFile,
   listStarredDocuments,
   setDocumentStar,
-} from '../services/documentApi'
-import type { DocumentItem, DocumentSubject } from '../types/document'
-import { IconTile } from '../components/shared/IconTile'
+} from '@/services/documentApi'
+import type { DocumentItem, DocumentSubject } from '@/types/document'
+import { IconTile } from '@/components/shared/IconTile'
 
 function formatDate(value?: string | null): string {
   if (!value) return 'Unknown'
@@ -159,7 +159,7 @@ export default function StarredDocumentsPage() {
                 <TableRow key={document.id}>
                   <TableCell>
                     <button
-                      className="flex min-w-0 items-center gap-3 text-left group"
+                      className="flex min-w-0 items-center gap-3 text-left group outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                       onClick={() => navigate(`/documents/${document.id}`)}
                       type="button"
                     >

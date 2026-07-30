@@ -9,7 +9,8 @@ import {
   Upload,
   X,
 } from 'lucide-react'
-import { useUploadStore } from '../../store/useUploadStore'
+import { Button } from '@/components/ui/button'
+import { useUploadStore } from '@/store/useUploadStore'
 
 export default function BackgroundUploadWidget() {
   const { uploads, cancelUpload, cancelAll, removeUpload, clearFinished } = useUploadStore()
@@ -37,10 +38,11 @@ export default function BackgroundUploadWidget() {
 
   if (!isExpanded) {
     return (
-      <button
+      <Button
         onClick={() => setIsExpanded(true)}
-        className="fixed bottom-4 right-4 z-50 flex w-80 items-center justify-between rounded-xl border border-border bg-card px-4 py-3 text-foreground shadow-[0_12px_32px_rgb(28_29_26/0.08)] transition-colors hover:bg-muted"
+        className="fixed bottom-4 right-4 z-50 flex h-auto w-80 justify-between rounded-xl px-4 py-3 text-foreground shadow-sm"
         type="button"
+        variant="outline"
       >
         <span className="flex items-center gap-2 text-sm font-medium">
           {activeCount > 0 ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
@@ -51,7 +53,7 @@ export default function BackgroundUploadWidget() {
           </span>
         </span>
         <ChevronUp className="h-4 w-4 text-muted-foreground" />
-      </button>
+      </Button>
     )
   }
 
@@ -61,21 +63,26 @@ export default function BackgroundUploadWidget() {
         <span className="text-base font-semibold">Uploads</span>
         <div className="flex items-center gap-2">
           {activeCount > 0 ? (
-            <button
+            <Button
               onClick={cancelAll}
-              className="rounded-lg border border-border bg-card px-2.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="text-muted-foreground"
+              size="xs"
               type="button"
+              variant="outline"
             >
               Cancel all
-            </button>
+            </Button>
           ) : null}
-          <button
+          <Button
+            aria-label="Collapse uploads"
             onClick={() => setIsExpanded(false)}
-            className="rounded-lg p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="text-muted-foreground"
+            size="icon-sm"
             type="button"
+            variant="ghost"
           >
             <ChevronDown className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -85,18 +92,17 @@ export default function BackgroundUploadWidget() {
           ['completed', `Completed (${completedCount})`],
           ['failed', `Failed (${failedCount})`],
         ].map(([value, label]) => (
-          <button
-            className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
-              activeTab === value
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-            }`}
+          <Button
+            aria-pressed={activeTab === value}
+            className="rounded-full px-3"
             key={value}
             onClick={() => setActiveTab(value as typeof activeTab)}
+            size="xs"
             type="button"
+            variant={activeTab === value ? 'default' : 'ghost'}
           >
             {label}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -144,21 +150,26 @@ export default function BackgroundUploadWidget() {
 
                 <div className="shrink-0">
                   {item.status === 'uploading' || item.status === 'processing' || item.status === 'pending' ? (
-                    <button
+                    <Button
                       onClick={() => cancelUpload(item.id)}
-                      className="rounded-lg border border-border px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                      className="text-muted-foreground"
+                      size="xs"
                       type="button"
+                      variant="outline"
                     >
                       Cancel
-                    </button>
+                    </Button>
                   ) : (
-                    <button
+                    <Button
+                      aria-label="Remove from list"
                       onClick={() => removeUpload(item.id)}
-                      className="rounded-lg p-1 text-muted-foreground opacity-0 transition-colors hover:bg-muted hover:text-foreground group-hover:opacity-100 focus:opacity-100"
+                      className="text-muted-foreground opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+                      size="icon-sm"
                       type="button"
+                      variant="ghost"
                     >
                       <X className="h-4.5 w-4.5" />
-                    </button>
+                    </Button>
                   )}
                 </div>
               </div>
@@ -184,13 +195,15 @@ export default function BackgroundUploadWidget() {
         </div>
 
         {activeCount === 0 ? (
-          <button
+          <Button
             onClick={clearFinished}
-            className="rounded-lg border border-border px-2.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="text-muted-foreground"
+            size="xs"
             type="button"
+            variant="outline"
           >
             Clear all
-          </button>
+          </Button>
         ) : null}
       </div>
     </div>

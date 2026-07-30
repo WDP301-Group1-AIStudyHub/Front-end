@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { BarChart2, Clock, Loader2, Target, Zap } from 'lucide-react'
-import { IconTile } from '../components/shared/IconTile'
-import { getEvaluationLogs, getEvaluationSummary } from '../services/chatApi'
-import type { ChatEvaluation, EvaluationLog, EvaluationSummary } from '../types/chat'
+import { IconTile } from '@/components/shared/IconTile'
+import { getEvaluationLogs, getEvaluationSummary } from '@/services/chatApi'
+import type { ChatEvaluation, EvaluationLog, EvaluationSummary } from '@/types/chat'
 
 function StatCard({
   icon,

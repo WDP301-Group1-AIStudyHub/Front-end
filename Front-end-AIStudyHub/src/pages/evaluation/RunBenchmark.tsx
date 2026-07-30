@@ -1,5 +1,6 @@
 ﻿import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import {
   AlertCircle,
   ArrowDownToLine,
@@ -10,12 +11,12 @@ import {
   Loader2,
   RefreshCw,
 } from "lucide-react";
-import { runBenchmarkQuestion } from "../../services/chatApi";
+import { runBenchmarkQuestion } from "@/services/chatApi";
 import type {
   BenchmarkEvaluationScore,
   BenchmarkRunResult,
   BenchmarkScores,
-} from "../../types/chat";
+} from "@/types/chat";
 
 type MetricKey = keyof Omit<BenchmarkScores, "totalScore">;
 
@@ -213,24 +214,27 @@ export default function RunBenchmark() {
               <ChevronLeft className="size-4" />
               Back
             </Link>
-            <button
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-border bg-background/60 px-4 text-sm font-semibold transition hover:border-primary disabled:opacity-60"
+            <Button
+              className="px-4"
               disabled={!result}
               onClick={exportJson}
+              size="lg"
               type="button"
+              variant="outline"
             >
-              <ArrowDownToLine className="size-4" />
+              <ArrowDownToLine data-icon="inline-start" aria-hidden="true" />
               Export JSON
-            </button>
-            <button
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-60"
+            </Button>
+            <Button
+              className="px-4"
               disabled={loading || rerunning}
               onClick={() => runBenchmark(true)}
+              size="lg"
               type="button"
             >
-              {rerunning ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
+              {rerunning ? <Loader2 data-icon="inline-start" className="animate-spin" aria-hidden="true" /> : <RefreshCw data-icon="inline-start" aria-hidden="true" />}
               Re-run
-            </button>
+            </Button>
           </div>
         </header>
 
@@ -240,14 +244,16 @@ export default function RunBenchmark() {
               <AlertCircle className="size-4" />
               {error}
             </span>
-            <button
-              className="inline-flex items-center justify-center gap-2 rounded-md border border-destructive/40 px-3 py-2 font-semibold"
+            <Button
+              className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
               onClick={() => runBenchmark()}
+              size="sm"
               type="button"
+              variant="outline"
             >
-              <RefreshCw className="size-4" />
+              <RefreshCw data-icon="inline-start" aria-hidden="true" />
               Retry
-            </button>
+            </Button>
           </div>
         )}
 

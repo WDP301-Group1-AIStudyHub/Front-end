@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -27,12 +28,12 @@ import {
   deleteBenchmarkQuestion,
   getBenchmarkQuestions,
   getBenchmarkSummary,
-} from "../../services/chatApi";
+} from "@/services/chatApi";
 import type {
   BenchmarkDifficulty,
   BenchmarkQuestion,
   BenchmarkSummary,
-} from "../../types/chat";
+} from "@/types/chat";
 
 type TabKey = "all" | "mine" | "recent" | "review";
 
@@ -311,14 +312,15 @@ export default function EvaluationPage() {
               <AlertCircle className="size-4" />
               {error}
             </span>
-            <button
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-3 py-1 font-bold text-foreground hover:bg-muted"
+            <Button
               onClick={loadBenchmarkData}
+              size="sm"
               type="button"
+              variant="outline"
             >
-              <RefreshCw className="size-4" />
+              <RefreshCw data-icon="inline-start" aria-hidden="true" />
               Retry
-            </button>
+            </Button>
           </div>
         )}
 
@@ -365,18 +367,16 @@ export default function EvaluationPage() {
           <div className="flex flex-col gap-4 border-b border-border p-4">
             <div className="flex gap-2 overflow-x-auto pb-1">
               {tabs.map((tab) => (
-                <button
-                  className={`h-9 shrink-0 rounded-md border border-border px-4 text-xs font-semibold transition ${
-                    activeTab === tab.key
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-card text-foreground hover:bg-muted"
-                  }`}
+                <Button
+                  aria-pressed={activeTab === tab.key}
+                  className="shrink-0 px-4 text-xs"
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
                   type="button"
+                  variant={activeTab === tab.key ? "default" : "outline"}
                 >
                   {tab.label}
-                </button>
+                </Button>
               ))}
             </div>
 
@@ -462,33 +462,37 @@ export default function EvaluationPage() {
                           #{question.id.substring(0, 8)}
                         </p>
                       </div>
-                      <button
+                      <Button
                         aria-label="Question actions"
                         aria-expanded={openMenuQuestionId === question.id}
-                        className="grid size-8 shrink-0 place-items-center rounded-xl border border-border bg-card text-foreground hover:bg-muted"
+                        className="shrink-0"
                         onClick={() =>
                           setOpenMenuQuestionId((currentId) =>
                             currentId === question.id ? null : question.id,
                           )
                         }
+                        size="icon-sm"
                         type="button"
+                        variant="outline"
                       >
                         <MoreHorizontal className="size-4" />
-                      </button>
+                      </Button>
                       {openMenuQuestionId === question.id && (
                         <div className="absolute right-4 top-12 z-20 w-44 rounded-xl border border-border bg-card p-1 shadow-sm">
-                          <button
-                            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-extrabold text-destructive transition hover:bg-destructive/10 disabled:opacity-60"
+                          <Button
+                            className="w-full justify-start text-destructive hover:bg-destructive/10 hover:text-destructive"
                             disabled={deletingQuestionId === question.id}
                             onClick={() => {
                               setConfirmDeleteQuestion(question);
                               setOpenMenuQuestionId(null);
                             }}
+                            size="sm"
                             type="button"
+                            variant="ghost"
                           >
-                            <Trash2 className="size-4" />
+                            <Trash2 data-icon="inline-start" aria-hidden="true" />
                             Delete question
-                          </button>
+                          </Button>
                         </div>
                       )}
                     </div>
@@ -552,27 +556,31 @@ export default function EvaluationPage() {
               </div>
 
               <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                <button
-                  className="inline-flex h-10 items-center justify-center rounded-xl border border-border bg-card px-4 text-sm font-extrabold text-foreground hover:bg-muted"
+                <Button
+                  className="px-4"
                   disabled={deletingQuestionId === confirmDeleteQuestion.id}
                   onClick={() => setConfirmDeleteQuestion(null)}
+                  size="lg"
                   type="button"
+                  variant="outline"
                 >
                   Cancel
-                </button>
-                <button
-                  className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-border bg-destructive/10 px-4 text-sm font-extrabold text-destructive hover:bg-destructive/15"
+                </Button>
+                <Button
+                  className="px-4"
                   disabled={deletingQuestionId === confirmDeleteQuestion.id}
                   onClick={handleDeleteQuestion}
+                  size="lg"
                   type="button"
+                  variant="destructive"
                 >
                   {deletingQuestionId === confirmDeleteQuestion.id ? (
-                    <Loader2 className="size-4 animate-spin" />
+                    <Loader2 data-icon="inline-start" className="animate-spin" aria-hidden="true" />
                   ) : (
-                    <Trash2 className="size-4" />
+                    <Trash2 data-icon="inline-start" aria-hidden="true" />
                   )}
                   Delete question
-                </button>
+                </Button>
               </div>
             </div>
           </div>

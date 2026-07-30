@@ -14,10 +14,10 @@ import {
  generateStudyMaterial,
  type StudyMaterial,
  type MaterialType,
-} from "../services/studyMaterialApi";
-import { listDocuments } from "../services/documentApi";
-import { listSubjects, type SubjectItem } from "../services/subjectApi";
-import { useStudyMaterialStore } from "../store/useStudyMaterialStore";
+} from "@/services/studyMaterialApi";
+import { listDocuments } from "@/services/documentApi";
+import { listSubjects, type SubjectItem } from "@/services/subjectApi";
+import { useStudyMaterialStore } from "@/store/useStudyMaterialStore";
 import {
  Search,
  Play,
@@ -42,7 +42,7 @@ import {
  AlertDialogHeader,
  AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { getAllProgress, type StudyProgressData } from "../hooks/useStudyProgress";
+import { getAllProgress, type StudyProgressData } from "@/hooks/useStudyProgress";
 
 export default function StudyMaterialsListPage() {
  const location = useLocation();
@@ -274,7 +274,7 @@ export default function StudyMaterialsListPage() {
  {/* MCQ Button */}
  <button
  onClick={() => handleOpenCustomise("MCQ")}
- className="group flex min-w-0 flex-1 items-center gap-3 rounded-md border border-border bg-white px-4 py-3 text-left transition-colors hover:border-primary/60 hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary"
+ className="group flex min-w-0 flex-1 items-center gap-3 rounded-md border border-border bg-white px-4 py-3 text-left transition-colors hover:border-primary/60 hover:bg-muted outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
  >
  <div className="rounded-md bg-blue-500/10 p-2 text-blue-700 transition-colors">
  <HelpCircle className="size-5" />
@@ -290,7 +290,7 @@ export default function StudyMaterialsListPage() {
  {/* Flashcard Button */}
  <button
  onClick={() => handleOpenCustomise("FLASHCARD")}
- className="group flex min-w-0 flex-1 items-center gap-3 rounded-md border border-border bg-white px-4 py-3 text-left transition-colors hover:border-primary/60 hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary"
+ className="group flex min-w-0 flex-1 items-center gap-3 rounded-md border border-border bg-white px-4 py-3 text-left transition-colors hover:border-primary/60 hover:bg-muted outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
  >
  <div className="rounded-md bg-purple-500/10 p-2 text-purple-700 transition-colors">
  <Brain className="size-5" />
@@ -324,17 +324,9 @@ export default function StudyMaterialsListPage() {
  const label = filter === "ALL" ? "All" : filter === "MCQ" ? "Quizzes" : "Flashcards";
  const isActive = typeFilter === filter;
  return (
- <button
- key={filter}
- onClick={() => setTypeFilter(filter)}
- className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
- isActive
- ? "bg-primary border-primary text-primary-foreground"
- : "bg-background border-border text-foreground hover:bg-muted"
- }`}
- >
+ <Button key={filter} onClick={() => setTypeFilter(filter)} aria-pressed={isActive} className="px-4 text-xs" size="sm" type="button" variant={isActive ? "default" : "outline"}>
  {label}
- </button>
+ </Button>
  );
  })}
  </div>
@@ -497,12 +489,9 @@ export default function StudyMaterialsListPage() {
  Customise {customiseType === "MCQ" ? "quiz" : "flashcards"}
  </h2>
  </div>
- <button
- onClick={handleCloseCustomise}
- className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-lg hover:bg-muted"
- >
+ <Button onClick={handleCloseCustomise} aria-label="Actions" className="text-muted-foreground" size="icon-sm" variant="ghost">
  <X className="size-5" />
- </button>
+ </Button>
  </div>
 
  {/* Dialog Body */}
@@ -586,18 +575,9 @@ export default function StudyMaterialsListPage() {
  { label: "Standard", value: 10 },
  { label: "More", value: 15 },
  ].map((opt) => (
- <button
- key={opt.value}
- type="button"
- onClick={() => setQuestionCount(opt.value)}
- className={`py-2 px-3 text-xs font-bold rounded-xl border transition-all ${
- questionCount === opt.value
- ? "bg-primary border-primary text-primary-foreground font-black"
- : "bg-background border-border text-foreground hover:bg-muted"
- }`}
- >
+ <Button key={opt.value} type="button" onClick={() => setQuestionCount(opt.value)} aria-pressed={questionCount === opt.value} className="px-3 text-xs" size="sm" variant={questionCount === opt.value ? "default" : "outline"}>
  {opt.label} ({opt.value})
- </button>
+ </Button>
  ))}
  </div>
  </div>
@@ -613,18 +593,9 @@ export default function StudyMaterialsListPage() {
  { label: "Medium", value: "Medium" },
  { label: "Hard", value: "Hard" },
  ].map((opt) => (
- <button
- key={opt.value}
- type="button"
- onClick={() => setDifficulty(opt.value)}
- className={`py-2 px-3 text-xs font-bold rounded-xl border transition-all ${
- difficulty === opt.value
- ? "bg-primary border-primary text-primary-foreground font-black"
- : "bg-background border-border text-foreground hover:bg-muted"
- }`}
- >
+ <Button key={opt.value} type="button" onClick={() => setDifficulty(opt.value)} aria-pressed={difficulty === opt.value} className="px-3 text-xs" size="sm" variant={difficulty === opt.value ? "default" : "outline"}>
  {opt.label}
- </button>
+ </Button>
  ))}
  </div>
  </div>

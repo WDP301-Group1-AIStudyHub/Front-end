@@ -1,14 +1,15 @@
 import { useState } from 'react'
 import type { ChangeEvent, FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
-import AcademicAside from '../../components/auth/AcademicAside'
-import AuthCardShell from '../../components/auth/AuthCardShell'
-import AuthScaffold from '../../components/auth/AuthScaffold'
-import FloatingField from '../../components/auth/FloatingField'
-import { CelestialInlineLoader } from '../../components/shared/CelestialLoading'
-import { login } from '../../services/authApi'
+import AcademicAside from '@/components/auth/AcademicAside'
+import AuthCardShell from '@/components/auth/AuthCardShell'
+import AuthScaffold from '@/components/auth/AuthScaffold'
+import FloatingField from '@/components/auth/FloatingField'
+import { CelestialInlineLoader } from '@/components/shared/CelestialLoading'
+import { login } from '@/services/authApi'
 
 const initialForm = {
   email: '',
@@ -87,13 +88,14 @@ export default function LoginPage() {
           {error ? (
             <p className="m-0 text-xs leading-relaxed text-destructive">{error}</p>
           ) : null}
-          <button
+          <Button
+            className="min-h-[52px] w-full"
             disabled={loading}
+            size="lg"
             type="submit"
-            className="min-h-[52px] w-full rounded-lg bg-primary text-sm font-semibold text-primary-foreground transition-colors hover:bg-[color-mix(in_oklab,var(--primary),black_12%)] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? <CelestialInlineLoader className="justify-center" label="Authenticating..." /> : 'Log in to dashboard'}
-          </button>
+          </Button>
         </form>
       </AuthCardShell>
     </AuthScaffold>

@@ -1,8 +1,9 @@
-import { useUploadStore } from "../../store/useUploadStore";
+import { useUploadStore } from "@/store/useUploadStore";
 import { AlertTriangle, FileText, Files } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { IconTile } from '../shared/IconTile';
-import { getFileIconColorClass } from "../../utils/formatters";
+import { IconTile } from '@/components/shared/IconTile';
+import { getFileIconColorClass } from "@/utils/formatters";
 
 export default function ConflictModal() {
   const stagedConflicts = useUploadStore((state) => state.stagedConflicts);
@@ -43,30 +44,35 @@ export default function ConflictModal() {
         </p>
 
         <div className="flex flex-col gap-2.5 mt-2">
-          <button
+          <Button
+            className="w-full"
             onClick={() => resolveConflict(currentId, "REPLACE")}
-            className="w-full cursor-pointer rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-[color-mix(in_oklab,var(--primary),black_12%)]"
+            size="lg"
             type="button"
           >
             Replace existing document
-          </button>
-          
-          <button
-            onClick={() => resolveConflict(currentId, "KEEP_BOTH")}
-            className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-border bg-card py-2.5 text-sm font-semibold text-secondary-foreground transition-colors hover:bg-muted"
-            type="button"
-          >
-            <Files className="size-4" />
-            Keep both (renames incoming file)
-          </button>
+          </Button>
 
-          <button
-            onClick={() => resolveConflict(currentId, "CANCEL")}
-            className="w-full cursor-pointer rounded-lg py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          <Button
+            className="w-full"
+            onClick={() => resolveConflict(currentId, "KEEP_BOTH")}
+            size="lg"
             type="button"
+            variant="outline"
+          >
+            <Files data-icon="inline-start" aria-hidden="true" />
+            Keep both (renames incoming file)
+          </Button>
+
+          <Button
+            className="w-full text-muted-foreground"
+            onClick={() => resolveConflict(currentId, "CANCEL")}
+            size="lg"
+            type="button"
+            variant="ghost"
           >
             Cancel upload
-          </button>
+          </Button>
         </div>
       </Card>
     </div>

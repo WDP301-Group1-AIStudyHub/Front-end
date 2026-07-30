@@ -1,4 +1,4 @@
-import PublicNav from '../shared/PublicNav'
+import PublicNav from '@/components/shared/PublicNav'
 
 export default function AuthHeader({ action }: { action: 'Sign Up' | 'Sign In' | 'Register' }) {
   const href = action === 'Sign In' ? '/login' : '/register'

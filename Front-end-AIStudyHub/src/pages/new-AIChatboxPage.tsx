@@ -30,33 +30,33 @@ import {
  SheetHeader,
  SheetTitle,
 } from "@/components/ui/sheet";
-import { ArtifactsPanel } from "../components/chat/ArtifactsPanel";
+import { ArtifactsPanel } from "@/components/chat/ArtifactsPanel";
 import {
  CelestialLoader,
  LoadingState,
-} from "../components/shared/CelestialLoading";
+} from "@/components/shared/CelestialLoading";
 import {
  deleteArtifact,
  initiateArtifact,
  listArtifacts,
-} from "../services/artifactApi";
-import type { ArtifactRecord, ArtifactType } from "../services/artifactApi";
+} from "@/services/artifactApi";
+import type { ArtifactRecord, ArtifactType } from "@/services/artifactApi";
 import {
  ChatApiError,
  askAgentStream,
  getChatThreadById,
-} from "../services/chatApi";
-import { listDocuments } from "../services/documentApi";
-import { extractArtifacts } from "../utils/extractArtifacts";
-import { IconTile } from '../components/shared/IconTile'
-import { normalizeSubjectColor } from "../utils/subjectColor";
+} from "@/services/chatApi";
+import { listDocuments } from "@/services/documentApi";
+import { extractArtifacts } from "@/utils/extractArtifacts";
+import { IconTile } from '@/components/shared/IconTile'
+import { normalizeSubjectColor } from "@/utils/subjectColor";
 import type {
  AskChatPayload,
  ChatEvaluation,
  ChatScope,
  ChatSource,
-} from "../types/chat";
-import type { DocumentItem } from "../types/document";
+} from "@/types/chat";
+import type { DocumentItem } from "@/types/document";
 
 // ── Inner component: owns the runtime so key-remount works correctly ──────────
 type ChatThreadProps = {
@@ -1068,7 +1068,7 @@ function DocumentPickerList({
  {/* "All documents" button */}
  <button
  onClick={onClearSelection}
- className={`w-full rounded-md border px-3 py-2 text-left text-xs transition-colors flex items-center justify-between ${
+ className={`w-full rounded-md border px-3 py-2 text-left text-xs transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50 flex items-center justify-between ${
  selectedDocIds.length === 0
  ? "border-primary/60 bg-primary/10 text-primary font-medium"
  : "border-border/70 bg-background text-muted-foreground hover:border-primary/35 hover:text-foreground"
@@ -1121,7 +1121,7 @@ function DocumentPickerList({
  return next;
  });
  }}
- className="flex flex-1 min-w-0 items-center gap-2 text-left"
+ className="flex flex-1 min-w-0 items-center gap-2 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
  >
  {/* Tinted dot representing the subject color */}
  <span

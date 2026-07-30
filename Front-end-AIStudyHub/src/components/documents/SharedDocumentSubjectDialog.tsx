@@ -17,9 +17,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { updateSharedDocumentProfile } from '../../services/documentApi'
-import type { SubjectItem } from '../../services/subjectApi'
-import type { DocumentItem } from '../../types/document'
+import { updateSharedDocumentProfile } from '@/services/documentApi'
+import type { SubjectItem } from '@/services/subjectApi'
+import type { DocumentItem } from '@/types/document'
 
 type SharedDocumentSubjectDialogProps = {
   document: DocumentItem | null

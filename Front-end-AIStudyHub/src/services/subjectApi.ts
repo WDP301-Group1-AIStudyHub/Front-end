@@ -1,5 +1,5 @@
 import { clearAuthSession, getStoredToken } from './authStorage'
-import type { DocumentItem, DocumentSubject } from '../types/document'
+import type { DocumentItem, DocumentSubject } from '@/types/document'
 
 const API_ORIGIN =
   import.meta.env.VITE_API_BASE_URL?.replace(/\/+$/, '') ??

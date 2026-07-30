@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
-import { IconTile } from '../../components/shared/IconTile'
+import { IconTile } from '@/components/shared/IconTile'
 import { Badge } from '@/components/ui/badge'
-import { CelestialSkeleton } from '../../components/shared/CelestialLoading'
+import { CelestialSkeleton } from '@/components/shared/CelestialLoading'
 
 export function formatDateTime(value?: string) {
   if (!value) return 'Never'

@@ -1,8 +1,8 @@
 import { create } from 'zustand'
 import axios from 'axios'
-import { getStoredToken } from '../services/authStorage'
-import { findOrCreateSubjectByName } from '../services/subjectApi'
-import type { DocumentItem } from '../types/document'
+import { getStoredToken } from '@/services/authStorage'
+import { findOrCreateSubjectByName } from '@/services/subjectApi'
+import type { DocumentItem } from '@/types/document'
 
 const API_ORIGIN =
   import.meta.env.VITE_API_BASE_URL?.replace(/\/+$/, '') ??

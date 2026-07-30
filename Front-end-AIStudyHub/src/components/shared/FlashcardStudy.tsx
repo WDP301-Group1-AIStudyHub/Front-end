@@ -5,7 +5,7 @@ import {
  type IFlashcardItem,
  type StudyMaterial,
  explainCardConcept,
-} from "../../services/studyMaterialApi";
+} from "@/services/studyMaterialApi";
 import {
  ArrowLeft,
  ArrowRight,
@@ -20,7 +20,7 @@ import {
  Shuffle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useStudyProgress, type FlashcardProgressData } from "../../hooks/useStudyProgress";
+import { useStudyProgress, type FlashcardProgressData } from "@/hooks/useStudyProgress";
 
 interface FlashcardStudyProps {
  material: StudyMaterial;
@@ -482,7 +482,7 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
  <button
  key={i}
  onClick={() => setSelectedFollowUp(topic)}
- className={`w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold border transition-all ${
+ className={`w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold border outline-none focus-visible:ring-3 focus-visible:ring-ring/50 transition-all ${
  isSelected
  ? "bg-primary border-primary text-primary-foreground"
  : "bg-background border-border text-foreground hover:bg-muted"
@@ -596,30 +596,22 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
  
  {/* Three dot action menu */}
  <div className="relative">
- <button
- type="button"
- onClick={(e) => {
+ <Button type="button" onClick={(e) => {
  e.stopPropagation();
  setShowMenu(!showMenu);
- }}
- className="text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-muted/80 transition-colors"
- >
+ }} aria-label="Card actions" className="text-muted-foreground" size="icon-sm" variant="ghost">
  <MoreVertical className="size-4" />
- </button>
+ </Button>
  {showMenu && (
  <div className="absolute right-0 top-7 z-10 w-36 bg-card border border-border rounded-xl shadow-sm p-1 animate-in fade-in slide-in-from-top-1 duration-100">
- <button
- type="button"
- onClick={(e) => {
+ <Button type="button" onClick={(e) => {
  e.stopPropagation();
  setShowMenu(false);
  handleExplain();
- }}
- className="w-full text-left px-3 py-2 text-xs font-bold text-foreground hover:bg-muted rounded-lg flex items-center gap-1.5"
- >
+ }} className="w-full justify-start text-xs" size="sm" variant="ghost">
  <Sparkles className="size-3.5 text-amber-500" />
  Explain Concept
- </button>
+ </Button>
  </div>
  )}
  </div>
@@ -645,30 +637,22 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
  </span>
  
  <div className="relative">
- <button
- type="button"
- onClick={(e) => {
+ <Button type="button" onClick={(e) => {
  e.stopPropagation();
  setShowMenu(!showMenu);
- }}
- className="text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-muted/85"
- >
+ }} aria-label="Card actions" className="text-muted-foreground" size="icon-sm" variant="ghost">
  <MoreVertical className="size-4" />
- </button>
+ </Button>
  {showMenu && (
  <div className="absolute right-0 top-7 z-10 w-36 bg-card border border-border rounded-xl shadow-sm p-1 animate-in fade-in slide-in-from-top-1 duration-100">
- <button
- type="button"
- onClick={(e) => {
+ <Button type="button" onClick={(e) => {
  e.stopPropagation();
  setShowMenu(false);
  handleExplain();
- }}
- className="w-full text-left px-3 py-2 text-xs font-bold text-foreground hover:bg-muted rounded-lg flex items-center gap-1.5"
- >
+ }} className="w-full justify-start text-xs" size="sm" variant="ghost">
  <Sparkles className="size-3.5 text-amber-500" />
  Explain Concept
- </button>
+ </Button>
  </div>
  )}
  </div>
@@ -702,28 +686,22 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
  </Button>
 
  {/* Missed it X button */}
- <button
- onClick={(e) => handleRate(e, "MISSED_IT")}
- className="flex-1 h-11 flex items-center justify-center gap-1.5 rounded-full border border-red-500/20 bg-red-500/5 text-red-650 hover:bg-red-500/10 hover:border-red-500/30 transition-all font-bold text-xs"
- >
+ <Button onClick={(e) => handleRate(e, "MISSED_IT")} className="h-11 flex-1 rounded-full border-red-500/20 bg-red-500/5 text-xs text-red-600 hover:border-red-500/30 hover:bg-red-500/10" variant="outline">
  <X className="size-4" />
  <span>Missed it</span>
  <span className="bg-red-500/15 text-red-650 px-2 py-0.5 rounded-full text-2xs">
  {missedItCount}
  </span>
- </button>
+ </Button>
 
  {/* Got it V button */}
- <button
- onClick={(e) => handleRate(e, "GOT_IT")}
- className="flex-1 h-11 flex items-center justify-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/5 text-emerald-700 hover:bg-emerald-500/10 hover:border-emerald-500/30 transition-all font-bold text-xs"
- >
+ <Button onClick={(e) => handleRate(e, "GOT_IT")} className="h-11 flex-1 rounded-full border-emerald-500/20 bg-emerald-500/5 text-xs text-emerald-700 hover:border-emerald-500/30 hover:bg-emerald-500/10" variant="outline">
  <Check className="size-4" />
  <span>Got it</span>
  <span className="bg-emerald-500/15 text-emerald-700 px-2 py-0.5 rounded-full text-2xs">
  {gotItCount}
  </span>
- </button>
+ </Button>
 
  {/* Next Arrow */}
  <Button
@@ -754,12 +732,9 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
  <Sparkles className="size-5 text-amber-500" />
  <h3 className="text-sm font-black text-foreground">AI Concept Explanation</h3>
  </div>
- <button
- onClick={() => setIsExplainModalOpen(false)}
- className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-lg hover:bg-muted"
- >
+ <Button onClick={() => setIsExplainModalOpen(false)} aria-label="Close" className="text-muted-foreground" size="icon-sm" variant="ghost">
  <X className="size-4" />
- </button>
+ </Button>
  </div>
 
  {/* Modal Body */}

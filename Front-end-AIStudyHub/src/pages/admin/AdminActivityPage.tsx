@@ -6,7 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { IconTile } from '../../components/shared/IconTile'
+import { IconTile } from '@/components/shared/IconTile'
 import { Activity, Filter, Search, Eye, Clock, User, Globe, MonitorSmartphone, Database, Tag } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -16,9 +16,9 @@ import {
   DialogDescription,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { LoadingState } from '../../components/shared/CelestialLoading'
-import { listSystemActivities } from '../../services/adminApi'
-import type { SystemActivity } from '../../types/admin'
+import { LoadingState } from '@/components/shared/CelestialLoading'
+import { listSystemActivities } from '@/services/adminApi'
+import type { SystemActivity } from '@/types/admin'
 import { AdminPageHeader, formatDateTime, StatusBadge } from './adminPageUtils'
 
 export default function AdminActivityPage() {

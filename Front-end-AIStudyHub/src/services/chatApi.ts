@@ -1,4 +1,4 @@
-import type { ApiResponse } from '../types/auth'
+import type { ApiResponse } from '@/types/auth'
 import type {
   AgentEvent,
   AskChatPayload,
@@ -14,7 +14,7 @@ import type {
   CreateBenchmarkQuestionPayload,
   EvaluationLogsResponse,
   EvaluationSummary,
-} from '../types/chat'
+} from '@/types/chat'
 import { clearAuthSession, getStoredToken } from './authStorage'
 
 const API_ORIGIN =

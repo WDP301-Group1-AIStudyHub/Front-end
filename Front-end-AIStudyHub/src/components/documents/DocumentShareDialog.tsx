@@ -33,12 +33,12 @@ import {
   revokeDocumentShare,
   shareDocument,
   updateDocumentShare,
-} from '../../services/documentApi'
+} from '@/services/documentApi'
 import type {
   DocumentItem,
   DocumentShare,
   DocumentSharePermission,
-} from '../../types/document'
+} from '@/types/document'
 
 type DocumentShareDialogProps = {
   document: DocumentItem | null

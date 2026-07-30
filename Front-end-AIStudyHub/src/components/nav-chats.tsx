@@ -16,7 +16,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import type { ThreadDateGroup } from "@/src/lib/groupChatThreads";
+import type { ThreadDateGroup } from "@/lib/groupChatThreads";
 import {
   ArchiveIcon,
   ArchiveRestoreIcon,

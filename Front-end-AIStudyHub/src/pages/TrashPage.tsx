@@ -27,9 +27,9 @@ import {
   emptyTrash,
   listTrashDocuments,
   restoreDocument,
-} from '../services/documentApi'
-import type { DocumentItem, DocumentSubject } from '../types/document'
-import { IconTile } from '../components/shared/IconTile'
+} from '@/services/documentApi'
+import type { DocumentItem, DocumentSubject } from '@/types/document'
+import { IconTile } from '@/components/shared/IconTile'
 
 function formatDate(value?: string | null): string {
   if (!value) return 'Unknown'

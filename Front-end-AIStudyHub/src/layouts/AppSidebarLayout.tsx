@@ -15,9 +15,9 @@ import {
 import { AppSidebar } from '@/components/app-sidebar'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 import { TooltipProvider } from '@/components/ui/tooltip'
-import { getStoredUser } from '@/src/services/authStorage'
+import { getStoredUser } from '@/services/authStorage'
 import { cn } from '@/lib/utils'
-import StudyMaterialNotificationTray from '../components/shared/StudyMaterialNotificationTray'
+import StudyMaterialNotificationTray from '@/components/shared/StudyMaterialNotificationTray'
 
 type AppSidebarLayoutProps = {
   children: ReactNode

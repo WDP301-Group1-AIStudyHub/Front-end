@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
-import AuthScaffold from '../../components/auth/AuthScaffold'
-import SplitInfoCard from '../../components/auth/SplitInfoCard'
+import AuthScaffold from '@/components/auth/AuthScaffold'
+import SplitInfoCard from '@/components/auth/SplitInfoCard'
 
 export default function ResetPasswordPage() {
   return (

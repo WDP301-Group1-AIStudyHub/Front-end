@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import type { IMcqItem } from "../../services/studyMaterialApi";
+import type { IMcqItem } from "@/services/studyMaterialApi";
 import { ArrowRight, RotateCcw, Check, X, AlertCircle, Award, Play, Shuffle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { useStudyProgress, type McqProgressData } from "../../hooks/useStudyProgress";
+import { useStudyProgress, type McqProgressData } from "@/hooks/useStudyProgress";
 
 interface McqQuizProps {
  materialId: string;
@@ -295,7 +295,7 @@ export default function McqQuiz({ materialId, items, title }: McqQuizProps) {
  type="button"
  disabled={isSubmitted}
  onClick={() => setSelectedOption(idx)}
- className={`w-full min-h-12 px-4 py-3 rounded-xl border text-left text-sm flex items-center justify-between gap-3 transition-all ${btnClass}`}
+ className={`w-full min-h-12 px-4 py-3 rounded-xl border text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50 text-sm flex items-center justify-between gap-3 transition-all ${btnClass}`}
  >
  <span>{option}</span>
  {iconElement}

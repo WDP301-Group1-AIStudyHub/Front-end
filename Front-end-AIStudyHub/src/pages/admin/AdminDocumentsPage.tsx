@@ -6,7 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { IconTile } from '../../components/shared/IconTile'
+import { IconTile } from '@/components/shared/IconTile'
 import { Eye, FileCog, Search, FileText, Database, User, Shield, Info } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,9 +14,9 @@ import {
   Dialog,
   DialogContent,
 } from '@/components/ui/dialog'
-import { LoadingState } from '../../components/shared/CelestialLoading'
-import { listAdminDocuments } from '../../services/adminApi'
-import type { AdminDocument } from '../../types/admin'
+import { LoadingState } from '@/components/shared/CelestialLoading'
+import { listAdminDocuments } from '@/services/adminApi'
+import type { AdminDocument } from '@/types/admin'
 import { AdminPageHeader, StatusBadge } from './adminPageUtils'
 
 

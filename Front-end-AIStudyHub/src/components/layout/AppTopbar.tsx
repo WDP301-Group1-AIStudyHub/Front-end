@@ -5,7 +5,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { SidebarTrigger } from '@/components/ui/sidebar'
-import { getStoredUser } from '@/src/services/authStorage'
+import { getStoredUser } from '@/services/authStorage'
 
 const routeLabels: Record<string, string> = {
   '/dashboard': 'Dashboard',

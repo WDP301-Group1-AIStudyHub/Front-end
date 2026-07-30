@@ -18,9 +18,9 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import { Textarea } from '@/components/ui/textarea'
-import { LoadingState } from '../../components/shared/CelestialLoading'
-import { listAdminUsers, banUser, unbanUser } from '../../services/adminApi'
-import type { AdminUser } from '../../types/admin'
+import { LoadingState } from '@/components/shared/CelestialLoading'
+import { listAdminUsers, banUser, unbanUser } from '@/services/adminApi'
+import type { AdminUser } from '@/types/admin'
 import { AdminPageHeader, formatDateTime, StatusBadge } from './adminPageUtils'
 
 export default function AdminUsersPage() {

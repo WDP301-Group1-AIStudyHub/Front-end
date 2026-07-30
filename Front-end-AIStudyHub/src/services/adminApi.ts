@@ -4,7 +4,7 @@ import type {
   AdminUser,
   DashboardStats,
   SystemActivity,
-} from '../types/admin'
+} from '@/types/admin'
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 

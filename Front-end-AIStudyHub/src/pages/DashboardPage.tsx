@@ -1,16 +1,16 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { IconTile } from '../components/shared/IconTile'
+import { IconTile } from '@/components/shared/IconTile'
 import { Archive, Bell, Database, FileText, Plus, UploadCloud, Sparkles } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 import { Button } from '@/components/ui/button'
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
 import { Skeleton } from '@/components/ui/skeleton'
-import { CelestialInlineLoader } from '../components/shared/CelestialLoading'
-import { listDocuments } from '../services/documentApi'
+import { CelestialInlineLoader } from '@/components/shared/CelestialLoading'
+import { listDocuments } from '@/services/documentApi'
 
-import { useUploadStore } from '../store/useUploadStore'
-import type { DocumentItem } from '../types/document'
+import { useUploadStore } from '@/store/useUploadStore'
+import type { DocumentItem } from '@/types/document'
 
 const STORAGE_LIMIT_BYTES = 10 * 1024 * 1024 * 1024
 
