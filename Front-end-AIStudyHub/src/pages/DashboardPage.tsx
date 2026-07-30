@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { IconTile } from '../components/shared/IconTile'
 import { Archive, Bell, Database, FileText, Plus, UploadCloud, Sparkles } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 import { Button } from '@/components/ui/button'
@@ -7,7 +8,7 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/
 import { Skeleton } from '@/components/ui/skeleton'
 import { CelestialInlineLoader } from '../components/shared/CelestialLoading'
 import { listDocuments } from '../services/documentApi'
-import { getFileBadgeClass } from '../utils/formatters'
+
 import { useUploadStore } from '../store/useUploadStore'
 import type { DocumentItem } from '../types/document'
 
@@ -217,9 +218,9 @@ export default function DashboardPage() {
         {/* Storage card with organic leaf slider */}
         <article className="flex flex-col justify-between p-6 xl:col-span-4">
           <div className="flex items-start justify-between gap-4">
-            <span className="admin-icon-badge">
+            <IconTile tone="primary">
               <Database className="size-4" />
-            </span>
+            </IconTile>
             <span className="text-xs font-semibold text-muted-foreground">Space Usage</span>
           </div>
           
@@ -345,9 +346,9 @@ export default function DashboardPage() {
                   to="/library"
                 >
                   <div className="flex min-w-0 items-center gap-3">
-                    <span className={`admin-icon-badge size-10 ${getFileBadgeClass(doc.fileName)}`}>
+                    <IconTile fileName={doc.fileName}>
                       <FileText className="size-4" />
-                    </span>
+                    </IconTile>
                     <div className="min-w-0">
                       <p className="truncate font-bold text-foreground text-sm">{doc.title}</p>
                       <p className="text-[10px] text-muted-foreground">{formatRelativeTime(doc.createdAt)}</p>
@@ -375,9 +376,9 @@ export default function DashboardPage() {
               <h2 className="font-bold tracking-tight text-foreground text-sm">Quick Drop Upload</h2>
               <p className="mt-1 text-xs text-muted-foreground">Drag and drop source files here</p>
             </div>
-            <span className="admin-icon-badge group-hover:scale-105 transition-transform">
+            <IconTile tone="primary" className="group-hover:scale-105 transition-transform">
               <UploadCloud className="size-4" />
-            </span>
+            </IconTile>
           </div>
 
           {/* Subject clusters list */}

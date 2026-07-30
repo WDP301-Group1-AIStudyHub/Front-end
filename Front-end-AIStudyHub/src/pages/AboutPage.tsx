@@ -1,4 +1,5 @@
 import { BookOpenCheck, Brain, Compass, Library } from 'lucide-react'
+import { IconTile } from '../components/shared/IconTile'
 import PublicNav from '../components/shared/PublicNav'
 
 const stats = [
@@ -58,9 +59,9 @@ export default function AboutPage() {
               const Icon = item.icon
               return (
                 <article className="flex gap-4 border-b border-border py-5 first:border-t" key={item.title}>
-                  <span className="admin-icon-badge size-10 shrink-0">
+                  <IconTile tone="primary" size="md" className="shrink-0">
                     <Icon className="size-5" aria-hidden="true" />
-                  </span>
+                  </IconTile>
                   <div>
                     <h3 className="font-semibold tracking-tight">{item.title}</h3>
                     <p className="mt-2 text-sm leading-6 text-muted-foreground">{item.text}</p>

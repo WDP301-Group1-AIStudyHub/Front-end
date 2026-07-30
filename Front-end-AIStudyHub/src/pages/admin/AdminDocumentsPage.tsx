@@ -6,6 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { IconTile } from '../../components/shared/IconTile'
 import { Eye, FileCog, Search, FileText, Database, User, Shield, Info } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -135,9 +136,9 @@ export default function AdminDocumentsPage() {
             paginatedDocuments.map((document) => (
               <article className="grid gap-4 p-5 transition-colors hover:bg-muted/35 xl:grid-cols-[1.4fr_1fr_110px_140px_220px]" key={document.id}>
                 <div className="flex min-w-0 items-center gap-3">
-                  <span className="admin-icon-badge admin-tone-gold size-10">
+                  <IconTile fileName={document.fileName}>
                     <FileCog className="size-4" />
-                  </span>
+                  </IconTile>
                   <div className="min-w-0">
                     <h2 className="truncate font-semibold text-foreground">{document.title}</h2>
                     <p className="truncate text-xs text-muted-foreground">
@@ -195,9 +196,9 @@ export default function AdminDocumentsPage() {
           <div className="flex flex-col h-full border-0 shadow-none">
             <div className="flex flex-col gap-2 border-b border-border/70 p-6">
               <div className="flex items-center gap-3">
-                <span className="admin-icon-badge admin-tone-gold size-12 shadow-sm">
+                <IconTile size="lg" fileName={viewingDocument?.fileName}>
                   <FileText className="size-6" />
-                </span>
+                </IconTile>
                 <div>
                   <h2 className="text-xl font-bold tracking-tight text-foreground">Document Metadata</h2>
                   <p className="text-sm text-muted-foreground mt-0.5">

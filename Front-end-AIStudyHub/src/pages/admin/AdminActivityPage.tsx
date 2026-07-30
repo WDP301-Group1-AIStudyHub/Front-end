@@ -6,6 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { IconTile } from '../../components/shared/IconTile'
 import { Activity, Filter, Search, Eye, Clock, User, Globe, MonitorSmartphone, Database, Tag } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -149,9 +150,9 @@ export default function AdminActivityPage() {
                 <div className="text-sm text-muted-foreground">{formatDateTime(activity.createdAt)}</div>
                 <div className="min-w-0">
                   <div className="flex items-start gap-3">
-                    <span className="admin-icon-badge admin-tone-blue mt-0.5 size-9">
+                    <IconTile size="sm" tone="info" className="mt-0.5">
                       <Activity className="size-4" />
-                    </span>
+                    </IconTile>
                     <div className="min-w-0">
                       <h2 className="font-semibold">{activity.description}</h2>
                       <p className="mt-1 text-sm text-muted-foreground">

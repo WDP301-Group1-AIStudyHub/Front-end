@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { BarChart2, Clock, Loader2, Target, Zap } from 'lucide-react'
+import { IconTile } from '../components/shared/IconTile'
 import { getEvaluationLogs, getEvaluationSummary } from '../services/chatApi'
 import type { ChatEvaluation, EvaluationLog, EvaluationSummary } from '../types/chat'
 
@@ -16,7 +17,7 @@ function StatCard({
 }) {
   return (
     <article className="p-5">
-      <div className={`admin-icon-badge admin-tone-${tone}`}>{icon}</div>
+      <IconTile tone={tone === 'emerald' ? 'success' : tone === 'coral' ? 'destructive' : tone === 'gold' ? 'warning' : 'info'}>{icon}</IconTile>
       <p className="mt-4 text-3xl font-light tracking-tight">{value}</p>
       <p className="mt-1 text-sm text-muted-foreground">{label}</p>
     </article>

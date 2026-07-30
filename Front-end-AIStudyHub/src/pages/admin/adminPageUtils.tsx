@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
-import { cn } from '@/lib/utils'
 import { Card, CardContent } from '@/components/ui/card'
+import { IconTile } from '../../components/shared/IconTile'
 import { Badge } from '@/components/ui/badge'
 import { CelestialSkeleton } from '../../components/shared/CelestialLoading'
 
@@ -58,7 +58,9 @@ export function AdminStatCard({
   return (
     <Card className="p-5">
       <CardContent className="p-0">
-        <div className={cn('admin-icon-badge', `admin-tone-${tone}`)}>{icon}</div>
+        <IconTile tone={tone === 'coral' ? 'destructive' : tone === 'gold' ? 'warning' : 'info'} size="lg">
+          {icon}
+        </IconTile>
         <p className="mt-5 text-sm font-medium text-muted-foreground">
           {label}
         </p>

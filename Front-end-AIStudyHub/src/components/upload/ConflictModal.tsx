@@ -1,6 +1,7 @@
 import { useUploadStore } from "../../store/useUploadStore";
 import { AlertTriangle, FileText, Files } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { IconTile } from '../shared/IconTile';
 import { getFileIconColorClass } from "../../utils/formatters";
 
 export default function ConflictModal() {
@@ -21,9 +22,9 @@ export default function ConflictModal() {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/70 p-4 animate-fade-in">
       <Card className="flex w-full max-w-md flex-col gap-5 p-6 text-card-foreground">
         <div className="flex items-center gap-3">
-          <div className="admin-icon-badge admin-tone-gold flex size-12 shrink-0 items-center justify-center rounded-xl">
+          <IconTile tone="warning" size="lg">
             <AlertTriangle className="size-6" aria-hidden="true" />
-          </div>
+          </IconTile>
           <div>
             <h3 className="text-lg font-semibold tracking-tight">Duplicate document found</h3>
             <p className="text-xs text-muted-foreground">Filename conflict detected</p>

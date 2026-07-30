@@ -29,7 +29,7 @@ import {
   restoreDocument,
 } from '../services/documentApi'
 import type { DocumentItem, DocumentSubject } from '../types/document'
-import { getFileBadgeClass } from '../utils/formatters'
+import { IconTile } from '../components/shared/IconTile'
 
 function formatDate(value?: string | null): string {
   if (!value) return 'Unknown'
@@ -217,9 +217,9 @@ export default function TrashPage() {
                 <TableRow key={document.id}>
                   <TableCell>
                     <div className="flex min-w-0 items-center gap-3">
-                      <div className={`admin-icon-badge ${getFileBadgeClass(document.fileName)} flex size-9 shrink-0 items-center justify-center rounded-lg`}>
+                      <IconTile fileName={document.fileName} size="sm" className="rounded-lg">
                         <FileText aria-hidden="true" />
-                      </div>
+                      </IconTile>
                       <div className="min-w-0">
                         <div className="truncate text-sm font-semibold text-foreground">
                           {document.title || document.fileName}

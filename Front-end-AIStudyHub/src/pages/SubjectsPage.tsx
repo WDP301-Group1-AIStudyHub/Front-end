@@ -2503,7 +2503,10 @@ export default function SubjectsPage() {
                   <Input disabled={isSaving} onChange={(event) => setForm({ ...form, color: event.target.value })} value={form.color} />
                 </div>
                 <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-muted/55 px-3 py-2">
-                  <span className="subject-code-pill" style={{ "--subject-color": previewColor } as CSSProperties}>
+                  <span
+                    className="inline-flex max-w-48 items-center justify-center rounded-full border-[1.5px] px-3 py-1.5 font-mono text-xs font-extrabold leading-none shadow-[inset_0_-8px_14px_rgb(73_107_85/0.05)]"
+                    style={{ "--subject-color": previewColor, borderColor: "var(--subject-color, var(--primary))", background: "color-mix(in srgb, var(--subject-color, var(--primary)) 13%, var(--background))" } as CSSProperties}
+                  >
                     {previewCode}
                   </span>
                   <span className="font-mono text-xs text-muted-foreground">{previewColor}</span>

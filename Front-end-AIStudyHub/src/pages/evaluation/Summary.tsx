@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
+import { IconTile } from '../../components/shared/IconTile'
 import {
   AlertCircle,
   ArrowDownToLine,
@@ -64,7 +65,7 @@ function KpiCard({
   detail: string;
   icon: ReactNode;
   label: string;
-  tone: string;
+  tone: 'blue' | 'emerald' | 'coral' | 'gold' | 'teal' | 'mist';
   value: string;
 }) {
   return (
@@ -77,7 +78,7 @@ function KpiCard({
           <p className="mt-3 text-3xl font-semibold tracking-tight">{value}</p>
           <p className="mt-2 text-sm text-muted-foreground">{detail}</p>
         </div>
-        <div className={`admin-icon-badge admin-tone-${tone}`}>{icon}</div>
+        <IconTile tone={tone === 'emerald' ? 'success' : tone === 'coral' ? 'destructive' : tone === 'gold' ? 'warning' : 'info'}>{icon}</IconTile>
       </div>
     </article>
   );

@@ -105,7 +105,7 @@ import DocumentShareDialog from "../components/documents/DocumentShareDialog";
 import SharedDocumentSubjectDialog from "../components/documents/SharedDocumentSubjectDialog";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getFileBadgeClass } from "../utils/formatters";
+import { IconTile } from '../components/shared/IconTile'
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const SEARCH_DEBOUNCE_MS = 350;
@@ -1654,9 +1654,9 @@ export default function NewLibraryPage() {
                               onClick={() => openFile(document)}
                               type="button"
                             >
-                              <div className={`admin-icon-badge ${getFileBadgeClass(document.fileName)} flex size-9 shrink-0 items-center justify-center rounded-lg transition-transform group-hover:scale-[1.02]`}>
+                              <IconTile fileName={document.fileName} size="sm" className="rounded-lg transition-transform group-hover:scale-[1.02]">
                                 <FileText aria-hidden="true" />
-                              </div>
+                              </IconTile>
                               <div className="min-w-0">
                                 <div className="truncate text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
                                   {document.title || document.fileName}

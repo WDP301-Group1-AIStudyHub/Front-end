@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { FileText, HeartPulse, MessageSquare, Users, BookOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { IconTile } from '../../components/shared/IconTile'
+import { Item, ItemActions, ItemContent, ItemTitle } from '@/components/ui/item'
 import { LoadingState } from '../../components/shared/CelestialLoading'
 import { getDashboardStats } from '../../services/adminApi'
 import type { DashboardStats } from '../../types/admin'
@@ -96,44 +98,68 @@ export default function AdminDashboardPage() {
         </article>
 
         <aside className="p-5 space-y-5">
-          <div className="admin-icon-badge admin-tone-mist">
+          <IconTile tone="info">
             <HeartPulse />
-          </div>
+          </IconTile>
           <h2 className="text-lg font-semibold">Platform Health</h2>
           {isLoading ? (
             <LoadingState label="Loading health..." tone="gold" />
           ) : health ? (
             <div className="space-y-3 text-sm">
-              <div className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-card/45 p-3">
-                <span>Overall status</span>
-                <StatusBadge severity={health.status === 'Healthy' ? 'success' : 'warning'}>
-                  {health.status}
-                </StatusBadge>
-              </div>
-              <div className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-card/45 p-3">
-                <span>Database</span>
-                <StatusBadge severity={health.databaseConnected ? 'success' : 'critical'}>
-                  {health.databaseConnected ? 'Connected' : 'Disconnected'}
-                </StatusBadge>
-              </div>
-              <div className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-card/45 p-3">
-                <span>Chunks processed</span>
-                <strong>{health.documentProcessing.totalChunksProcessed}</strong>
-              </div>
-              <div className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-card/45 p-3">
-                <span>Successful extractions</span>
-                <StatusBadge severity="success">{health.documentProcessing.completedExtractions}</StatusBadge>
-              </div>
-              <div className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-card/45 p-3">
-                <span>Extractions failed</span>
-                <StatusBadge severity={health.documentProcessing.failedExtractions > 0 ? 'warning' : 'success'}>
-                  {health.documentProcessing.failedExtractions}
-                </StatusBadge>
-              </div>
-              <div className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-card/45 p-3">
-                <span>Failure rate</span>
-                <span className="font-medium">{health.documentProcessing.failureRatePercentage}%</span>
-              </div>
+              <Item variant="outline" className="justify-between">
+                <ItemContent>
+                  <ItemTitle>Overall status</ItemTitle>
+                </ItemContent>
+                <ItemActions>
+                  <StatusBadge severity={health.status === 'Healthy' ? 'success' : 'warning'}>
+                    {health.status}
+                  </StatusBadge>
+                </ItemActions>
+              </Item>
+              <Item variant="outline" className="justify-between">
+                <ItemContent>
+                  <ItemTitle>Database</ItemTitle>
+                </ItemContent>
+                <ItemActions>
+                  <StatusBadge severity={health.databaseConnected ? 'success' : 'critical'}>
+                    {health.databaseConnected ? 'Connected' : 'Disconnected'}
+                  </StatusBadge>
+                </ItemActions>
+              </Item>
+              <Item variant="outline" className="justify-between">
+                <ItemContent>
+                  <ItemTitle>Chunks processed</ItemTitle>
+                </ItemContent>
+                <ItemActions>
+                  <strong>{health.documentProcessing.totalChunksProcessed}</strong>
+                </ItemActions>
+              </Item>
+              <Item variant="outline" className="justify-between">
+                <ItemContent>
+                  <ItemTitle>Successful extractions</ItemTitle>
+                </ItemContent>
+                <ItemActions>
+                  <StatusBadge severity="success">{health.documentProcessing.completedExtractions}</StatusBadge>
+                </ItemActions>
+              </Item>
+              <Item variant="outline" className="justify-between">
+                <ItemContent>
+                  <ItemTitle>Extractions failed</ItemTitle>
+                </ItemContent>
+                <ItemActions>
+                  <StatusBadge severity={health.documentProcessing.failedExtractions > 0 ? 'warning' : 'success'}>
+                    {health.documentProcessing.failedExtractions}
+                  </StatusBadge>
+                </ItemActions>
+              </Item>
+              <Item variant="outline" className="justify-between">
+                <ItemContent>
+                  <ItemTitle>Failure rate</ItemTitle>
+                </ItemContent>
+                <ItemActions>
+                  <span className="font-medium">{health.documentProcessing.failureRatePercentage}%</span>
+                </ItemActions>
+              </Item>
             </div>
           ) : (
             <p className="text-muted-foreground">No health data available.</p>

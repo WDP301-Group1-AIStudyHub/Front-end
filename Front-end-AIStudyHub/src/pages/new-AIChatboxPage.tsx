@@ -48,7 +48,7 @@ import {
 } from "../services/chatApi";
 import { listDocuments } from "../services/documentApi";
 import { extractArtifacts } from "../utils/extractArtifacts";
-import { getFileBadgeClass } from "../utils/formatters";
+import { IconTile } from '../components/shared/IconTile'
 import { normalizeSubjectColor } from "../utils/subjectColor";
 import type {
  AskChatPayload,
@@ -1188,14 +1188,12 @@ function DocumentPickerList({
  checked={isSelected}
  onCheckedChange={() => onToggleDoc(doc)}
  />
- <span
- className={`admin-icon-badge ${getFileBadgeClass(doc.fileName)} flex size-5 shrink-0 items-center justify-center rounded`}
- >
+ <IconTile fileName={doc.fileName} size="sm" className="size-5 rounded">
  <FileText
  className="size-3"
  aria-hidden="true"
  />
- </span>
+ </IconTile>
  <span className="min-w-0 flex-1 truncate text-[11px]">
  {doc.fileName}
  </span>
