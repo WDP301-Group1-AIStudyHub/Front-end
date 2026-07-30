@@ -6,7 +6,9 @@ import { Item, ItemActions, ItemContent, ItemTitle } from '@/components/ui/item'
 import { LoadingState } from '@/components/shared/CelestialLoading'
 import { getDashboardStats } from '@/services/adminApi'
 import type { DashboardStats } from '@/types/admin'
-import { AdminPageHeader, AdminStatCard, formatDateTime, StatusBadge } from './adminPageUtils'
+import { AdminStatCard, formatDateTime, StatusBadge } from './adminPageUtils'
+import { PageShell } from '@/components/layout/PageShell'
+import { PageHeader } from '@/components/layout/PageHeader'
 import { Link } from 'react-router-dom'
 
 const ACTION_LABELS: Record<string, string> = {
@@ -48,15 +50,15 @@ export default function AdminDashboardPage() {
   const activities = stats?.recentActivities ?? []
 
   return (
-    <main className="min-h-svh overflow-y-auto p-5 md:p-8">
-      <AdminPageHeader
+    <PageShell>
+      <PageHeader
         actions={<Button asChild><Link to="/admin/users">Review users</Link></Button>}
         description="System-wide usage statistics and overall platform health at a glance."
         eyebrow="Admin workspace"
         title="Admin Dashboard"
       />
 
-      <section className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <AdminStatCard icon={<Users />} label="Total users" value={isLoading ? '...' : String(usage?.totalUsers ?? 0)} tone="blue" />
         <AdminStatCard icon={<FileText />} label="Total documents" value={isLoading ? '...' : String(usage?.totalDocuments ?? 0)} tone="gold" />
         <AdminStatCard icon={<MessageSquare />} label="Chat threads" value={isLoading ? '...' : String(usage?.totalChatThreads ?? 0)} tone="teal" />
@@ -166,6 +168,6 @@ export default function AdminDashboardPage() {
           )}
         </aside>
       </section>
-    </main>
+    </PageShell>
   )
 }

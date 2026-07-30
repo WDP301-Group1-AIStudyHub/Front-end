@@ -19,30 +19,7 @@ export function formatDateTime(value?: string) {
   }).format(date)
 }
 
-export function AdminPageHeader({
-  actions,
-  description,
-  eyebrow,
-  title,
-}: {
-  actions?: ReactNode
-  description: string
-  eyebrow: string
-  title: string
-}) {
-  return (
-    <header className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          {eyebrow}
-        </p>
-        <h1 className="mt-2 text-2xl font-bold tracking-tight md:text-3xl">{title}</h1>
-        <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">{description}</p>
-      </div>
-      {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
-    </header>
-  )
-}
+
 
 export function AdminStatCard({
   icon,

@@ -17,7 +17,9 @@ import {
 import { LoadingState } from '@/components/shared/CelestialLoading'
 import { listAdminDocuments } from '@/services/adminApi'
 import type { AdminDocument } from '@/types/admin'
-import { AdminPageHeader, StatusBadge } from './adminPageUtils'
+import { StatusBadge } from './adminPageUtils'
+import { PageShell } from '@/components/layout/PageShell'
+import { PageHeader } from '@/components/layout/PageHeader'
 
 
 
@@ -71,14 +73,14 @@ export default function AdminDocumentsPage() {
 
 
   return (
-    <main className="min-h-svh overflow-y-auto p-5 md:p-8">
-      <AdminPageHeader
+    <PageShell>
+      <PageHeader
         description="Review all uploaded documents across the platform. Change status, visibility, or remove documents."
         eyebrow="Admin documents"
         title="Document Oversight"
       />
 
-      <section className="mt-8 overflow-hidden">
+      <section className="overflow-hidden">
         {/* ── Toolbar ── */}
         <div className="flex flex-col gap-3 border-b border-border/70 p-5 md:flex-row md:items-center md:justify-between">
           <label className="relative max-w-lg flex-1">
@@ -293,6 +295,6 @@ export default function AdminDocumentsPage() {
           </div>
         </DialogContent>
       </Dialog>
-    </main>
+    </PageShell>
   )
 }

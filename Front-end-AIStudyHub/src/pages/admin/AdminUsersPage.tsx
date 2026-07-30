@@ -21,7 +21,9 @@ import { Textarea } from '@/components/ui/textarea'
 import { LoadingState } from '@/components/shared/CelestialLoading'
 import { listAdminUsers, banUser, unbanUser } from '@/services/adminApi'
 import type { AdminUser } from '@/types/admin'
-import { AdminPageHeader, formatDateTime, StatusBadge } from './adminPageUtils'
+import { formatDateTime, StatusBadge } from './adminPageUtils'
+import { PageShell } from '@/components/layout/PageShell'
+import { PageHeader } from '@/components/layout/PageHeader'
 
 export default function AdminUsersPage() {
   const [isLoading, setIsLoading] = useState(true)
@@ -94,14 +96,14 @@ export default function AdminUsersPage() {
 
 
   return (
-    <main className="min-h-svh overflow-y-auto p-5 md:p-8">
-      <AdminPageHeader
+    <PageShell>
+      <PageHeader
         description="View users, update roles, and ban or unban accounts."
         eyebrow="Admin users"
         title="User Management"
       />
 
-      <section className="mt-8 overflow-hidden">
+      <section className="overflow-hidden">
         {/* ── Toolbar ── */}
         <div className="flex flex-col gap-3 border-b border-border/70 p-5 xl:flex-row xl:items-center xl:justify-between">
           <label className="relative max-w-md flex-1">
@@ -253,6 +255,6 @@ export default function AdminUsersPage() {
           </SheetFooter>
         </SheetContent>
       </Sheet>
-    </main>
+    </PageShell>
   )
 }

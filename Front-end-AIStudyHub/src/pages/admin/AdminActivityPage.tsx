@@ -19,7 +19,9 @@ import {
 import { LoadingState } from '@/components/shared/CelestialLoading'
 import { listSystemActivities } from '@/services/adminApi'
 import type { SystemActivity } from '@/types/admin'
-import { AdminPageHeader, formatDateTime, StatusBadge } from './adminPageUtils'
+import { formatDateTime, StatusBadge } from './adminPageUtils'
+import { PageShell } from '@/components/layout/PageShell'
+import { PageHeader } from '@/components/layout/PageHeader'
 
 export default function AdminActivityPage() {
   const [activities, setActivities] = useState<SystemActivity[]>([])
@@ -64,14 +66,14 @@ export default function AdminActivityPage() {
   const totalPages = Math.ceil(filteredActivities.length / ITEMS_PER_PAGE)
 
   return (
-    <main className="min-h-svh overflow-y-auto p-5 md:p-8">
-      <AdminPageHeader
+    <PageShell>
+      <PageHeader
         description="Monitor account events, document processing signals, and system activity from the backend."
         eyebrow="Admin activity"
         title="Activity Log"
       />
 
-      <section className="mt-8 overflow-hidden">
+      <section className="overflow-hidden">
         {/* ── Toolbar ── */}
         <div className="flex flex-col gap-3 border-b border-border/70 p-5 xl:flex-row xl:items-center xl:justify-between">
           <label className="relative max-w-lg flex-1">
@@ -289,6 +291,6 @@ export default function AdminActivityPage() {
           )}
         </DialogContent>
       </Dialog>
-    </main>
+    </PageShell>
   )
 }
