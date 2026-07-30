@@ -4,9 +4,6 @@
 @import "@fontsource-variable/inter";
 @import "@fontsource-variable/outfit";
 @import "tw-shimmer";
-
-@custom-variant dark (&:is(.dark *));
-
 @theme inline {
   --font-sans:
     "Inter Variable", "Geist Sans", "SF Pro Text", system-ui, -apple-system,
