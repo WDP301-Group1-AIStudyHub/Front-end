@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import {
   type IFlashcardItem,
@@ -135,9 +136,9 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
 
   if (activeItems.length === 0) {
     return (
-      <div className="moonlit-card p-8 text-center text-muted-foreground font-sans">
+      <Card className="p-8 text-center text-muted-foreground font-sans">
         No flashcards found.
-      </div>
+      </Card>
     );
   }
 
@@ -304,7 +305,7 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
     const strokeDashoffset = circumference - (accuracyPercent / 100) * circumference;
 
     return (
-      <div className="w-[min(100%,480px)] font-sans mx-auto botanical-bento p-8 text-center space-y-6 shadow-2xl relative overflow-hidden bg-card/95 border border-border">
+      <Card className="w-[min(100%,480px)] font-sans mx-auto p-8 text-center space-y-6 shadow-sm relative overflow-hidden bg-card/95">
         {/* Soft glowing effect */}
         <div className="absolute -top-24 -left-24 size-48 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
         <div className="absolute -bottom-24 -right-24 size-48 rounded-full bg-blue-500/10 blur-3xl pointer-events-none" />
@@ -371,7 +372,7 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
             Practise again
           </Button>
         </div>
-      </div>
+      </Card>
     );
   }
 
@@ -390,7 +391,7 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
       : ["Advanced applications", "Key vocabulary terms", "Formulas and practices"];
 
     return (
-      <div className="w-full max-w-2xl font-sans mx-auto botanical-bento p-6 space-y-6 shadow-2xl bg-card border border-border">
+      <Card className="w-full max-w-2xl font-sans mx-auto p-6 space-y-6 shadow-sm">
         {/* Top Mini-Stats Section */}
         <div className="flex flex-col sm:flex-row items-center gap-6 bg-muted/15 border border-border/80 rounded-2xl p-5 justify-between">
           <div className="flex items-center gap-4">
@@ -528,7 +529,7 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
             </Button>
           </div>
         </div>
-      </div>
+      </Card>
     );
   }
 
@@ -582,7 +583,7 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
         <div className="absolute -inset-1 rounded-2xl bg-gradient-to-tr from-emerald-500/10 via-sky-500/5 to-purple-500/15 blur-lg pointer-events-none opacity-80" />
 
         <div
-          className={`flashcard-preserve w-full h-full relative rounded-2xl border border-border/80 bg-card shadow-lg ${
+          className={`flashcard-preserve w-full h-full relative rounded-2xl border border-border/80 bg-card shadow-sm ${
             isFlipped ? "is-flipped" : ""
           }`}
         >
@@ -606,7 +607,7 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
                   <MoreVertical className="size-4" />
                 </button>
                 {showMenu && (
-                  <div className="absolute right-0 top-7 z-10 w-36 bg-card border border-border rounded-xl shadow-lg p-1 animate-in fade-in slide-in-from-top-1 duration-100">
+                  <div className="absolute right-0 top-7 z-10 w-36 bg-card border border-border rounded-xl shadow-sm p-1 animate-in fade-in slide-in-from-top-1 duration-100">
                     <button
                       type="button"
                       onClick={(e) => {
@@ -655,7 +656,7 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
                   <MoreVertical className="size-4" />
                 </button>
                 {showMenu && (
-                  <div className="absolute right-0 top-7 z-10 w-36 bg-card border border-border rounded-xl shadow-lg p-1 animate-in fade-in slide-in-from-top-1 duration-100">
+                  <div className="absolute right-0 top-7 z-10 w-36 bg-card border border-border rounded-xl shadow-sm p-1 animate-in fade-in slide-in-from-top-1 duration-100">
                     <button
                       type="button"
                       onClick={(e) => {
@@ -746,7 +747,7 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
       {/* AI Explanation Popover Dialog */}
       {isExplainModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 font-sans">
-          <div className="bg-card border border-border rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-card border border-border rounded-2xl max-w-lg w-full overflow-hidden shadow-sm animate-in fade-in zoom-in-95 duration-200">
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-border/80 px-6 py-4 bg-muted/10">
               <div className="flex items-center gap-2">

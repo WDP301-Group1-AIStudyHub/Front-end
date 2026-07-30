@@ -74,7 +74,7 @@ export default function StudyMaterialModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="botanical-bento max-w-md p-6 font-sans">
+      <DialogContent className="max-w-md p-6 font-sans">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl font-black">
             <Sparkles className="size-5 text-amber-600 dark:text-amber-500" />

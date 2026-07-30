@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import type { IMcqItem } from "../../services/studyMaterialApi";
 import { ArrowRight, RotateCcw, Check, X, AlertCircle, Award, Play, Shuffle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { useStudyProgress, type McqProgressData } from "../../hooks/useStudyProgress";
 
 interface McqQuizProps {
@@ -76,9 +77,9 @@ export default function McqQuiz({ materialId, items, title }: McqQuizProps) {
 
   if (activeItems.length === 0) {
     return (
-      <div className="moonlit-card p-8 text-center text-muted-foreground font-sans">
+      <Card className="p-8 text-center text-muted-foreground font-sans">
         No questions found.
-      </div>
+      </Card>
     );
   }
 

@@ -1,6 +1,8 @@
-﻿import { Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
+import { Card } from '@/components/ui/card'
 import type { UploadSession } from '../../types/document'
-import { getUploadStageLabel, StatusBadge } from './StatusBadge'
+import { getUploadStageLabel } from '../../utils/formatters'
+import { StatusBadge } from '../../pages/admin/adminPageUtils'
 
 export function ProgressPanel({
   error,
@@ -13,13 +15,13 @@ export function ProgressPanel({
   const status = session?.status ?? 'PENDING'
 
   return (
-    <div className="moonlit-card tone-surface tone-cyan flex flex-col gap-3 p-4">
+    <Card className="flex flex-col gap-3 p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-sm font-medium">
           <Loader2 className="size-4 animate-spin" aria-hidden="true" />
           <span>{getUploadStageLabel(session?.stage)}</span>
         </div>
-        <StatusBadge status={status} />
+        <StatusBadge severity={status} />
       </div>
       <div className="flex items-center gap-3">
         <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
@@ -36,6 +38,6 @@ export function ProgressPanel({
         <p className="text-sm text-muted-foreground">{session.message}</p>
       ) : null}
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
-    </div>
+    </Card>
   )
 }

@@ -1,3 +1,5 @@
+import type { UploadSession } from '../types/document'
+
 export function formatFileSize(bytes: number): string {
   if (!Number.isFinite(bytes) || bytes <= 0) {
     return '0 B'
@@ -46,5 +48,24 @@ export function getFileIconColorClass(fileName: string | undefined): string {
   if (ext === "xlsx" || ext === "xls") return "text-green-600";
   if (ext === "pptx" || ext === "ppt") return "text-orange-500";
   return "text-muted-foreground";
+}
+
+export function getUploadStageLabel(stage: UploadSession['stage'] | undefined): string {
+  switch (stage) {
+    case 'UPLOADED':
+      return 'Uploading'
+    case 'EXTRACTING_TEXT':
+      return 'Extracting Text'
+    case 'CHUNKING':
+      return 'Chunking'
+    case 'EMBEDDING':
+      return 'Creating Embeddings'
+    case 'UPSERTING_VECTOR':
+      return 'Indexing Vectors'
+    case 'COMPLETED':
+      return 'Completed'
+    default:
+      return 'Uploading'
+  }
 }
 
