@@ -56,14 +56,14 @@ export default function AdminActivityPage() {
   const totalPages = Math.ceil(filteredActivities.length / ITEMS_PER_PAGE)
 
   return (
-    <main className="botanical-page min-h-svh overflow-y-auto p-5 md:p-8">
+    <main className="min-h-svh overflow-y-auto p-5 md:p-8">
       <AdminPageHeader
         description="Monitor account events, document processing signals, and system activity from the backend."
         eyebrow="Admin activity"
         title="Activity Log"
       />
 
-      <section className="botanical-bento moonlit-table tone-surface tone-coral mt-8 overflow-hidden">
+      <section className="mt-8 overflow-hidden">
         {/* ── Toolbar ── */}
         <div className="flex flex-col gap-3 border-b border-border/70 p-5 xl:flex-row xl:items-center xl:justify-between">
           <label className="relative max-w-lg flex-1">
@@ -182,7 +182,7 @@ export default function AdminActivityPage() {
       </section>
 
       <Dialog open={Boolean(viewingActivity)} onOpenChange={(open) => !open && setViewingActivity(null)}>
-        <DialogContent className="sm:max-w-2xl max-h-[85vh] p-0 overflow-hidden bg-background border-border/60 shadow-2xl">
+        <DialogContent className="sm:max-w-2xl max-h-[85vh] p-0 overflow-hidden bg-background border-border/60 shadow-sm">
           {viewingActivity && (
             <div className="flex flex-col max-h-[85vh]">
               {/* Header Section */}

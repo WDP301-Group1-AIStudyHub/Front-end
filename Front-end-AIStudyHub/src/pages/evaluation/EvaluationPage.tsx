@@ -1,4 +1,5 @@
-﻿import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
 import { Link } from "react-router-dom";
 import {
   AlertCircle,
@@ -111,7 +112,7 @@ function StatCard({
 }) {
   const bgClass = toneColors[tone] || "bg-card";
   return (
-    <article className={`botanical-bento ${bgClass} border border-border p-4 text-foreground transition-all`}>
+    <article className={`border border-border p-4 text-foreground transition-all ${bgClass}`}>
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-[11px] font-black uppercase text-foreground/75">
@@ -263,12 +264,12 @@ export default function EvaluationPage() {
   }, []);
 
   return (
-    <main className="botanical-page min-h-svh overflow-y-auto p-5 text-foreground md:p-8">
+    <main className="min-h-svh overflow-y-auto p-5 text-foreground md:p-8">
       <div className="mx-auto max-w-7xl space-y-8">
         <header className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
-            <p className="botanical-kicker">RAG research</p>
-            <h1 className="moonlit-title page-title mt-2">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">RAG research</p>
+            <h1 className="mt-2 text-2xl font-bold tracking-tight md:text-3xl">
               Evaluation
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">
@@ -353,7 +354,7 @@ export default function EvaluationPage() {
           />
         </section>
 
-        <section className="botanical-bento overflow-hidden border border-border bg-card">
+        <section className="overflow-hidden border border-border bg-card">
           <div className="flex flex-col gap-4 border-b border-border p-4">
             <div className="flex gap-2 overflow-x-auto pb-1">
               {tabs.map((tab) => (
@@ -417,15 +418,17 @@ export default function EvaluationPage() {
             </div>
           ) : filteredQuestions.length === 0 ? (
             <div className="grid min-h-64 place-items-center p-8 text-center bg-card">
-              <div className="botanical-empty">
-                <FileText className="mx-auto size-9 text-foreground" />
-                <h2 className="mt-3 text-lg font-semibold text-foreground">
-                  No benchmark questions found
-                </h2>
-                <p className="mt-1 max-w-md text-sm text-muted-foreground">
-                  Create a question with an expected answer, then run it through DR-RAG.
-                </p>
-              </div>
+              <Empty>
+                <EmptyHeader>
+                  <EmptyMedia>
+                    <FileText className="size-6 text-muted-foreground" />
+                  </EmptyMedia>
+                  <EmptyTitle>No benchmark questions found</EmptyTitle>
+                  <EmptyDescription>
+                    Create a question with an expected answer, then run it through DR-RAG.
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
             </div>
           ) : (
             <div className="divide-y divide-border bg-card">
@@ -460,7 +463,7 @@ export default function EvaluationPage() {
                         <MoreHorizontal className="size-4" />
                       </button>
                       {openMenuQuestionId === question.id && (
-                        <div className="absolute right-4 top-12 z-20 w-44 rounded-xl border border-border bg-card p-1 shadow-xl">
+                        <div className="absolute right-4 top-12 z-20 w-44 rounded-xl border border-border bg-card p-1 shadow-sm">
                           <button
                             className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-extrabold text-destructive transition hover:bg-destructive/10 disabled:opacity-60"
                             disabled={deletingQuestionId === question.id}
@@ -513,7 +516,7 @@ export default function EvaluationPage() {
             <div
               aria-labelledby="delete-benchmark-question-title"
               aria-modal="true"
-              className="w-full max-w-md rounded-[20px] border border-border bg-card p-5 shadow-xl"
+              className="w-full max-w-md rounded-[20px] border border-border bg-card p-5 shadow-sm"
               role="dialog"
             >
               <div className="flex items-start gap-3">

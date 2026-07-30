@@ -63,14 +63,14 @@ export default function AdminDocumentsPage() {
 
 
   return (
-    <main className="botanical-page min-h-svh overflow-y-auto p-5 md:p-8">
+    <main className="min-h-svh overflow-y-auto p-5 md:p-8">
       <AdminPageHeader
         description="Review all uploaded documents across the platform. Change status, visibility, or remove documents."
         eyebrow="Admin documents"
         title="Document Oversight"
       />
 
-      <section className="botanical-bento moonlit-table tone-surface tone-gold mt-8 overflow-hidden">
+      <section className="mt-8 overflow-hidden">
         {/* ── Toolbar ── */}
         <div className="flex flex-col gap-3 border-b border-border/70 p-5 md:flex-row md:items-center md:justify-between">
           <label className="relative max-w-lg flex-1">
@@ -181,7 +181,7 @@ export default function AdminDocumentsPage() {
 
       <Dialog open={Boolean(viewingDocument)} onOpenChange={(open) => !open && setViewingDocument(null)}>
         <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto p-0 border-0 bg-background/95 backdrop-blur-md">
-          <div className="botanical-bento moonlit-table tone-surface tone-gold flex flex-col h-full border-0 shadow-none">
+          <div className="flex flex-col h-full border-0 shadow-none">
             <div className="flex flex-col gap-2 border-b border-border/70 p-6">
               <div className="flex items-center gap-3">
                 <span className="admin-icon-badge admin-tone-gold size-12 shadow-sm">

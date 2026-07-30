@@ -621,12 +621,12 @@ export default function NewAIChatboxPage() {
   void _selectedContextLabel;
 
   return (
-    <main className="botanical-page flex h-svh min-h-0 w-full flex-col overflow-hidden p-3 pb-24 text-foreground sm:p-5 sm:pb-24 lg:pb-5">
+    <main className="flex h-svh min-h-0 w-full flex-col overflow-hidden p-3 pb-24 text-foreground sm:p-5 sm:pb-24 lg:pb-5">
       <header className="border-b border-border px-2 pb-4 sm:px-3">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-3">
             <div>
-              <h1 className="moonlit-title page-title page-title--compact">
+              <h1 className="text-xl font-bold tracking-tight md:text-2xl">
                 AI Study Chat
               </h1>
               <p className="text-sm text-muted-foreground">
@@ -664,7 +664,7 @@ export default function NewAIChatboxPage() {
       </header>
 
       <div
-        className="botanical-bento mt-4 grid min-h-0 w-full flex-1 grid-cols-1 overflow-hidden lg:grid-cols-[minmax(0,1fr)_12px_var(--context-panel-width)]"
+        className="mt-4 grid min-h-0 w-full flex-1 grid-cols-1 overflow-hidden lg:grid-cols-[minmax(0,1fr)_12px_var(--context-panel-width)]"
         style={
           {
             "--context-panel-width": `${contextPanelWidth}px`,

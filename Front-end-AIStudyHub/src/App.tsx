@@ -47,7 +47,7 @@ const demoAdminUser: AuthUser = {
 
 function AuthLoading() {
   return (
-    <div className="moonlit-page grid min-h-svh place-items-center">
+    <div className="grid min-h-svh place-items-center">
       <LoadingState className="min-h-48 w-[min(100%,420px)]" label="Verifying session..." tone="gold" />
     </div>
   );
@@ -56,9 +56,9 @@ function AuthLoading() {
 function AdminAccessDenied() {
   return (
     <AppSidebarLayout>
-      <main className="moonlit-page flex min-h-svh items-center justify-center p-6">
-        <section className="botanical-bento max-w-lg p-8 text-center">
-          <p className="botanical-kicker mb-3 justify-center">
+      <main className="flex min-h-svh items-center justify-center p-6">
+        <section className="max-w-lg p-8 text-center">
+          <p className="mb-3 justify-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Admin only
           </p>
           <h1 className="text-3xl font-semibold tracking-tight">

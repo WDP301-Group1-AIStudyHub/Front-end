@@ -1295,13 +1295,13 @@ export default function NewLibraryPage() {
   }
 
   return (
-    <main className="moonlit-page flex min-h-svh w-full min-w-0 flex-col overflow-y-auto text-foreground">
+    <main className="flex min-h-svh w-full min-w-0 flex-col overflow-y-auto text-foreground">
       <div className="mx-auto flex w-full min-w-0 max-w-7xl flex-1 flex-col gap-6 px-5 py-6 sm:px-8 lg:px-10">
         <section className="flex flex-1 flex-col gap-4">
           <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
             <div className="flex flex-col gap-4">
               <div className="flex flex-wrap items-center gap-3">
-                <h1 className="moonlit-title page-title document-manager-title">
+                <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
                   My Document
                 </h1>
                 <IconTooltip label="Document settings">
@@ -1387,7 +1387,7 @@ export default function NewLibraryPage() {
 
           <div className="flex flex-col gap-3 border-y border-border/70 py-4">
             <div className="flex items-center gap-3 overflow-x-auto pb-1 -mb-1 w-full">
-              <InputGroup className="document-manager-search min-w-[260px] max-w-sm flex-1 bg-background">
+              <InputGroup className="min-w-[260px] max-w-sm flex-1 bg-background">
                 <InputGroupAddon align="inline-start">
                   <SearchIcon aria-hidden="true" />
                 </InputGroupAddon>
@@ -1511,7 +1511,7 @@ export default function NewLibraryPage() {
 
           {feedback && (
             <div
-              className={`moonlit-card tone-surface flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm ${feedback.tone === "error" ? "tone-coral" : feedback.tone === "success" ? "tone-emerald" : "tone-sapphire"}`}
+              className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm"
               role={feedback.tone === "error" ? "alert" : "status"}
             >
               <span
@@ -1537,7 +1537,7 @@ export default function NewLibraryPage() {
           )}
 
           {isUploading && (
-            <div className="moonlit-card tone-surface tone-cyan flex flex-col gap-2 p-4">
+            <div className="flex flex-col gap-2 p-4">
               <div className="flex items-center gap-2 text-sm font-medium">
                 <UploadCloud aria-hidden="true" />
                 Uploading, extracting text, and indexing for RAG
@@ -1546,7 +1546,7 @@ export default function NewLibraryPage() {
             </div>
           )}
 
-          <div className="moonlit-card moonlit-table tone-surface tone-sapphire overflow-x-auto overflow-y-hidden relative">
+          <div className="overflow-x-auto overflow-y-hidden relative">
             <Table className="min-w-[520px] md:min-w-[760px] lg:min-w-[980px]">
               <TableHeader>
                 <TableRow>
@@ -1910,7 +1910,7 @@ export default function NewLibraryPage() {
         </SheetContent>
       </Sheet>
       {selectedIds.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-card border border-border/80 rounded-2xl shadow-xl px-5 py-3 flex items-center gap-4 text-xs font-semibold">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-card border border-border/80 rounded-2xl shadow-sm px-5 py-3 flex items-center gap-4 text-xs font-semibold">
           <span className="text-muted-foreground">
             Selected <span className="text-primary font-bold">{selectedIds.length}</span> item(s)
           </span>

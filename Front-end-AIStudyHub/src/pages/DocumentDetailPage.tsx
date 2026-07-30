@@ -1,7 +1,19 @@
 import { useEffect, useState } from 'react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { ArrowLeft, BookOpen, Download, FileText, Pencil, Star, Trash2, UploadCloud, Users } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
+import { StatusBadge } from './admin/adminPageUtils'
 import {
   Dialog,
   DialogContent,
@@ -61,15 +73,7 @@ function formatFileSize(bytes?: number): string {
   return `${value >= 10 || index === 0 ? value.toFixed(0) : value.toFixed(1)} ${units[index]}`
 }
 
-function statusClass(status?: string): string {
-  const normalized = status?.toUpperCase()
-  if (normalized === 'ACTIVE' || normalized === 'INDEXED' || normalized === 'COMPLETED') {
-    return 'status-success'
-  }
-  if (normalized === 'FAILED' || normalized === 'DELETED') return 'status-error'
-  if (normalized === 'PROCESSING' || normalized === 'PENDING') return 'status-warning'
-  return 'status-info'
-}
+
 
 function InfoCard({
   title,
@@ -79,7 +83,7 @@ function InfoCard({
   items: Array<{ label: string; value: string | number }>
 }) {
   return (
-    <section className="botanical-bento tone-surface tone-sapphire p-5">
+    <section className="p-5">
       <h2 className="text-lg font-black">{title}</h2>
       <dl className="mt-4 grid gap-4 sm:grid-cols-2">
         {items.map((item) => (
@@ -110,6 +114,7 @@ export default function DocumentDetailPage() {
   const [isUploadingVersion, setIsUploadingVersion] = useState(false)
   const [isSavingEdit, setIsSavingEdit] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false)
   const [isStarring, setIsStarring] = useState(false)
   const [editTitle, setEditTitle] = useState('')
   const [editDescription, setEditDescription] = useState('')
@@ -233,11 +238,13 @@ export default function DocumentDetailPage() {
     }
   }
 
+  function handleDelete() {
+    if (!document || !id) return
+    setIsDeleteConfirmOpen(true)
+  }
+
   async function confirmDelete() {
     if (!document || !id) return
-    const ok = window.confirm(`Move "${document.title}" to trash? You can restore it within 30 days.`)
-    if (!ok) return
-
     setIsDeleting(true)
     setError(null)
     try {
@@ -311,7 +318,7 @@ export default function DocumentDetailPage() {
   }
 
   return (
-    <main className="botanical-page flex min-h-svh w-full min-w-0 flex-col overflow-y-auto text-foreground">
+    <main className="flex min-h-svh w-full min-w-0 flex-col overflow-y-auto text-foreground">
       <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-5 py-6 sm:px-8 lg:px-10">
         <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0">
@@ -321,7 +328,7 @@ export default function DocumentDetailPage() {
                 Back to My Document
               </Link>
             </Button>
-            <h1 className="moonlit-title page-title mt-4 break-words">
+            <h1 className="mt-4 text-2xl font-bold tracking-tight md:text-3xl break-words">
               {document?.title || 'Document detail'}
             </h1>
           </div>
@@ -363,7 +370,7 @@ export default function DocumentDetailPage() {
               Download
             </Button>
             {canManage && (
-            <Button disabled={!document || isDeleting} onClick={confirmDelete} type="button" variant="destructive">
+            <Button disabled={!document || isDeleting} onClick={handleDelete} type="button" variant="destructive">
               <Trash2 data-icon="inline-start" aria-hidden="true" />
               {isDeleting ? 'Moving...' : 'Move to trash'}
             </Button>
@@ -372,15 +379,15 @@ export default function DocumentDetailPage() {
         </header>
 
         {error ? (
-          <div className="moonlit-card tone-surface tone-coral px-4 py-3 text-sm" role="alert">
-            {error}
-          </div>
+          <Alert variant="destructive" className="mb-4">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         ) : null}
 
         {isLoading ? (
           <div className="grid gap-4 lg:grid-cols-2">
             {Array.from({ length: 4 }).map((_, index) => (
-              <section className="botanical-card p-5" key={index}>
+              <section className="p-5" key={index}>
                 <Skeleton className="h-6 w-48" />
                 <div className="mt-5 grid gap-4 sm:grid-cols-2">
                   {Array.from({ length: 6 }).map((__, itemIndex) => (
@@ -424,7 +431,7 @@ export default function DocumentDetailPage() {
               />
             </div>
 
-            <section className="botanical-bento moonlit-table tone-surface tone-sapphire overflow-x-auto">
+            <section className="overflow-x-auto">
               <div className="flex items-center gap-3 p-5">
                 <FileText aria-hidden="true" />
                 <h2 className="text-lg font-black">Version history</h2>
@@ -449,9 +456,9 @@ export default function DocumentDetailPage() {
                       <TableCell>{version.fileName}</TableCell>
                       <TableCell>{version.uploadMode}</TableCell>
                       <TableCell>
-                        <span className={`status-badge ${statusClass(version.processingStatus)}`}>
+                        <StatusBadge severity={version.processingStatus}>
                           {version.processingStatus || 'UNKNOWN'}
-                        </span>
+                        </StatusBadge>
                       </TableCell>
                       <TableCell>{version.totalChunks}</TableCell>
                       <TableCell>{formatDate(version.createdAt)}</TableCell>
@@ -619,6 +626,22 @@ export default function DocumentDetailPage() {
         onOpenChange={setIsSubjectProfileOpen}
         onUpdated={(updatedDocument) => setDocument(updatedDocument as DocumentDetail)}
       />
+      <AlertDialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Move to trash?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to move "{document?.title}" to trash? You can restore it within 30 days.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Move to trash
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
   )
 }

@@ -46,7 +46,7 @@ export default function AdminDashboardPage() {
   const activities = stats?.recentActivities ?? []
 
   return (
-    <main className="botanical-page min-h-svh overflow-y-auto p-5 md:p-8">
+    <main className="min-h-svh overflow-y-auto p-5 md:p-8">
       <AdminPageHeader
         actions={<Button asChild><Link to="/admin/users">Review users</Link></Button>}
         description="System-wide usage statistics and overall platform health at a glance."
@@ -62,7 +62,7 @@ export default function AdminDashboardPage() {
       </section>
 
       <section className="mt-8 grid gap-5 xl:grid-cols-[1fr_360px]">
-        <article className="botanical-bento moonlit-table tone-surface tone-sapphire overflow-hidden">
+        <article className="overflow-hidden">
           <div className="flex items-center justify-between border-b border-border/70 p-5">
             <div>
               <h2 className="text-lg font-semibold">Recent activity stream</h2>
@@ -95,7 +95,7 @@ export default function AdminDashboardPage() {
           </div>
         </article>
 
-        <aside className="botanical-bento p-5 space-y-5">
+        <aside className="p-5 space-y-5">
           <div className="admin-icon-badge admin-tone-mist">
             <HeartPulse />
           </div>

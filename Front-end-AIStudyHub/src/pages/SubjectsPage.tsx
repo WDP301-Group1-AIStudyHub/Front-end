@@ -45,7 +45,7 @@ import {
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { downloadDocumentFile, getDocumentDownloadUrl } from "../services/documentApi";
-import { useToast } from "../hooks/useToast";
+import { toast } from "sonner";
 import {
   addSubjectMember,
   addSubjectTeamMember,
@@ -874,7 +874,6 @@ function WorkspaceDetail({
   onChanged: (subject: SubjectItem) => void;
   subject: SubjectItem;
 }) {
-  const { showToast } = useToast();
   const [activeView, setActiveView] = useState<WorkspaceView>("documents");
   const [viewMode, setViewMode] = useState<DocumentViewMode>("grid");
   const [currentSubject, setCurrentSubject] = useState(subject);
@@ -914,10 +913,13 @@ function WorkspaceDetail({
 
   function showFeedback(nextFeedback: Feedback) {
     setFeedback(nextFeedback);
-    showToast({
-      tone: nextFeedback.tone,
-      message: nextFeedback.message,
-    });
+    if (nextFeedback.tone === 'error') {
+      toast.error(nextFeedback.message);
+    } else if (nextFeedback.tone === 'success') {
+      toast.success(nextFeedback.message);
+    } else {
+      toast.info(nextFeedback.message);
+    }
   }
 
   async function loadWorkspace() {
@@ -1371,7 +1373,7 @@ function WorkspaceDetail({
   const memberGrants = grants.filter((grant) => grant.granteeType === "USER");
 
   return (
-    <main className="moonlit-page flex min-h-svh w-full min-w-0 flex-col overflow-y-auto text-foreground">
+    <main className="flex min-h-svh w-full min-w-0 flex-col overflow-y-auto text-foreground">
       <div className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col gap-4 px-4 py-4 sm:px-6 lg:px-8">
         <header className="rounded-lg border border-border bg-white px-4 py-3">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -1842,7 +1844,7 @@ function WorkspaceDetail({
       </div>
 
       {selectedIds.length ? (
-        <div className="fixed inset-x-4 bottom-4 z-40 mx-auto flex max-w-3xl flex-col gap-3 rounded-lg border border-border bg-white p-3 shadow-lg sm:flex-row sm:items-center sm:justify-between">
+        <div className="fixed inset-x-4 bottom-4 z-40 mx-auto flex max-w-3xl flex-col gap-3 rounded-lg border border-border bg-white p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
           <div className="text-sm">
             <strong>{selectedIds.length}</strong> document(s) selected
           </div>
@@ -2246,12 +2248,12 @@ export default function SubjectsPage() {
   }
 
   return (
-    <main className="moonlit-page flex min-h-svh w-full min-w-0 flex-col overflow-y-auto text-foreground">
+    <main className="flex min-h-svh w-full min-w-0 flex-col overflow-y-auto text-foreground">
       <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-5 py-6 sm:px-8 lg:px-10">
         <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-sm font-bold uppercase tracking-wide text-muted-foreground">Team workspace</p>
-            <h1 className="moonlit-title page-title mt-2">Subject Workspaces</h1>
+            <h1 className="mt-2 text-2xl font-bold tracking-tight md:text-3xl">Subject Workspaces</h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
               Drive-style folders for subject documents, members, teams, and access control.
             </p>

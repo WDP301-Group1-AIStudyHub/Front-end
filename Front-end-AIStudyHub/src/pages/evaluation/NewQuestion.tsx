@@ -1,4 +1,4 @@
-﻿import {
+import {
   useEffect,
   useMemo,
   useState,
@@ -239,7 +239,7 @@ export default function NewQuestion() {
   }
 
   return (
-    <main className="botanical-page min-h-svh overflow-y-auto px-4 py-5 sm:px-6 lg:px-8">
+    <main className="min-h-svh overflow-y-auto px-4 py-5 sm:px-6 lg:px-8">
       <form
         className="mx-auto flex w-full max-w-[1180px] flex-col gap-5"
         onSubmit={handleSubmit}
@@ -260,7 +260,7 @@ export default function NewQuestion() {
                 DR-RAG
               </span>
             </div>
-            <h1 className="moonlit-title page-title">
+            <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
               New Benchmark Question
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">
@@ -310,7 +310,7 @@ export default function NewQuestion() {
           </div>
         )}
 
-        <section className="moonlit-panel grid gap-5 p-4 md:p-5">
+        <section className="grid gap-5 p-4 md:p-5">
           <FieldShell
             description="The question you'd ask the chatbot. Phrase it like a real student would."
             label="Question"
@@ -350,7 +350,7 @@ export default function NewQuestion() {
         </section>
 
         <section className="grid gap-5 lg:grid-cols-[1fr_340px]">
-          <div className="moonlit-panel grid gap-5 p-4 md:p-5">
+          <div className="grid gap-5 p-4 md:p-5">
             <div>
               <h2 className="text-lg font-semibold">Scope</h2>
               <p className="mt-1 text-sm text-muted-foreground">
@@ -442,7 +442,7 @@ export default function NewQuestion() {
             )}
           </div>
 
-          <aside className="moonlit-panel grid content-start gap-5 p-4 md:p-5">
+          <aside className="grid content-start gap-5 p-4 md:p-5">
             <div>
               <h2 className="text-lg font-semibold">Difficulty</h2>
               <p className="mt-1 text-sm text-muted-foreground">

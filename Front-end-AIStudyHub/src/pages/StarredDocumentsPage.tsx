@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Download, ExternalLink, FileText, Star } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
@@ -119,11 +120,11 @@ export default function StarredDocumentsPage() {
   }
 
   return (
-    <main className="moonlit-page flex min-h-svh w-full min-w-0 flex-col overflow-y-auto text-foreground">
+    <main className="flex min-h-svh w-full min-w-0 flex-col overflow-y-auto text-foreground">
       <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-5 py-6 sm:px-8 lg:px-10">
         <header className="flex flex-col gap-3">
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="moonlit-title page-title">
+            <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
             Starred documents
             </h1>
             <Badge className="rounded-full px-2.5 py-1" variant="secondary">
@@ -136,12 +137,12 @@ export default function StarredDocumentsPage() {
         </header>
 
         {error ? (
-          <div className="moonlit-card tone-surface tone-coral px-4 py-3 text-sm" role="alert">
-            {error}
-          </div>
+          <Alert variant="destructive" className="mb-4">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         ) : null}
 
-        <section className="moonlit-card moonlit-table tone-surface tone-sapphire overflow-x-auto">
+        <section className="overflow-x-auto">
           <Table className="min-w-[420px] md:min-w-[820px]">
             <TableHeader>
               <TableRow>

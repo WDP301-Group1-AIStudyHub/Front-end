@@ -72,7 +72,7 @@ export default function StudyMaterialsPage() {
 
   if (isLoading) {
     return (
-      <div className="moonlit-page min-h-svh grid place-items-center p-6">
+      <div className="grid min-h-svh place-items-center p-6">
         <LoadingState
           className="w-full max-w-md"
           label="Loading study material..."
@@ -84,8 +84,8 @@ export default function StudyMaterialsPage() {
 
   if (error) {
     return (
-      <div className="moonlit-page min-h-svh flex items-center justify-center p-6 font-sans">
-        <div className="botanical-bento tone-surface tone-coral max-w-md p-6 text-center space-y-4">
+      <div className="flex min-h-svh items-center justify-center p-6 font-sans">
+        <div className="max-w-md p-6 text-center space-y-4">
           <AlertCircle className="size-10 text-red-600 dark:text-red-400 mx-auto" />
           <h2 className="text-xl font-bold">Failed to Load</h2>
           <p className="text-sm text-muted-foreground">{error}</p>
@@ -102,8 +102,8 @@ export default function StudyMaterialsPage() {
 
   if (!material) {
     return (
-      <div className="moonlit-page min-h-svh flex items-center justify-center p-6 font-sans">
-        <div className="botanical-bento max-w-md p-6 text-center space-y-4">
+      <div className="flex min-h-svh items-center justify-center p-6 font-sans">
+        <div className="max-w-md p-6 text-center space-y-4">
           <h2 className="text-xl font-bold">Material Not Found</h2>
           <p className="text-sm text-muted-foreground">
             The requested study material does not exist.
@@ -122,8 +122,8 @@ export default function StudyMaterialsPage() {
   // Handle generation states
   if (material.status === "PENDING" || material.status === "GENERATING") {
     return (
-      <div className="moonlit-page min-h-svh flex items-center justify-center p-6 font-sans">
-        <div className="botanical-bento max-w-md p-8 text-center space-y-6">
+      <div className="flex min-h-svh items-center justify-center p-6 font-sans">
+        <div className="max-w-md p-8 text-center space-y-6">
           <div className="relative flex items-center justify-center my-4">
             <RefreshCw className="size-12 text-primary animate-spin" />
             <BookOpen className="size-6 text-primary absolute" />
@@ -150,8 +150,8 @@ export default function StudyMaterialsPage() {
 
   if (material.status === "FAILED") {
     return (
-      <div className="moonlit-page min-h-svh flex items-center justify-center p-6 font-sans">
-        <div className="botanical-bento tone-surface tone-coral max-w-md p-6 text-center space-y-4">
+      <div className="flex min-h-svh items-center justify-center p-6 font-sans">
+        <div className="max-w-md p-6 text-center space-y-4">
           <AlertCircle className="size-10 text-red-600 dark:text-red-400 mx-auto" />
           <h2 className="text-xl font-bold">Generation Failed</h2>
           <p className="text-sm text-muted-foreground">
@@ -170,7 +170,7 @@ export default function StudyMaterialsPage() {
   }
 
   return (
-    <main className="botanical-page min-h-svh flex flex-col font-sans text-foreground">
+    <main className="flex min-h-svh flex-col font-sans text-foreground">
       <div className="mx-auto w-full max-w-4xl flex-1 flex flex-col gap-6 px-4 py-8">
         <header className="flex items-center gap-4">
           <Button asChild variant="secondary" size="sm">

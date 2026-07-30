@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   getAllStudyMaterials,
@@ -23,6 +24,17 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { getAllProgress, type StudyProgressData } from "../hooks/useStudyProgress";
 
 export default function StudyMaterialsListPage() {
@@ -197,16 +209,23 @@ export default function StudyMaterialsListPage() {
     }
   };
 
-  const handleDelete = async (id: string, e: React.MouseEvent) => {
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+
+  const handleDelete = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    if (window.confirm("Are you sure you want to delete this study set?")) {
-      try {
-        await deleteStudyMaterial(id);
-        setMaterials((prev) => prev.filter((m) => m._id !== id && m.id !== id));
-      } catch (err: any) {
-        alert(err.message || "Failed to delete study material");
-      }
+    setDeleteTargetId(id);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTargetId) return;
+    try {
+      await deleteStudyMaterial(deleteTargetId);
+      setMaterials((prev) => prev.filter((m) => m._id !== deleteTargetId && m.id !== deleteTargetId));
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete study material");
+    } finally {
+      setDeleteTargetId(null);
     }
   };
 
@@ -227,16 +246,16 @@ export default function StudyMaterialsListPage() {
   });
 
   return (
-    <main className="botanical-page flex min-h-svh w-full min-w-0 flex-col overflow-y-auto text-foreground font-sans">
+    <main className="flex min-h-svh w-full min-w-0 flex-col overflow-y-auto text-foreground font-sans">
       <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-5 py-6 sm:px-8 lg:px-10">
         
         {/* Header */}
         <header className="flex flex-col gap-2">
-          <span className="botanical-kicker flex items-center gap-1.5 justify-start">
+          <span className="flex items-center gap-1.5 justify-start text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             <Brain className="size-4 text-primary" />
             AI Practice Hub
           </span>
-          <h1 className="moonlit-title page-title break-words">
+          <h1 className="text-2xl font-bold tracking-tight md:text-3xl break-words">
             Study Materials
           </h1>
           <p className="text-sm text-muted-foreground max-w-xl leading-relaxed">
@@ -316,16 +335,16 @@ export default function StudyMaterialsListPage() {
 
         {/* List Content */}
         {error && (
-          <div className="moonlit-card tone-surface tone-coral px-4 py-3 text-sm flex items-center gap-2" role="alert">
-            <AlertCircle className="size-4 shrink-0" />
-            <span>{error}</span>
-          </div>
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="size-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         )}
 
         {isLoading ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mt-4">
             {Array.from({ length: 6 }).map((_, idx) => (
-              <div key={idx} className="botanical-card p-5 space-y-4">
+              <div key={idx} className="p-5 space-y-4">
                 <Skeleton className="h-5 w-24" />
                 <Skeleton className="h-6 w-48" />
                 <Skeleton className="h-10 w-full" />
@@ -354,7 +373,7 @@ export default function StudyMaterialsListPage() {
                   return (
                     <div
                       key={mat._id || mat.id}
-                      className="rounded-2xl border border-border bg-card p-5 flex flex-col justify-between gap-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden"
+                      className="rounded-2xl border border-border bg-card p-5 flex flex-col justify-between gap-5 shadow-sm transition-shadow relative overflow-hidden"
                     >
                       <div className="space-y-3">
                         <div className="flex items-center justify-between gap-2">
@@ -365,6 +384,13 @@ export default function StudyMaterialsListPage() {
                           }`}>
                             {mat.type === "MCQ" ? "Quiz" : "Flashcards"}
                           </span>
+
+                          {isGenerating && (
+                            <Button size="sm" variant="outline" disabled className="flex-1 text-xs">
+                              <Clock3 className="size-3.5 mr-1.5 animate-spin" />
+                              {isGenerating ? "Generating..." : "Generate"}
+                            </Button>
+                          )}
 
                           {isGenerating && (
                             <span className="flex items-center gap-1 text-2xs text-amber-700 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full animate-pulse">
@@ -451,7 +477,7 @@ export default function StudyMaterialsListPage() {
       {/* Customize Dialog (Image-1 Style Popover Modal) */}
       {isCustomiseOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-card border border-border rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-card border border-border rounded-2xl max-w-lg w-full overflow-hidden shadow-sm animate-in fade-in zoom-in-95 duration-200">
             {/* Dialog Header */}
             <div className="flex items-center justify-between border-b border-border/80 px-6 py-4">
               <div className="flex items-center gap-2">
@@ -624,6 +650,22 @@ export default function StudyMaterialsListPage() {
           </div>
         </div>
       )}
+      <AlertDialog open={Boolean(deleteTargetId)} onOpenChange={(open) => !open && setDeleteTargetId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete study set?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this study set? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
   );
 }

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Archive, Bell, Database, FileText, Plus, UploadCloud, Sparkles } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 import { Button } from '@/components/ui/button'
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
 import { Skeleton } from '@/components/ui/skeleton'
 import { CelestialInlineLoader } from '../components/shared/CelestialLoading'
 import { listDocuments } from '../services/documentApi'
@@ -162,7 +163,7 @@ export default function DashboardPage() {
 
   return (
     <main 
-      className="botanical-page min-h-svh overflow-y-auto p-5 text-foreground md:p-8"
+      className="min-h-svh overflow-y-auto p-5 text-foreground md:p-8"
       onDragEnter={handleDrag}
     >
       {/* Absolute Drag & Drop overlay */}
@@ -177,7 +178,7 @@ export default function DashboardPage() {
             onDrop={handleDrop}
             className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-md p-6"
           >
-            <div className="botanical-dropzone flex w-full max-w-lg flex-col items-center justify-center gap-4 p-12 text-center shadow-xl">
+            <div className="flex w-full max-w-lg flex-col items-center justify-center gap-4 rounded-xl border border-dashed border-border bg-card p-12 text-center shadow-sm">
               <div className="flex size-16 items-center justify-center rounded-full bg-primary/10 text-primary">
                 <UploadCloud className="size-8" />
               </div>
@@ -190,8 +191,8 @@ export default function DashboardPage() {
 
       <header className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <p className="botanical-kicker">Workspace overview</p>
-          <h1 className="moonlit-title page-title mt-2">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Workspace overview</p>
+          <h1 className="mt-2 text-2xl font-bold tracking-tight md:text-3xl">
             Dashboard
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
@@ -214,7 +215,7 @@ export default function DashboardPage() {
       {/* Bento Grid Layout */}
       <section className="mt-8 grid gap-5 xl:grid-cols-12">
         {/* Storage card with organic leaf slider */}
-        <article className="botanical-bento flex flex-col justify-between p-6 xl:col-span-4">
+        <article className="flex flex-col justify-between p-6 xl:col-span-4">
           <div className="flex items-start justify-between gap-4">
             <span className="admin-icon-badge">
               <Database className="size-4" />
@@ -248,7 +249,7 @@ export default function DashboardPage() {
         </article>
 
         {/* AI Assistant box */}
-        <article className="botanical-bento flex flex-col justify-between p-6 xl:col-span-5">
+        <article className="flex flex-col justify-between p-6 xl:col-span-5">
           <div className="flex items-center gap-2 text-xs font-bold text-primary">
             <Sparkles className="size-4" aria-hidden="true" />
             AI Assistant
@@ -267,7 +268,7 @@ export default function DashboardPage() {
         </article>
 
         {/* Study Progress SVG Chart */}
-        <article className="botanical-bento flex flex-col justify-between p-6 xl:col-span-3">
+        <article className="flex flex-col justify-between p-6 xl:col-span-3">
           <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground">
             <span>Study Activity</span>
             <span className="text-primary font-bold">7-day library</span>
@@ -302,7 +303,7 @@ export default function DashboardPage() {
       {/* Main Section */}
       <section className="mt-6 grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
         {/* Recent Documents */}
-        <article className="botanical-bento overflow-hidden p-0">
+        <article className="overflow-hidden p-0">
           <div className="flex items-center justify-between border-b border-border/80 p-5">
             <div className="flex items-center gap-3">
               <Archive className="size-4 text-primary" aria-hidden="true" />
@@ -327,11 +328,15 @@ export default function DashboardPage() {
                 </div>
               ))
             ) : recentDocs.length === 0 ? (
-              <div className="botanical-empty m-5">
-                <Archive className="size-9 text-primary" aria-hidden="true" />
-                <p className="text-sm font-semibold">No documents yet</p>
-                <p className="max-w-md text-sm text-muted-foreground">Drag and drop files onto this page to upload.</p>
-              </div>
+              <Empty className="m-5">
+                <EmptyHeader>
+                  <EmptyMedia>
+                    <Archive className="size-6 text-muted-foreground" />
+                  </EmptyMedia>
+                  <EmptyTitle>No documents yet</EmptyTitle>
+                  <EmptyDescription>Drag and drop files onto this page to upload.</EmptyDescription>
+                </EmptyHeader>
+              </Empty>
             ) : (
               recentDocs.map((doc) => (
                 <Link
@@ -364,7 +369,7 @@ export default function DashboardPage() {
           <div 
             onDragOver={handleDrag}
             onDrop={handleDrop}
-            className="botanical-dropzone group flex cursor-pointer items-center justify-between gap-5 p-5 transition-colors hover:border-primary"
+            className="group flex cursor-pointer items-center justify-between gap-5 rounded-xl border border-dashed border-border bg-card p-5 transition-colors hover:border-primary"
           >
             <div>
               <h2 className="font-bold tracking-tight text-foreground text-sm">Quick Drop Upload</h2>
@@ -376,7 +381,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Subject clusters list */}
-          <article className="botanical-bento p-5">
+          <article className="p-5">
             <span className="text-xs font-semibold text-muted-foreground">Documents by subject</span>
             <div className="mt-5 space-y-2">
               {loading ? (
@@ -405,7 +410,7 @@ export default function DashboardPage() {
       </section>
 
       {/* Footer statistics bar */}
-      <section className="botanical-card mt-6 flex flex-col gap-4 p-5 lg:flex-row lg:items-center lg:justify-between">
+      <section className="mt-6 flex flex-col gap-4 p-5 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex min-w-0 items-center gap-3">
           <span className="size-2 rounded-full bg-primary shrink-0" />
           <p className="text-xs text-muted-foreground leading-relaxed">
@@ -429,7 +434,7 @@ export default function DashboardPage() {
       </section>
 
       {/* Floating Plus button */}
-      <Button asChild className="fixed bottom-6 right-6 z-40 size-12 rounded-xl shadow-lg hover:scale-105 active:scale-95 transition-transform" title="New document">
+      <Button asChild className="fixed bottom-6 right-6 z-40 size-12 rounded-xl shadow-sm hover:scale-105 active:scale-95 transition-transform" title="New document">
         <Link to="/library">
           <Plus aria-hidden="true" className="size-5" />
         </Link>

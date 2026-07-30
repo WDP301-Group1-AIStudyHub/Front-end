@@ -1,8 +1,19 @@
 import { useEffect, useState } from 'react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertTriangle, FileText, LoaderCircle, RotateCcw, Trash2 } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import {
   Table,
   TableBody,
@@ -102,52 +113,60 @@ export default function TrashPage() {
     }
   }
 
-  async function permanentDelete(document: DocumentItem) {
-    const ok = window.confirm(`Permanently delete "${document.title}"? This cannot be undone.`)
-    if (!ok) return
+  const [deleteTarget, setDeleteTarget] = useState<DocumentItem | 'ALL' | null>(null)
 
-    setBusyId(document.id)
-    setError(null)
-    try {
-      await deleteDocumentPermanently(document.id)
-      setDocuments((current) => current.filter((item) => item.id !== document.id))
-      setFeedback(`"${document.title}" permanently deleted.`)
-    } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : 'Unable to permanently delete document')
-    } finally {
-      setBusyId(null)
-    }
+  function permanentDelete(document: DocumentItem) {
+    setDeleteTarget(document)
   }
 
-  async function emptyAll() {
+  function emptyAll() {
     if (documents.length === 0) return
-    const ok = window.confirm(`Permanently delete all ${documents.length} document(s) in Trash?`)
-    if (!ok) return
+    setDeleteTarget('ALL')
+  }
 
-    setIsEmptying(true)
-    setError(null)
-    try {
-      const result = await emptyTrash()
-      await loadTrash()
-      setFeedback(
-        result.failedCount > 0
-          ? `${result.deletedCount} deleted; ${result.failedCount} could not be deleted.`
-          : `${result.deletedCount} document(s) permanently deleted.`,
-      )
-    } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : 'Unable to empty trash')
-    } finally {
-      setIsEmptying(false)
+  async function executePermanentDelete() {
+    if (!deleteTarget) return
+
+    if (deleteTarget === 'ALL') {
+      setIsEmptying(true)
+      setError(null)
+      try {
+        const result = await emptyTrash()
+        await loadTrash()
+        setFeedback(
+          result.failedCount > 0
+            ? `${result.deletedCount} deleted; ${result.failedCount} could not be deleted.`
+            : `${result.deletedCount} document(s) permanently deleted.`,
+        )
+      } catch (caughtError) {
+        setError(caughtError instanceof Error ? caughtError.message : 'Unable to empty trash')
+      } finally {
+        setIsEmptying(false)
+        setDeleteTarget(null)
+      }
+    } else {
+      setBusyId(deleteTarget.id)
+      setError(null)
+      try {
+        await deleteDocumentPermanently(deleteTarget.id)
+        setDocuments((current) => current.filter((item) => item.id !== deleteTarget.id))
+        setFeedback(`"${deleteTarget.title}" permanently deleted.`)
+      } catch (caughtError) {
+        setError(caughtError instanceof Error ? caughtError.message : 'Unable to permanently delete document')
+      } finally {
+        setBusyId(null)
+        setDeleteTarget(null)
+      }
     }
   }
 
   return (
-    <main className="moonlit-page flex min-h-svh w-full min-w-0 flex-col overflow-y-auto text-foreground">
+    <main className="flex min-h-svh w-full min-w-0 flex-col overflow-y-auto text-foreground">
       <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-5 py-6 sm:px-8 lg:px-10">
         <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="flex flex-col gap-2">
             <div className="flex flex-wrap items-center gap-3">
-              <h1 className="moonlit-title page-title">
+              <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
                 Trash
               </h1>
               <Badge className="rounded-full px-2.5 py-1" variant="secondary">
@@ -170,18 +189,18 @@ export default function TrashPage() {
         </header>
 
         {feedback ? (
-          <div className="moonlit-card tone-surface tone-emerald px-4 py-3 text-sm" role="status">
+          <div className="px-4 py-3 text-sm" role="status">
             {feedback}
           </div>
         ) : null}
 
         {error ? (
-          <div className="moonlit-card tone-surface tone-coral px-4 py-3 text-sm" role="alert">
-            {error}
-          </div>
+          <Alert variant="destructive" className="mb-4">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         ) : null}
 
-        <section className="moonlit-card moonlit-table tone-surface tone-sapphire overflow-x-auto">
+        <section className="overflow-x-auto">
           <Table className="min-w-[500px] md:min-w-[880px]">
             <TableHeader>
               <TableRow>
@@ -277,6 +296,27 @@ export default function TrashPage() {
           ) : null}
         </section>
       </div>
+
+      <AlertDialog open={Boolean(deleteTarget)} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {deleteTarget === 'ALL' ? 'Empty Trash?' : 'Delete permanently?'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteTarget === 'ALL'
+                ? `Are you sure you want to permanently delete all ${documents.length} document(s) in Trash? This action cannot be undone.`
+                : `Are you sure you want to permanently delete "${(deleteTarget as DocumentItem)?.title}"? This action cannot be undone.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={executePermanentDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Permanently delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
   )
 }

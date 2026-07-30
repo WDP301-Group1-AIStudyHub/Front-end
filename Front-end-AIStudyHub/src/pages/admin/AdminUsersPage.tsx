@@ -87,14 +87,14 @@ export default function AdminUsersPage() {
 
 
   return (
-    <main className="botanical-page min-h-svh overflow-y-auto p-5 md:p-8">
+    <main className="min-h-svh overflow-y-auto p-5 md:p-8">
       <AdminPageHeader
         description="View users, update roles, and ban or unban accounts."
         eyebrow="Admin users"
         title="User Management"
       />
 
-      <section className="botanical-bento moonlit-table tone-surface tone-teal mt-8 overflow-hidden">
+      <section className="mt-8 overflow-hidden">
         {/* ── Toolbar ── */}
         <div className="flex flex-col gap-3 border-b border-border/70 p-5 xl:flex-row xl:items-center xl:justify-between">
           <label className="relative max-w-md flex-1">

@@ -15,7 +15,7 @@ function StatCard({
   value: string
 }) {
   return (
-    <article className={`moonlit-card tone-surface tone-${tone} p-5`}>
+    <article className="p-5">
       <div className={`admin-icon-badge admin-tone-${tone}`}>{icon}</div>
       <p className="mt-4 text-3xl font-light tracking-tight">{value}</p>
       <p className="mt-1 text-sm text-muted-foreground">{label}</p>
@@ -66,12 +66,12 @@ export default function EvaluationPage() {
   }, [])
 
   return (
-    <main className="botanical-page min-h-svh overflow-y-auto p-5 md:p-8">
+    <main className="min-h-svh overflow-y-auto p-5 md:p-8">
       <header className="flex flex-col gap-2">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
           RAG Research
         </p>
-        <h1 className="moonlit-title page-title">Evaluation</h1>
+        <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Evaluation</h1>
         <p className="text-sm text-muted-foreground">
           Track DR-RAG retrieval quality, grounding and latency.
         </p>
@@ -127,7 +127,7 @@ export default function EvaluationPage() {
 
           {/* Logs table */}
           <section className="mt-8">
-            <article className="moonlit-card moonlit-table tone-surface tone-mist overflow-hidden">
+            <article className="rounded-xl border border-border bg-card overflow-hidden">
               <div className="border-b border-border/70 p-5">
                 <h2 className="text-lg font-semibold">Evaluation logs</h2>
                 <p className="text-sm text-muted-foreground">

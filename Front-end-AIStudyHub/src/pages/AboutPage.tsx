@@ -33,9 +33,9 @@ export default function AboutPage() {
 
       <main className="pb-20 pt-28 md:pt-32">
         <section className="mx-auto grid w-[min(100%,1120px)] gap-8 px-4 py-12 md:grid-cols-[0.75fr_1fr] md:px-6">
-          <p className="botanical-kicker">Built for researchers</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Built for researchers</p>
           <div>
-            <h1 className="moonlit-title text-[clamp(2.5rem,6vw,4.8rem)] leading-none">
+            <h1 className="text-[clamp(2.5rem,6vw,4.8rem)] font-bold leading-none">
               About AI Study Hub
             </h1>
             <p className="mt-6 max-w-[68ch] text-base leading-7 text-muted-foreground md:text-lg">
@@ -47,7 +47,7 @@ export default function AboutPage() {
         <section className="mx-auto grid w-[min(100%,1120px)] gap-5 px-4 md:grid-cols-[1.05fr_0.95fr] md:px-6">
           <article className="border-y border-border py-8 md:py-10">
             <BookOpenCheck className="mb-7 size-9 text-primary" aria-hidden="true" />
-            <h2 className="moonlit-title text-3xl leading-tight md:text-4xl">A simpler way to study with AI</h2>
+            <h2 className="text-3xl font-bold leading-tight md:text-4xl">A simpler way to study with AI</h2>
             <p className="mt-5 max-w-2xl text-sm leading-7 text-muted-foreground md:text-base">
               Our mission is to make academic work feel navigable. The platform organizes documents, extracts context, supports AI conversations, and turns progress into visible learning signals.
             </p>
@@ -84,7 +84,7 @@ export default function AboutPage() {
 
         <section className="mx-auto w-[min(100%,820px)] px-4 py-8 text-center md:px-6">
           <div className="border-y border-border py-10 md:py-12">
-            <h2 className="moonlit-title text-3xl leading-tight md:text-4xl">Ready to start?</h2>
+            <h2 className="text-3xl font-bold leading-tight md:text-4xl">Ready to start?</h2>
             <p className="mx-auto mt-4 max-w-[540px] text-sm leading-6 text-muted-foreground">
               Create an account to organize your files and begin practicing with your own material.
             </p>

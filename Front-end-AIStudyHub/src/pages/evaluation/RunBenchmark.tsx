@@ -85,7 +85,7 @@ function Panel({
   children: ReactNode;
   className?: string;
 }) {
-  return <section className={`moonlit-panel ${className}`}>{children}</section>;
+  return <section className={className}>{children}</section>;
 }
 
 function ScoreCard({
@@ -180,7 +180,7 @@ export default function RunBenchmark() {
   }
 
   return (
-    <main className="botanical-page min-h-svh overflow-y-auto px-4 py-5 sm:px-6 lg:px-8">
+    <main className="min-h-svh overflow-y-auto px-4 py-5 sm:px-6 lg:px-8">
       <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-5">
         <header className="flex flex-col gap-4 border-b border-border/60 pb-5 xl:flex-row xl:items-end xl:justify-between">
           <div className="min-w-0">
@@ -197,7 +197,7 @@ export default function RunBenchmark() {
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
               {formatDate(result?.createdAt)}
             </p>
-            <h1 className="page-title mt-2 line-clamp-2">
+            <h1 className="mt-2 text-2xl font-bold tracking-tight md:text-3xl line-clamp-2">
               {result?.question || "Running benchmark..."}
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">
