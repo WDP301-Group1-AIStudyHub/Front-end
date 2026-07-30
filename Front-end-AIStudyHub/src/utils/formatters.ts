@@ -40,6 +40,8 @@ export function getFileBadgeClass(fileName: string | undefined): string {
   return "file-txt-badge";
 }
 
+// Data-driven extension colors (PDF red, DOCX blue, XLSX green, PPTX orange).
+// Intentional literal data encoding - do not tokenize.
 export function getFileIconColorClass(fileName: string | undefined): string {
   if (!fileName) return "text-muted-foreground";
   const ext = fileName.split(".").pop()?.toLowerCase();

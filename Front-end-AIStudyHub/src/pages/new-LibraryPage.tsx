@@ -1601,7 +1601,7 @@ export default function NewLibraryPage() {
                       </TableRow>
                     ))
                   : visibleDocuments.map((document) => (
-                      <TableRow key={document.id} className={selectedIds.includes(document.id) ? "bg-[#ECEFE7]/35" : ""}>
+                      <TableRow key={document.id} className={selectedIds.includes(document.id) ? "bg-accent/40" : ""}>
                         <TableCell className="w-12 px-4 text-center">
                           <input
                             type="checkbox"

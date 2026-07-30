@@ -80,7 +80,7 @@ export default function DashboardSidebar({ collapsed, onToggle }: DashboardSideb
               key={item.icon}
               title={item.label}
               onClick={() => { navigate(item.path) }}
-              className={`w-full py-2 flex items-center gap-0 bg-transparent border-none border-r-2 font-medium cursor-pointer transition-all duration-300 whitespace-nowrap overflow-hidden hover:bg-card/5 active:scale-95 ${collapsed ? 'justify-center px-0' : 'justify-start px-5 gap-3'} ${isActive ? 'text-white font-bold border-r-white' : 'text-[rgba(196,199,200,0.6)] border-r-transparent hover:text-[#e5e2e1]'}`}
+              className={`w-full py-2 flex items-center gap-0 bg-transparent border-none border-r-2 font-medium cursor-pointer transition-all duration-300 whitespace-nowrap overflow-hidden hover:bg-card/5 active:scale-95 ${collapsed ? 'justify-center px-0' : 'justify-start px-5 gap-3'} ${isActive ? 'text-white font-bold border-r-white' : 'text-muted-foreground border-r-transparent hover:text-foreground'}`}
             >
               <span
                 className="material-symbols-outlined text-[24px] flex-shrink-0"

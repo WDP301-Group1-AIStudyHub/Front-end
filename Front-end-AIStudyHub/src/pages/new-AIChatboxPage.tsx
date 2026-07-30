@@ -712,7 +712,7 @@ export default function NewAIChatboxPage() {
           </div>
         </div>
 
-        <aside className="hidden min-h-0 border-l border-border bg-[#f7f8f7] p-5 lg:block">
+        <aside className="hidden min-h-0 border-l border-border bg-sidebar p-5 lg:block">
           <div className="flex h-full flex-col gap-5 overflow-y-auto">
             {/* Document context selector */}
             <section className="border-b border-border pb-5">
