@@ -1,4 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Eye, FileCog, Search, FileText, Database, User, Shield, Info } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -85,16 +92,20 @@ export default function AdminDocumentsPage() {
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-1.5">
               <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Extraction:</span>
-              <select
-                className="h-8 rounded-md border border-input bg-background px-2.5 text-sm"
+              <Select
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
+                onValueChange={(val) => setStatusFilter(val as typeof statusFilter)}
               >
-                <option value="all">All</option>
-                <option value="indexed">Indexed</option>
-                <option value="processing">Processing</option>
-                <option value="failed">Failed</option>
-              </select>
+                <SelectTrigger className="h-8 w-[140px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="indexed">Indexed</SelectItem>
+                  <SelectItem value="processing">Processing</SelectItem>
+                  <SelectItem value="failed">Failed</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <StatusBadge severity="info">{filteredDocuments.length} documents</StatusBadge>
           </div>

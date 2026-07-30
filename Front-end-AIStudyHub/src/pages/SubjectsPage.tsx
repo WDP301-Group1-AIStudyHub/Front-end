@@ -1,4 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type { CSSProperties, FormEvent } from "react";
 import {
   BookMarked,
@@ -17,7 +25,6 @@ import {
   Plus,
   Search,
   ShieldCheck,
-  SlidersHorizontal,
   Trash2,
   UploadCloud,
   Users,
@@ -284,31 +291,36 @@ function DriveToolbar({
               value={query}
             />
           </label>
-          <label className="relative block">
-            <SlidersHorizontal className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <select
-              aria-label="Filter document access"
-              className="h-10 w-full rounded-md border border-border bg-background pl-9 pr-3 text-sm text-foreground outline-none transition-colors focus:border-ring"
-              onChange={(event) => setAccessFilter(event.target.value as DocumentAccessFilter)}
-              value={accessFilter}
+          <div className="relative">
+            <Select
+              onValueChange={(val) => setAccessFilter((val === "all" ? "" : val) as DocumentAccessFilter)}
+              value={accessFilter || "all"}
             >
-              <option value="">All access</option>
-              <option value="OWNER">Manager</option>
-              <option value="EDITOR">Editor</option>
-              <option value="VIEWER">Viewer</option>
-            </select>
-          </label>
-          <select
-            aria-label="Sort documents"
-            className="h-10 rounded-md border border-border bg-background px-3 text-sm text-foreground outline-none transition-colors focus:border-ring"
-            onChange={(event) => setSortKey(event.target.value as DocumentSortKey)}
+              <SelectTrigger aria-label="Filter document access" className="h-10 w-full min-w-[140px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All access</SelectItem>
+                <SelectItem value="OWNER">Manager</SelectItem>
+                <SelectItem value="EDITOR">Editor</SelectItem>
+                <SelectItem value="VIEWER">Viewer</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <Select
+            onValueChange={(val) => setSortKey(val as DocumentSortKey)}
             value={sortKey}
           >
-            <option value="updatedAt">Recently updated</option>
-            <option value="name">Name</option>
-            <option value="size">Size</option>
-            <option value="type">Type</option>
-          </select>
+            <SelectTrigger aria-label="Sort documents" className="h-10 min-w-[160px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="updatedAt">Recently updated</SelectItem>
+              <SelectItem value="name">Name</SelectItem>
+              <SelectItem value="size">Size</SelectItem>
+              <SelectItem value="type">Type</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {canManage ? (
@@ -400,13 +412,11 @@ function SubjectDocumentGrid({
                   <p className="truncate text-xs text-muted-foreground">{readableFileType(document)}</p>
                 </div>
               </div>
-              <input
+              <Checkbox
                 aria-label={`Select ${documentTitle(document)}`}
                 checked={isSelected}
-                className="mt-1 size-4"
-                onChange={(event) => onSelect(document, event.target.checked)}
+                onCheckedChange={(checked) => onSelect(document, Boolean(checked))}
                 onClick={(event) => event.stopPropagation()}
-                type="checkbox"
               />
             </div>
             <div className="mt-5 flex flex-wrap gap-2">
@@ -498,12 +508,10 @@ function SubjectDocumentList({
                 onClick={() => onOpen(document)}
               >
                 <TableCell onClick={(event) => event.stopPropagation()}>
-                  <input
+                  <Checkbox
                     aria-label={`Select ${documentTitle(document)}`}
                     checked={isSelected}
-                    className="size-4"
-                    onChange={(event) => onSelect(document, event.target.checked)}
-                    type="checkbox"
+                    onCheckedChange={(checked) => onSelect(document, Boolean(checked))}
                   />
                 </TableCell>
                 <TableCell>
@@ -1619,14 +1627,18 @@ function WorkspaceDetail({
                       type="email"
                       value={memberEmail}
                     />
-                    <select
-                      className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-                      onChange={(event) => setMemberRole(event.target.value === "ADMIN" ? "ADMIN" : "MEMBER")}
+                    <Select
+                      onValueChange={(val) => setMemberRole(val === "ADMIN" ? "ADMIN" : "MEMBER")}
                       value={memberRole}
                     >
-                      <option value="MEMBER">Member</option>
-                      <option value="ADMIN">Admin</option>
-                    </select>
+                      <SelectTrigger className="h-10 w-[140px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="MEMBER">Member</SelectItem>
+                        <SelectItem value="ADMIN">Admin</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <Button disabled={!memberEmail.trim() || busyId === "member"} onClick={() => void addMember()} type="button">
                       <Plus data-icon="inline-start" aria-hidden="true" />
                       Add member
@@ -1685,17 +1697,21 @@ function WorkspaceDetail({
                             ) : member.role === "OWNER" ? (
                               <Badge className={`border ${roleTone(member.role)}`} variant="outline">Owner</Badge>
                             ) : (
-                              <select
-                                className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                              <Select
                                 disabled={busyId === member.id}
-                                onChange={(event) =>
-                                  void changeMemberRole(member, event.target.value === "ADMIN" ? "ADMIN" : "MEMBER")
+                                onValueChange={(val) =>
+                                  void changeMemberRole(member, val === "ADMIN" ? "ADMIN" : "MEMBER")
                                 }
                                 value={member.role}
                               >
-                                <option value="MEMBER">Member</option>
-                                <option value="ADMIN">Admin</option>
-                              </select>
+                                <SelectTrigger className="h-9 w-[120px]">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="MEMBER">Member</SelectItem>
+                                  <SelectItem value="ADMIN">Admin</SelectItem>
+                                </SelectContent>
+                              </Select>
                             )}
                           </TableCell>
                           <TableCell className="text-right">
@@ -1793,21 +1809,26 @@ function WorkspaceDetail({
                           )}
                         </div>
                         <div className="mt-4 grid gap-3 border-t border-border pt-4 lg:grid-cols-[minmax(180px,280px)_minmax(240px,1fr)_auto]">
-                          <select
-                            className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-                            defaultValue=""
-                            onChange={(event) => {
-                              void addMemberToTeam(team, event.target.value);
-                              event.currentTarget.value = "";
+                          <Select
+                            onValueChange={(val) => {
+                              if (val && val !== "add_placeholder") {
+                                void addMemberToTeam(team, val);
+                              }
                             }}
+                            value="add_placeholder"
                           >
-                            <option value="">Add member to team</option>
-                            {availableMembers.map((member) => (
-                              <option key={member.user.id} value={member.user.id}>
-                                {member.user.fullName} ({member.user.email})
-                              </option>
-                            ))}
-                          </select>
+                            <SelectTrigger className="h-10 min-w-[180px]">
+                              <SelectValue placeholder="Add member to team" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="add_placeholder">Add member to team</SelectItem>
+                              {availableMembers.map((member) => (
+                                <SelectItem key={member.user.id} value={member.user.id}>
+                                  {member.user.fullName} ({member.user.email})
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                           <Input
                             onChange={(event) =>
                               setTeamMemberEmails((current) => ({
@@ -1928,37 +1949,49 @@ function WorkspaceDetail({
 
           <div className="grid max-h-[72vh] gap-4 overflow-y-auto pr-1">
             <div className="grid gap-3 rounded-lg border border-border bg-slate-50 p-3 sm:grid-cols-2 lg:grid-cols-[140px_minmax(0,1fr)_140px_auto]">
-              <select
-                className="h-10 min-w-0 rounded-md border border-input bg-background px-3 text-sm"
-                onChange={(event) => {
-                  setGrantType(event.target.value === "USER" ? "USER" : "TEAM");
+              <Select
+                onValueChange={(val) => {
+                  setGrantType(val === "USER" ? "USER" : "TEAM");
                   setGrantGranteeId("");
                 }}
                 value={grantType}
               >
-                <option value="TEAM">Team</option>
-                <option value="USER">Member</option>
-              </select>
-              <select
-                className="h-10 min-w-0 rounded-md border border-input bg-background px-3 text-sm"
-                onChange={(event) => setGrantGranteeId(event.target.value)}
-                value={grantGranteeId}
+                <SelectTrigger className="h-10 w-[140px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="TEAM">Team</SelectItem>
+                  <SelectItem value="USER">Member</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select
+                onValueChange={(val) => setGrantGranteeId(val === "select_grantee" ? "" : val)}
+                value={grantGranteeId || "select_grantee"}
               >
-                <option value="">Select {grantType === "TEAM" ? "team" : "member"}</option>
-                {grantOptions.map((option) => (
-                  <option key={option.id} value={option.id}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              <select
-                className="h-10 min-w-0 rounded-md border border-input bg-background px-3 text-sm"
-                onChange={(event) => setGrantPermission(event.target.value === "EDIT" ? "EDIT" : "VIEW")}
+                <SelectTrigger className="h-10 w-full min-w-0">
+                  <SelectValue placeholder={`Select ${grantType === "TEAM" ? "team" : "member"}`} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="select_grantee">Select {grantType === "TEAM" ? "team" : "member"}</SelectItem>
+                  {grantOptions.map((option) => (
+                    <SelectItem key={option.id} value={option.id}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select
+                onValueChange={(val) => setGrantPermission(val === "EDIT" ? "EDIT" : "VIEW")}
                 value={grantPermission}
               >
-                <option value="VIEW">Viewer</option>
-                <option value="EDIT">Editor</option>
-              </select>
+                <SelectTrigger className="h-10 w-[140px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="VIEW">Viewer</SelectItem>
+                  <SelectItem value="EDIT">Editor</SelectItem>
+                </SelectContent>
+              </Select>
               <Button className="sm:col-span-2 lg:col-span-1" disabled={!grantGranteeId || isGrantLoading} onClick={() => void saveGrant()} type="button">
                 Add
               </Button>
@@ -1989,17 +2022,21 @@ function WorkspaceDetail({
                               ) : null}
                             </div>
                             <div className="flex gap-2">
-                              <select
-                                className="h-9 flex-1 rounded-md border border-input bg-background px-3 text-sm"
+                              <Select
                                 disabled={isGrantLoading}
-                                onChange={(event) =>
-                                  void changeGrantPermission(grant, event.target.value === "EDIT" ? "EDIT" : "VIEW")
+                                onValueChange={(val) =>
+                                  void changeGrantPermission(grant, val === "EDIT" ? "EDIT" : "VIEW")
                                 }
                                 value={grant.permission}
                               >
-                                <option value="VIEW">{permissionLabel("VIEW")}</option>
-                                <option value="EDIT">{permissionLabel("EDIT")}</option>
-                              </select>
+                                <SelectTrigger className="h-9 flex-1">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="VIEW">{permissionLabel("VIEW")}</SelectItem>
+                                  <SelectItem value="EDIT">{permissionLabel("EDIT")}</SelectItem>
+                                </SelectContent>
+                              </Select>
                               <Button
                                 disabled={isGrantLoading}
                                 onClick={() => void revokeGrant(grant)}
@@ -2055,37 +2092,49 @@ function WorkspaceDetail({
             </div>
 
             <div className="grid gap-3 rounded-lg border border-border bg-white p-3 sm:grid-cols-2 lg:grid-cols-[140px_minmax(0,1fr)_140px]">
-              <select
-                className="h-10 min-w-0 rounded-md border border-input bg-background px-3 text-sm"
-                onChange={(event) => {
-                  setGrantType(event.target.value === "USER" ? "USER" : "TEAM");
+              <Select
+                onValueChange={(val) => {
+                  setGrantType(val === "USER" ? "USER" : "TEAM");
                   setGrantGranteeId("");
                 }}
                 value={grantType}
               >
-                <option value="TEAM">Team</option>
-                <option value="USER">Member</option>
-              </select>
-              <select
-                className="h-10 min-w-0 rounded-md border border-input bg-background px-3 text-sm"
-                onChange={(event) => setGrantGranteeId(event.target.value)}
-                value={grantGranteeId}
+                <SelectTrigger className="h-10 min-w-0">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="TEAM">Team</SelectItem>
+                  <SelectItem value="USER">Member</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select
+                onValueChange={(val) => setGrantGranteeId(val === "select_grantee" ? "" : val)}
+                value={grantGranteeId || "select_grantee"}
               >
-                <option value="">Select {grantType === "TEAM" ? "team" : "member"}</option>
-                {grantOptions.map((option) => (
-                  <option key={option.id} value={option.id}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              <select
-                className="h-10 min-w-0 rounded-md border border-input bg-background px-3 text-sm"
-                onChange={(event) => setGrantPermission(event.target.value === "EDIT" ? "EDIT" : "VIEW")}
+                <SelectTrigger className="h-10 min-w-0">
+                  <SelectValue placeholder={`Select ${grantType === "TEAM" ? "team" : "member"}`} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="select_grantee">Select {grantType === "TEAM" ? "team" : "member"}</SelectItem>
+                  {grantOptions.map((option) => (
+                    <SelectItem key={option.id} value={option.id}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select
+                onValueChange={(val) => setGrantPermission(val === "EDIT" ? "EDIT" : "VIEW")}
                 value={grantPermission}
               >
-                <option value="VIEW">Viewer</option>
-                <option value="EDIT">Editor</option>
-              </select>
+                <SelectTrigger className="h-10 min-w-0">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="VIEW">Viewer</SelectItem>
+                  <SelectItem value="EDIT">Editor</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -2287,17 +2336,20 @@ export default function SubjectsPage() {
                 value={searchQuery}
               />
             </label>
-            <select
-              aria-label="Filter by workspace role"
-              className="h-10 rounded-md border border-border bg-background px-3 text-sm text-foreground outline-none transition-colors focus:border-ring"
-              onChange={(event) => setRoleFilter(event.target.value as SubjectWorkspaceRole | "")}
-              value={roleFilter}
+            <Select
+              onValueChange={(val) => setRoleFilter((val === "all" ? "" : val) as SubjectWorkspaceRole | "")}
+              value={roleFilter || "all"}
             >
-              <option value="">All roles</option>
-              <option value="OWNER">Owner</option>
-              <option value="ADMIN">Admin</option>
-              <option value="MEMBER">Member</option>
-            </select>
+              <SelectTrigger aria-label="Filter by workspace role" className="h-10 w-[180px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All roles</SelectItem>
+                <SelectItem value="OWNER">Owner</SelectItem>
+                <SelectItem value="ADMIN">Admin</SelectItem>
+                <SelectItem value="MEMBER">Member</SelectItem>
+              </SelectContent>
+            </Select>
             <Button
               disabled={!searchQuery.trim() && !roleFilter}
               onClick={() => {

@@ -25,6 +25,14 @@ import {
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -463,28 +471,31 @@ function DocumentFields({
       </label>
 
       {showSubject ? (
-      <label className="flex flex-col gap-2 text-sm font-medium">
-        Subject
-        <select
-          className="h-9 w-full min-w-0 rounded-md border-2 border-foreground bg-background px-3 text-sm font-semibold  outline-none focus:translate-x-[1px] focus:translate-y-[1px] focus: disabled:opacity-50"
+      <div className="flex flex-col gap-2 text-sm font-medium">
+        <span>Subject</span>
+        <Select
           disabled={disabled}
-          onChange={(event) =>
-            onFormChange({ ...form, subject: event.target.value })
+          onValueChange={(val) =>
+            onFormChange({ ...form, subject: val === "unassigned" ? "" : val })
           }
-          onBlur={() => onBlur?.("subject")}
-          value={form.subject}
+          value={form.subject || "unassigned"}
         >
-          <option value="">Select subject</option>
-          {subjects.map((subject) => (
-            <option key={subject._id} value={subject.name}>
-              {[subject.code, subject.name].filter(Boolean).join(" ")}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select subject" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="unassigned">Select subject</SelectItem>
+            {subjects.map((s) => (
+              <SelectItem key={s._id} value={s._id}>
+                {[s.code, s.name].filter(Boolean).join(" ")}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         {touched.subject && errors.subject && (
           <span className="text-xs text-rose-500 font-semibold">{errors.subject}</span>
         )}
-      </label>
+      </div>
       ) : null}
 
       <label className="flex flex-col gap-2 text-sm font-medium">
@@ -1424,71 +1435,83 @@ export default function NewLibraryPage() {
                   Filters
                 </span>
 
-                <select
-                  aria-label="Filter by subject"
-                  className="h-9 min-w-40 flex-1 rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 sm:flex-none"
-                  onChange={(event) => {
-                    setSubjectFilter(event.target.value);
+                <Select
+                  onValueChange={(val) => {
+                    setSubjectFilter(val === "all" ? "" : val);
                     setSelectedIds([]);
                   }}
-                  value={subjectFilter}
+                  value={subjectFilter || "all"}
                 >
-                  <option value="">All subjects</option>
-                  {subjects.map((subject) => (
-                    <option key={subject._id} value={subject._id}>
-                      {[subject.code, subject.name].filter(Boolean).join(" ")}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger aria-label="Filter by subject" className="h-9 min-w-40 flex-1 sm:flex-none">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All subjects</SelectItem>
+                    {subjects.map((subject) => (
+                      <SelectItem key={subject._id} value={subject._id}>
+                        {[subject.code, subject.name].filter(Boolean).join(" ")}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-                <select
-                  aria-label="Filter by semester"
-                  className="h-9 min-w-32 flex-1 rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 sm:flex-none"
-                  onChange={(event) => {
-                    setSemesterFilter(event.target.value);
+                <Select
+                  onValueChange={(val) => {
+                    setSemesterFilter(val === "all" ? "" : val);
                     setSelectedIds([]);
                   }}
-                  value={semesterFilter}
+                  value={semesterFilter || "all"}
                 >
-                  <option value="">All semesters</option>
-                  {uniqueSemesters.map((sem) => (
-                    <option key={sem as string} value={sem as string}>
-                      Semester {sem}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger aria-label="Filter by semester" className="h-9 min-w-32 flex-1 sm:flex-none">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All semesters</SelectItem>
+                    {uniqueSemesters.map((sem) => (
+                      <SelectItem key={sem as string} value={sem as string}>
+                        Semester {sem}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-                <select
-                  aria-label="Filter by file type"
-                  className="h-9 min-w-32 flex-1 rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 sm:flex-none"
-                  onChange={(event) => {
-                    setFileTypeFilter(event.target.value);
+                <Select
+                  onValueChange={(val) => {
+                    setFileTypeFilter(val === "all" ? "" : val);
                     setSelectedIds([]);
                   }}
-                  value={fileTypeFilter}
+                  value={fileTypeFilter || "all"}
                 >
-                  <option value="">All file types</option>
-                  {DOCUMENT_FILE_TYPES.map((fileType) => (
-                    <option key={fileType} value={fileType}>
-                      {fileType}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger aria-label="Filter by file type" className="h-9 min-w-32 flex-1 sm:flex-none">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All file types</SelectItem>
+                    {DOCUMENT_FILE_TYPES.map((fileType) => (
+                      <SelectItem key={fileType} value={fileType}>
+                        {fileType}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-                <select
-                  aria-label="Filter by processing status"
-                  className="h-9 min-w-32 flex-1 rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 sm:flex-none"
-                  onChange={(event) => {
-                    setStatusFilter(event.target.value);
+                <Select
+                  onValueChange={(val) => {
+                    setStatusFilter(val === "all" ? "" : val);
                     setSelectedIds([]);
                   }}
-                  value={statusFilter}
+                  value={statusFilter || "all"}
                 >
-                  <option value="">All statuses</option>
-                  <option value="ready">Ready</option>
-                  <option value="processing">Processing</option>
-                  <option value="failed">Failed</option>
-                </select>
+                  <SelectTrigger aria-label="Filter by processing status" className="h-9 min-w-32 flex-1 sm:flex-none">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All statuses</SelectItem>
+                    <SelectItem value="ready">Ready</SelectItem>
+                    <SelectItem value="processing">Processing</SelectItem>
+                    <SelectItem value="failed">Failed</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
@@ -1551,11 +1574,9 @@ export default function NewLibraryPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-12 px-4 text-center">
-                    <input
-                      type="checkbox"
-                      className="rounded border-border text-primary focus:ring-primary size-4 accent-primary cursor-pointer"
+                    <Checkbox
                       checked={allVisibleSelected}
-                      onChange={toggleSelectAll}
+                      onCheckedChange={toggleSelectAll}
                       aria-label="Select all visible documents"
                     />
                   </TableHead>
@@ -1603,11 +1624,9 @@ export default function NewLibraryPage() {
                   : visibleDocuments.map((document) => (
                       <TableRow key={document.id} className={selectedIds.includes(document.id) ? "bg-accent/40" : ""}>
                         <TableCell className="w-12 px-4 text-center">
-                          <input
-                            type="checkbox"
-                            className="rounded border-border text-primary focus:ring-primary size-4 accent-primary cursor-pointer"
+                          <Checkbox
                             checked={selectedIds.includes(document.id)}
-                            onChange={() => toggleSelectOne(document.id)}
+                            onCheckedChange={() => toggleSelectOne(document.id)}
                           />
                         </TableCell>
                         <TableCell>

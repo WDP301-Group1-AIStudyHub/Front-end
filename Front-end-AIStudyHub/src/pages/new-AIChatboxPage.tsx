@@ -22,6 +22,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { Thread } from "@/components/assistant-ui/thread";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
  Sheet,
  SheetContent,
@@ -1148,15 +1149,12 @@ function DocumentPickerList({
  : "border-border/70 bg-background text-muted-foreground hover:border-primary/35 hover:text-foreground"
  }`}
  >
- <input
- type="checkbox"
+ <Checkbox
  checked={
  allSubjectDocsSelected &&
  docs.some((d) => selectedDocIds.includes(d.id))
  }
- onChange={() => onToggleSubject(docs)}
- className="size-3 rounded border-border"
- style={{ accentColor: subjectColor }}
+ onCheckedChange={() => onToggleSubject(docs)}
  />
  All
  </label>
@@ -1186,12 +1184,9 @@ function DocumentPickerList({
  : undefined
  }
  >
- <input
- type="checkbox"
+ <Checkbox
  checked={isSelected}
- onChange={() => onToggleDoc(doc)}
- className="size-3.5 shrink-0 rounded border-border"
- style={{ accentColor: subjectColor }}
+ onCheckedChange={() => onToggleDoc(doc)}
  />
  <span
  className={`admin-icon-badge ${getFileBadgeClass(doc.fileName)} flex size-5 shrink-0 items-center justify-center rounded`}

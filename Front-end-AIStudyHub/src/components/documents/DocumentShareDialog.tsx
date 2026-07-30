@@ -2,6 +2,13 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Mail, RefreshCw, Trash2, Users } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import {
   Dialog,
@@ -42,11 +49,6 @@ type DocumentShareDialogProps = {
 type DeliveryFeedback = {
   tone: 'success' | 'warning' | 'info'
   message: string
-}
-
-const permissionLabel: Record<DocumentSharePermission, string> = {
-  EDIT: 'Editor',
-  VIEW: 'Viewer',
 }
 
 function formatExpiry(value?: string): string {
@@ -275,18 +277,19 @@ export default function DocumentShareDialog({
             type="email"
             value={email}
           />
-          <select
-            aria-label="Permission"
-            className="h-9 rounded-md border-2 border-foreground bg-background px-3 text-sm font-semibold outline-none disabled:opacity-50"
+          <Select
             disabled={isSaving}
-            onChange={(event) =>
-              setPermission(event.target.value === 'EDIT' ? 'EDIT' : 'VIEW')
-            }
+            onValueChange={(val) => setPermission(val === 'EDIT' ? 'EDIT' : 'VIEW')}
             value={permission}
           >
-            <option value="VIEW">Viewer</option>
-            <option value="EDIT">Editor</option>
-          </select>
+            <SelectTrigger aria-label="Permission" className="w-[120px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="VIEW">Can view</SelectItem>
+              <SelectItem value="EDIT">Can edit</SelectItem>
+            </SelectContent>
+          </Select>
           <Button disabled={!canSubmit} type="submit">
             <Mail data-icon="inline-start" aria-hidden="true" />
             {isSaving ? 'Sharing...' : 'Share'}
@@ -363,20 +366,23 @@ export default function DocumentShareDialog({
                       </div>
                     </TableCell>
                     <TableCell>
-                      <select
-                        aria-label={`Permission for ${share.sharedWithUser.email}`}
-                        className="h-9 rounded-md border border-border bg-background px-3 text-sm font-semibold outline-none"
-                        onChange={(event) =>
+                      <Select
+                        onValueChange={(val) =>
                           void handlePermissionChange(
                             share,
-                            event.target.value === 'EDIT' ? 'EDIT' : 'VIEW',
+                            val === 'EDIT' ? 'EDIT' : 'VIEW',
                           )
                         }
                         value={share.permission}
                       >
-                        <option value="VIEW">{permissionLabel.VIEW}</option>
-                        <option value="EDIT">{permissionLabel.EDIT}</option>
-                      </select>
+                        <SelectTrigger aria-label={`Permission for ${share.sharedWithUser.email}`} className="w-[120px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="VIEW">Can view</SelectItem>
+                          <SelectItem value="EDIT">Can edit</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">

@@ -1,4 +1,13 @@
 import { useEffect, useState } from 'react'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import {
   AlertDialog,
@@ -495,22 +504,26 @@ export default function DocumentDetailPage() {
             </label>
 
             {canManage ? (
-              <label className="flex flex-col gap-2 text-sm font-semibold">
-                Subject
-                <select
-                  className="h-9 w-full rounded-md border-2 border-foreground bg-background px-3 text-sm font-semibold outline-none disabled:opacity-50"
+              <div className="flex flex-col gap-2 text-sm font-semibold">
+                <span>Subject</span>
+                <Select
                   disabled={isSavingEdit}
-                  onChange={(event) => setEditSubjectId(event.target.value)}
-                  value={editSubjectId}
+                  onValueChange={(val) => setEditSubjectId(val === "keep" ? "" : val)}
+                  value={editSubjectId || "keep"}
                 >
-                  <option value="">Keep current subject</option>
-                  {subjects.map((item) => (
-                    <option key={item._id} value={item._id}>
-                      {[item.code, item.name].filter(Boolean).join(' ')}
-                    </option>
-                  ))}
-                </select>
-              </label>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="keep">Keep current subject</SelectItem>
+                    {subjects.map((item) => (
+                      <SelectItem key={item._id} value={item._id}>
+                        {[item.code, item.name].filter(Boolean).join(' ')}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             ) : null}
 
             <label className="flex flex-col gap-2 text-sm font-semibold">
@@ -524,20 +537,24 @@ export default function DocumentDetailPage() {
             </label>
 
             {canManage ? (
-              <label className="flex flex-col gap-2 text-sm font-semibold">
-                Visibility
-                <select
-                  className="h-9 w-full rounded-md border-2 border-foreground bg-background px-3 text-sm font-semibold outline-none disabled:opacity-50"
+              <div className="flex flex-col gap-2 text-sm font-semibold">
+                <span>Visibility</span>
+                <Select
                   disabled={isSavingEdit}
-                  onChange={(event) =>
-                    setEditVisibility(event.target.value === 'PUBLIC' ? 'PUBLIC' : 'PRIVATE')
+                  onValueChange={(val) =>
+                    setEditVisibility(val === 'PUBLIC' ? 'PUBLIC' : 'PRIVATE')
                   }
                   value={editVisibility}
                 >
-                  <option value="PRIVATE">Private</option>
-                  <option value="PUBLIC">Public</option>
-                </select>
-              </label>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="PRIVATE">Private</SelectItem>
+                    <SelectItem value="PUBLIC">Public</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             ) : null}
 
             <DialogFooter>
@@ -567,22 +584,26 @@ export default function DocumentDetailPage() {
                 type="file"
               />
             </label>
-            <label className="flex flex-col gap-2 text-sm font-semibold">
-              Upload mode
-              <select
-                className="h-9 rounded-md border border-input bg-background px-3 text-sm outline-none"
+            <div className="flex flex-col gap-2 text-sm font-semibold">
+              <span>Upload mode</span>
+              <Select
                 disabled={isUploadingVersion}
-                onChange={(event) => {
-                  const nextMode = event.target.value === 'APPEND' ? 'APPEND' : 'OVERRIDE'
+                onValueChange={(val) => {
+                  const nextMode = val === 'APPEND' ? 'APPEND' : 'OVERRIDE'
                   setVersionMode(nextMode)
                   if (nextMode === 'OVERRIDE') setMakeVersionActive(true)
                 }}
                 value={versionMode}
               >
-                <option value="OVERRIDE">Replace active content</option>
-                <option value="APPEND">Append to existing content</option>
-              </select>
-            </label>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="OVERRIDE">Replace active content</SelectItem>
+                  <SelectItem value="APPEND">Append to existing content</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <label className="flex flex-col gap-2 text-sm font-semibold">
               Change note
               <Textarea
@@ -593,16 +614,17 @@ export default function DocumentDetailPage() {
                 value={versionReason}
               />
             </label>
-            <label className="flex items-center gap-2 text-sm font-semibold">
-              <input
+            <div className="flex items-center gap-2">
+              <Checkbox
                 checked={makeVersionActive}
-                className="size-4 accent-primary"
                 disabled={isUploadingVersion}
-                onChange={(event) => setMakeVersionActive(event.target.checked)}
-                type="checkbox"
+                id="makeVersionActive"
+                onCheckedChange={(checked) => setMakeVersionActive(Boolean(checked))}
               />
-              Make this the active version
-            </label>
+              <Label htmlFor="makeVersionActive" className="text-sm font-semibold cursor-pointer">
+                Make this the active version
+              </Label>
+            </div>
             <DialogFooter>
               <Button disabled={isUploadingVersion} onClick={() => setIsVersionOpen(false)} type="button" variant="secondary">
                 Cancel

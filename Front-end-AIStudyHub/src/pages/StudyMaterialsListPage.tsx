@@ -1,4 +1,11 @@
 import { useEffect, useState } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -508,21 +515,25 @@ export default function StudyMaterialsListPage() {
  {subjectsLoading ? (
  <Skeleton className="h-10 w-full" />
  ) : (
- <select
- value={selectedSubjectId}
- onChange={(e) => {
- setSelectedSubjectId(e.target.value);
+ <Select
+ value={selectedSubjectId || "none"}
+ onValueChange={(val) => {
+ setSelectedSubjectId(val === "none" ? "" : val);
  setSelectedDocId(""); // Reset document when subject changes
  }}
- className="w-full min-h-10 px-3 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
  >
- <option value="">-- Choose a subject --</option>
+ <SelectTrigger className="w-full h-10">
+ <SelectValue placeholder="-- Choose a subject --" />
+ </SelectTrigger>
+ <SelectContent>
+ <SelectItem value="none">-- Choose a subject --</SelectItem>
  {subjects.map((sub) => (
- <option key={sub._id} value={sub._id}>
+ <SelectItem key={sub._id} value={sub._id}>
  {sub.name} {sub.code ? `(${sub.code})` : ""}
- </option>
+ </SelectItem>
  ))}
- </select>
+ </SelectContent>
+ </Select>
  )}
  </div>
 
@@ -534,17 +545,18 @@ export default function StudyMaterialsListPage() {
  {documentsLoading ? (
  <Skeleton className="h-10 w-full" />
  ) : (
- <select
- value={selectedDocId}
- onChange={(e) => setSelectedDocId(e.target.value)}
+ <Select
+ value={selectedDocId || "none"}
+ onValueChange={(val) => setSelectedDocId(val === "none" ? "" : val)}
  disabled={!selectedSubjectId}
- className="w-full min-h-10 px-3 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
  >
- {!selectedSubjectId ? (
- <option value="">-- Choose a subject first --</option>
- ) : (
- <>
- <option value="">-- Choose a document --</option>
+ <SelectTrigger className="w-full h-10">
+ <SelectValue placeholder={!selectedSubjectId ? "-- Choose a subject first --" : "-- Select a document --"} />
+ </SelectTrigger>
+ <SelectContent>
+ <SelectItem value="none">
+ {!selectedSubjectId ? "-- Choose a subject first --" : "-- Select a document --"}
+ </SelectItem>
  {availableDocs
  .filter((doc) => {
  const docSubId = doc.subjectId || (doc.subject && typeof doc.subject === "object" ? doc.subject._id : doc.subject);
@@ -553,14 +565,13 @@ export default function StudyMaterialsListPage() {
  .map((doc) => {
  const isExtracted = doc.extractionStatus === "COMPLETED";
  return (
- <option key={doc._id || doc.id} value={doc._id || doc.id} disabled={!isExtracted}>
+ <SelectItem key={doc._id || doc.id} value={doc._id || doc.id} disabled={!isExtracted}>
  {doc.title} {!isExtracted ? " (Processing/Not extracted)" : ""}
- </option>
+ </SelectItem>
  );
  })}
- </>
- )}
- </select>
+ </SelectContent>
+ </Select>
  )}
  </div>
 

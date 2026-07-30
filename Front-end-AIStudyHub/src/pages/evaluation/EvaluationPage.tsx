@@ -1,4 +1,11 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
 import { Link } from "react-router-dom";
 import {
@@ -383,32 +390,38 @@ export default function EvaluationPage() {
                   value={query}
                 />
               </label>
-              <select
-                className="h-10 rounded-xl border border-border bg-card px-3 text-sm font-bold text-foreground outline-none"
-                onChange={(event) =>
-                  setDifficultyFilter(
-                    event.target.value as "all" | BenchmarkDifficulty,
-                  )
-                }
+              <Select
                 value={difficultyFilter}
+                onValueChange={(val) =>
+                  setDifficultyFilter(val as "all" | BenchmarkDifficulty)
+                }
               >
-                <option value="all">All difficulties</option>
-                <option value="easy">Easy</option>
-                <option value="medium">Medium</option>
-                <option value="hard">Hard</option>
-              </select>
-              <select
-                className="h-10 rounded-xl border border-border bg-card px-3 text-sm font-bold text-foreground outline-none"
-                onChange={(event) => setSubjectFilter(event.target.value)}
+                <SelectTrigger className="h-10 w-[150px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All difficulties</SelectItem>
+                  <SelectItem value="easy">Easy</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="hard">Hard</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select
                 value={subjectFilter}
+                onValueChange={(val) => setSubjectFilter(val)}
               >
-                <option value="all">All subjects</option>
-                {subjects.map((subject) => (
-                  <option key={subject} value={subject}>
-                    {subject}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="h-10 w-[150px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All subjects</SelectItem>
+                  {subjects.map((subject) => (
+                    <SelectItem key={subject} value={subject}>
+                      {subject}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 

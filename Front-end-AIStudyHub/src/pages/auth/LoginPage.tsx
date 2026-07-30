@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import type { ChangeEvent, FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Label } from '@/components/ui/label'
 import AcademicAside from '../../components/auth/AcademicAside'
 import AuthCardShell from '../../components/auth/AuthCardShell'
 import AuthScaffold from '../../components/auth/AuthScaffold'
@@ -76,10 +78,10 @@ export default function LoginPage() {
             value={form.password}
           />
           <div className="flex items-center justify-between gap-[18px] text-xs font-medium text-muted-foreground">
-            <label className="inline-flex items-center gap-2">
-              <input checked readOnly type="checkbox" className="h-4 w-4 accent-[var(--accent-blue)]" />
-              <span>Remember me</span>
-            </label>
+            <div className="flex items-center gap-2">
+              <Checkbox checked id="remember" />
+              <Label htmlFor="remember">Remember me</Label>
+            </div>
             <Link to="/forgot-password" className="text-foreground hover:text-primary">Forgot?</Link>
           </div>
           {error ? (

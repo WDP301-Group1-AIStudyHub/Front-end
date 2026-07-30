@@ -1,4 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Activity, Filter, Search, Eye, Clock, User, Globe, MonitorSmartphone, Database, Tag } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -78,31 +85,39 @@ export default function AdminActivityPage() {
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-1.5">
               <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Severity:</span>
-              <select
-                className="h-8 rounded-md border border-input bg-background px-2.5 text-sm"
+              <Select
                 value={severityFilter}
-                onChange={(e) => setSeverityFilter(e.target.value as typeof severityFilter)}
+                onValueChange={(val) => setSeverityFilter(val as typeof severityFilter)}
               >
-                <option value="all">All severities</option>
-                <option value="info">Info</option>
-                <option value="success">Success</option>
-                <option value="warning">Warning</option>
-                <option value="critical">Critical</option>
-              </select>
+                <SelectTrigger className="h-8 w-[140px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All severities</SelectItem>
+                  <SelectItem value="info">Info</SelectItem>
+                  <SelectItem value="success">Success</SelectItem>
+                  <SelectItem value="warning">Warning</SelectItem>
+                  <SelectItem value="critical">Critical</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Category:</span>
-              <select
-                className="h-8 rounded-md border border-input bg-background px-2.5 text-sm"
+              <Select
                 value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value as typeof typeFilter)}
+                onValueChange={(val) => setTypeFilter(val as typeof typeFilter)}
               >
-                <option value="all">All categories</option>
-                <option value="auth">Authentication</option>
-                <option value="user">User</option>
-                <option value="document">Document</option>
-                <option value="system">System</option>
-              </select>
+                <SelectTrigger className="h-8 w-[140px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All categories</SelectItem>
+                  <SelectItem value="auth">Authentication</SelectItem>
+                  <SelectItem value="user">User</SelectItem>
+                  <SelectItem value="document">Document</SelectItem>
+                  <SelectItem value="system">System</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <StatusBadge severity="info">{filteredActivities.length} logs</StatusBadge>
           </div>

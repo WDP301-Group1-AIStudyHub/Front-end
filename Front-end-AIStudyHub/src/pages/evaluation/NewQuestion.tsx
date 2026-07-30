@@ -20,6 +20,15 @@ import {
   createBenchmarkQuestion,
   getBenchmarkQuestions,
 } from "../../services/chatApi";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { listDocuments } from "../../services/documentApi";
 import type {
   BenchmarkDifficulty,
@@ -391,28 +400,28 @@ export default function NewQuestion() {
                 description="Picks the doc the question should be answered from."
                 label="Source document"
               >
-                <select
-                  className="h-11 rounded-lg border border-input bg-background/70 px-3 text-sm outline-none transition focus:border-primary"
+                <Select
                   disabled={documentsLoading}
-                  onChange={(event) =>
+                  onValueChange={(val) =>
                     setForm((current) => ({
                       ...current,
-                      documentId: event.target.value,
+                      documentId: val === "none" ? "" : val,
                     }))
                   }
-                  value={form.documentId}
+                  value={form.documentId || "none"}
                 >
-                  <option value="">
-                    {documentsLoading
-                      ? "Loading documents..."
-                      : "Select source document"}
-                  </option>
-                  {documents.map((document) => (
-                    <option key={document.id} value={document.id}>
-                      {document.title}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger className="h-11 w-full">
+                    <SelectValue placeholder={documentsLoading ? "Loading documents..." : "Select source document"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Select source document</SelectItem>
+                    {documents.map((document) => (
+                      <SelectItem key={document.id} value={document.id}>
+                        {document.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 {documentsError && (
                   <p className="text-xs text-destructive">{documentsError}</p>
                 )}
@@ -475,27 +484,27 @@ export default function NewQuestion() {
               ))}
             </div>
 
-            <label className="flex items-start gap-3 rounded-lg border border-border/70 bg-muted/20 p-3 text-sm">
-              <input
+            <div className="flex items-start gap-3 rounded-lg border border-border/70 bg-muted/20 p-3 text-sm">
+              <Checkbox
                 checked={form.runImmediately}
-                className="mt-1 size-4 accent-primary"
-                onChange={(event) =>
+                id="runImmediately"
+                onCheckedChange={(checked) =>
                   setForm((current) => ({
                     ...current,
-                    runImmediately: event.target.checked,
+                    runImmediately: Boolean(checked),
                   }))
                 }
-                type="checkbox"
+                className="mt-0.5"
               />
-              <span>
-                <span className="block font-semibold">
+              <Label htmlFor="runImmediately" className="grid gap-1 cursor-pointer font-normal">
+                <span className="block font-semibold text-foreground">
                   Run benchmark immediately after saving
                 </span>
-                <span className="mt-1 block text-xs leading-5 text-muted-foreground">
+                <span className="block text-xs leading-5 text-muted-foreground">
                   Runs DR-RAG once the question is created.
                 </span>
-              </span>
-            </label>
+              </Label>
+            </div>
           </aside>
         </section>
       </form>
