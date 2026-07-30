@@ -26,6 +26,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -93,10 +94,7 @@ import {
   setDocumentStar,
   updateDocument,
 } from "@/services/documentApi";
-import {
-  findOrCreateSubjectByName,
-  listSubjects,
-} from "@/services/subjectApi";
+import { findOrCreateSubjectByName, listSubjects } from "@/services/subjectApi";
 import type { SubjectItem } from "@/services/subjectApi";
 import { useUploadStore } from "@/store/useUploadStore";
 import { getStoredUser } from "@/services/authStorage";
@@ -105,7 +103,7 @@ import DocumentShareDialog from "@/components/documents/DocumentShareDialog";
 import SharedDocumentSubjectDialog from "@/components/documents/SharedDocumentSubjectDialog";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { IconTile } from '@/components/shared/IconTile'
+import { IconTile } from "@/components/shared/IconTile";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const SEARCH_DEBOUNCE_MS = 350;
@@ -400,7 +398,6 @@ function getEditErrors(
   return errors;
 }
 
-
 function DocumentFields({
   disabled,
   fileInput,
@@ -442,7 +439,9 @@ function DocumentFields({
             type="file"
           />
           {touched.file && errors.file ? (
-            <span className="text-xs text-rose-500 font-semibold">{errors.file}</span>
+            <span className="text-xs text-rose-500 font-semibold">
+              {errors.file}
+            </span>
           ) : (
             <span className="text-xs text-muted-foreground">
               {fileInput
@@ -466,36 +465,43 @@ function DocumentFields({
           value={form.title}
         />
         {touched.title && errors.title && (
-          <span className="text-xs text-rose-500 font-semibold">{errors.title}</span>
+          <span className="text-xs text-rose-500 font-semibold">
+            {errors.title}
+          </span>
         )}
       </label>
 
       {showSubject ? (
-      <div className="flex flex-col gap-2 text-sm font-medium">
-        <span>Subject</span>
-        <Select
-          disabled={disabled}
-          onValueChange={(val) =>
-            onFormChange({ ...form, subject: val === "unassigned" ? "" : val })
-          }
-          value={form.subject || "unassigned"}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select subject" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="unassigned">Select subject</SelectItem>
-            {subjects.map((s) => (
-              <SelectItem key={s._id} value={s._id}>
-                {[s.code, s.name].filter(Boolean).join(" ")}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {touched.subject && errors.subject && (
-          <span className="text-xs text-rose-500 font-semibold">{errors.subject}</span>
-        )}
-      </div>
+        <div className="flex flex-col gap-2 text-sm font-medium">
+          <span>Subject</span>
+          <Select
+            disabled={disabled}
+            onValueChange={(val) =>
+              onFormChange({
+                ...form,
+                subject: val === "unassigned" ? "" : val,
+              })
+            }
+            value={form.subject || "unassigned"}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select subject" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="unassigned">Select subject</SelectItem>
+              {subjects.map((s) => (
+                <SelectItem key={s._id} value={s._id}>
+                  {[s.code, s.name].filter(Boolean).join(" ")}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {touched.subject && errors.subject && (
+            <span className="text-xs text-rose-500 font-semibold">
+              {errors.subject}
+            </span>
+          )}
+        </div>
       ) : null}
 
       <label className="flex flex-col gap-2 text-sm font-medium">
@@ -511,7 +517,9 @@ function DocumentFields({
           value={form.description}
         />
         {touched.description && errors.description && (
-          <span className="text-xs text-rose-500 font-semibold">{errors.description}</span>
+          <span className="text-xs text-rose-500 font-semibold">
+            {errors.description}
+          </span>
         )}
       </label>
     </div>
@@ -722,8 +730,11 @@ export default function NewLibraryPage() {
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
-  const [sharingDocument, setSharingDocument] = useState<DocumentItem | null>(null);
-  const [classifyingDocument, setClassifyingDocument] = useState<DocumentItem | null>(null);
+  const [sharingDocument, setSharingDocument] = useState<DocumentItem | null>(
+    null,
+  );
+  const [classifyingDocument, setClassifyingDocument] =
+    useState<DocumentItem | null>(null);
   const [searchQuery, setSearchQuery] = useState(searchQueryParam);
   const [subjectFilter, setSubjectFilter] = useState("");
   const [semesterFilter, setSemesterFilter] = useState("");
@@ -747,7 +758,8 @@ export default function NewLibraryPage() {
     if (document.accessRole) return document.accessRole;
     if (
       currentUser &&
-      (document.ownerId === currentUser.id || document.uploadedBy === currentUser.id)
+      (document.ownerId === currentUser.id ||
+        document.uploadedBy === currentUser.id)
     ) {
       return "OWNER";
     }
@@ -764,7 +776,7 @@ export default function NewLibraryPage() {
 
   const toggleSelectOne = (id: string) => {
     setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
     );
   };
 
@@ -797,22 +809,36 @@ export default function NewLibraryPage() {
     }
 
     setIsBulkDeleting(true);
-    setFeedback({ tone: "info", message: `Moving ${selectedIds.length} selected document(s) to trash...` });
+    setFeedback({
+      tone: "info",
+      message: `Moving ${selectedIds.length} selected document(s) to trash...`,
+    });
     try {
-      const results = await Promise.all(deletableDocuments.map((document) => deleteDocument(document.id)));
+      const results = await Promise.all(
+        deletableDocuments.map((document) => deleteDocument(document.id)),
+      );
       setDocuments((current) =>
-        current.filter((item) => !deletableDocuments.some((document) => document.id === item.id)),
+        current.filter(
+          (item) =>
+            !deletableDocuments.some((document) => document.id === item.id),
+        ),
       );
       setSelectedIds([]);
-      const pendingCleanup = results.filter((result) => result.ragStatus === 'DELETE_PENDING').length;
+      const pendingCleanup = results.filter(
+        (result) => result.ragStatus === "DELETE_PENDING",
+      ).length;
       setFeedback({
         tone: pendingCleanup > 0 ? "info" : "success",
-        message: pendingCleanup > 0
-          ? `Selected documents moved to trash; AI cleanup is retrying for ${pendingCleanup}.`
-          : "Selected documents moved to trash.",
+        message:
+          pendingCleanup > 0
+            ? `Selected documents moved to trash; AI cleanup is retrying for ${pendingCleanup}.`
+            : "Selected documents moved to trash.",
       });
     } catch {
-      setFeedback({ tone: "error", message: "Error moving some documents to trash. Please refresh." });
+      setFeedback({
+        tone: "error",
+        message: "Error moving some documents to trash. Please refresh.",
+      });
     } finally {
       setIsBulkDeleting(false);
     }
@@ -826,7 +852,10 @@ export default function NewLibraryPage() {
         void downloadDocumentFile(doc);
       }
     });
-    setFeedback({ tone: "success", message: `Downloads triggered for ${selectedIds.length} file(s).` });
+    setFeedback({
+      tone: "success",
+      message: `Downloads triggered for ${selectedIds.length} file(s).`,
+    });
   };
 
   const handleToggleStar = async (document: DocumentItem) => {
@@ -834,9 +863,7 @@ export default function NewLibraryPage() {
     setIsStarringId(document.id);
     setDocuments((current) =>
       current.map((item) =>
-        item.id === document.id
-          ? { ...item, isStarred: nextStarred }
-          : item,
+        item.id === document.id ? { ...item, isStarred: nextStarred } : item,
       ),
     );
 
@@ -861,12 +888,18 @@ export default function NewLibraryPage() {
     }
   };
 
-  const [uploadTouched, setUploadTouched] = useState<Record<string, boolean>>({});
+  const [uploadTouched, setUploadTouched] = useState<Record<string, boolean>>(
+    {},
+  );
   const [editTouched, setEditTouched] = useState<Record<string, boolean>>({});
 
-  const uploadErrors = useMemo(() => getUploadErrors(uploadForm, selectedFile), [uploadForm, selectedFile]);
-  const canEditSubject =
-    editingDocument ? canManageDocument(editingDocument) : true;
+  const uploadErrors = useMemo(
+    () => getUploadErrors(uploadForm, selectedFile),
+    [uploadForm, selectedFile],
+  );
+  const canEditSubject = editingDocument
+    ? canManageDocument(editingDocument)
+    : true;
   const editErrors = useMemo(
     () => getEditErrors(editForm, canEditSubject),
     [canEditSubject, editForm],
@@ -886,7 +919,9 @@ export default function NewLibraryPage() {
 
   // Auto-refresh library when a background upload succeeds
   const uploads = useUploadStore((state) => state.uploads);
-  const isUploading = uploads.some((u) => u.status === "uploading" || u.status === "processing");
+  const isUploading = uploads.some(
+    (u) => u.status === "uploading" || u.status === "processing",
+  );
   const prevSuccessCountRef = useRef(0);
 
   useEffect(() => {
@@ -908,7 +943,10 @@ export default function NewLibraryPage() {
   );
 
   const uniqueSemesters = useMemo(
-    () => Array.from(new Set(subjects.map((s) => s.semester).filter(Boolean))).sort(),
+    () =>
+      Array.from(
+        new Set(subjects.map((s) => s.semester).filter(Boolean)),
+      ).sort(),
     [subjects],
   );
 
@@ -942,8 +980,13 @@ export default function NewLibraryPage() {
         }
 
         if (semesterFilter) {
-          const documentSubjectId = typeof document.subject === "object" ? document.subject?._id : document.subjectId;
-          const subject = documentSubjectId ? subjectById.get(documentSubjectId) : null;
+          const documentSubjectId =
+            typeof document.subject === "object"
+              ? document.subject?._id
+              : document.subjectId;
+          const subject = documentSubjectId
+            ? subjectById.get(documentSubjectId)
+            : null;
           if (subject?.semester !== semesterFilter) {
             return false;
           }
@@ -951,7 +994,13 @@ export default function NewLibraryPage() {
 
         return true;
       }),
-    [fileTypeFilter, sortedDocuments, statusFilter, semesterFilter, subjectById],
+    [
+      fileTypeFilter,
+      sortedDocuments,
+      statusFilter,
+      semesterFilter,
+      subjectById,
+    ],
   );
 
   const allVisibleSelected =
@@ -1025,10 +1074,12 @@ export default function NewLibraryPage() {
                   (!subjectFilter || documentSubjectId === subjectFilter)
                 );
               })
-            : (await searchDocuments({
-                keyword: searchQuery,
-                subjectId: subjectFilter,
-              })).filter((document) => !document.isShared);
+            : (
+                await searchDocuments({
+                  keyword: searchQuery,
+                  subjectId: subjectFilter,
+                })
+              ).filter((document) => !document.isShared);
         setDocuments(results);
       } catch (error) {
         setFeedback({ tone: "error", message: getErrorMessage(error) });
@@ -1067,7 +1118,7 @@ export default function NewLibraryPage() {
         subject: uploadForm.subject,
         title: uploadForm.title,
       },
-      documents
+      documents,
     );
 
     // Close the dialog and clear form inputs immediately
@@ -1252,7 +1303,10 @@ export default function NewLibraryPage() {
     setEditingDocument(document);
     setEditForm({
       description: document.description ?? "",
-      subject: (typeof document.subject === "object" ? document.subject?.name : document.subject) ?? "",
+      subject:
+        (typeof document.subject === "object"
+          ? document.subject?.name
+          : document.subject) ?? "",
       title: document.title,
     });
     setIsEditOpen(true);
@@ -1315,15 +1369,7 @@ export default function NewLibraryPage() {
                 <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
                   My Document
                 </h1>
-                <IconTooltip label="Document settings">
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    aria-label="Document settings"
-                  >
-                    <Settings aria-hidden="true" />
-                  </Button>
-                </IconTooltip>
+
                 <Badge className="rounded-full px-2.5 py-1" variant="secondary">
                   {documents.length} total
                 </Badge>
@@ -1333,70 +1379,58 @@ export default function NewLibraryPage() {
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
-                <div
+                <Tabs
                   aria-label="My Document view"
-                  className="inline-flex rounded-lg border border-border bg-muted/40 p-1"
-                  role="group"
+                  onValueChange={(value) =>
+                    setLibraryView(value as "mine" | "shared")
+                  }
+                  value={libraryView}
                 >
-                  <Button
-                    aria-pressed={libraryView === "mine"}
-                    onClick={() => setLibraryView("mine")}
-                    size="sm"
-                    type="button"
-                    variant={libraryView === "mine" ? "default" : "ghost"}
-                  >
-                    <FileText data-icon="inline-start" aria-hidden="true" />
-                    My documents
-                  </Button>
-                  <Button
-                    aria-pressed={libraryView === "shared"}
-                    onClick={() => setLibraryView("shared")}
-                    size="sm"
-                    type="button"
-                    variant={libraryView === "shared" ? "default" : "ghost"}
-                  >
-                    <Users data-icon="inline-start" aria-hidden="true" />
-                    Shared with me
-                  </Button>
-                </div>
-                <Button variant="secondary" size="sm" className="rounded-full">
-                  <Clock3 data-icon="inline-start" aria-hidden="true" />
-                  Recently updated
-                </Button>
+                  <TabsList>
+                    <TabsTrigger value="mine">
+                      <FileText data-icon="inline-start" aria-hidden="true" />
+                      My documents
+                    </TabsTrigger>
+                    <TabsTrigger value="shared">
+                      <Users data-icon="inline-start" aria-hidden="true" />
+                      Shared with me
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
               </div>
             </div>
 
             {libraryView === "mine" ? (
-            <div className="flex items-center gap-2 self-end xl:self-auto">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="secondary" disabled={isUploading}>
-                    <ArrowUpFromLineIcon
-                      data-icon="inline-start"
-                      aria-hidden="true"
-                    />
-                    Upload
-                    <ChevronDownIcon
-                      data-icon="inline-end"
-                      aria-hidden="true"
-                    />
-                  </Button>
-                </DropdownMenuTrigger>
+              <div className="flex items-center gap-2 self-end xl:self-auto">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="secondary" disabled={isUploading}>
+                      <ArrowUpFromLineIcon
+                        data-icon="inline-start"
+                        aria-hidden="true"
+                      />
+                      Upload
+                      <ChevronDownIcon
+                        data-icon="inline-end"
+                        aria-hidden="true"
+                      />
+                    </Button>
+                  </DropdownMenuTrigger>
 
-                <DropdownMenuContent className="w-fit" align="end">
-                  <DropdownMenuItem onSelect={() => setIsUploadOpen(true)}>
-                    <FileIcon />
-                    Document file
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+                  <DropdownMenuContent className="w-fit" align="end">
+                    <DropdownMenuItem onSelect={() => setIsUploadOpen(true)}>
+                      <FileIcon />
+                      Document file
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             ) : null}
           </div>
 
           <div className="flex flex-col gap-3 border-y border-border/70 py-4">
             <div className="flex items-center gap-3 overflow-x-auto pb-1 -mb-1 w-full">
-              <InputGroup className="min-w-[260px] max-w-sm flex-1 bg-background">
+              <InputGroup className="min-w-65 max-w-sm flex-1 bg-background">
                 <InputGroupAddon align="inline-start">
                   <SearchIcon aria-hidden="true" />
                 </InputGroupAddon>
@@ -1440,7 +1474,10 @@ export default function NewLibraryPage() {
                   }}
                   value={subjectFilter || "all"}
                 >
-                  <SelectTrigger aria-label="Filter by subject" className="h-9 min-w-40 flex-1 sm:flex-none">
+                  <SelectTrigger
+                    aria-label="Filter by subject"
+                    className="h-9 min-w-40 flex-1 sm:flex-none"
+                  >
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1460,7 +1497,10 @@ export default function NewLibraryPage() {
                   }}
                   value={semesterFilter || "all"}
                 >
-                  <SelectTrigger aria-label="Filter by semester" className="h-9 min-w-32 flex-1 sm:flex-none">
+                  <SelectTrigger
+                    aria-label="Filter by semester"
+                    className="h-9 min-w-32 flex-1 sm:flex-none"
+                  >
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1480,7 +1520,10 @@ export default function NewLibraryPage() {
                   }}
                   value={fileTypeFilter || "all"}
                 >
-                  <SelectTrigger aria-label="Filter by file type" className="h-9 min-w-32 flex-1 sm:flex-none">
+                  <SelectTrigger
+                    aria-label="Filter by file type"
+                    className="h-9 min-w-32 flex-1 sm:flex-none"
+                  >
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1500,7 +1543,10 @@ export default function NewLibraryPage() {
                   }}
                   value={statusFilter || "all"}
                 >
-                  <SelectTrigger aria-label="Filter by processing status" className="h-9 min-w-32 flex-1 sm:flex-none">
+                  <SelectTrigger
+                    aria-label="Filter by processing status"
+                    className="h-9 min-w-32 flex-1 sm:flex-none"
+                  >
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1568,7 +1614,7 @@ export default function NewLibraryPage() {
           )}
 
           <div className="overflow-x-auto overflow-y-hidden relative">
-            <Table className="min-w-[520px] md:min-w-[760px] lg:min-w-[980px]">
+            <Table className="min-w-130 md:min-w-190 lg:min-w-245">
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-12 px-4 text-center">
@@ -1579,10 +1625,14 @@ export default function NewLibraryPage() {
                     />
                   </TableHead>
                   <TableHead>Name</TableHead>
-                  <TableHead className="hidden md:table-cell">Subject</TableHead>
+                  <TableHead className="hidden md:table-cell">
+                    Subject
+                  </TableHead>
                   <TableHead className="hidden md:table-cell">Access</TableHead>
                   <TableHead className="hidden lg:table-cell">Size</TableHead>
-                  <TableHead className="hidden lg:table-cell">Updated</TableHead>
+                  <TableHead className="hidden lg:table-cell">
+                    Updated
+                  </TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -1620,7 +1670,14 @@ export default function NewLibraryPage() {
                       </TableRow>
                     ))
                   : visibleDocuments.map((document) => (
-                      <TableRow key={document.id} className={selectedIds.includes(document.id) ? "bg-accent/40" : ""}>
+                      <TableRow
+                        key={document.id}
+                        className={
+                          selectedIds.includes(document.id)
+                            ? "bg-accent/40"
+                            : ""
+                        }
+                      >
                         <TableCell className="w-12 px-4 text-center">
                           <Checkbox
                             checked={selectedIds.includes(document.id)}
@@ -1630,7 +1687,11 @@ export default function NewLibraryPage() {
                         <TableCell>
                           <div className="flex min-w-0 items-center gap-2">
                             <Button
-                              aria-label={document.isStarred ? "Unstar document" : "Star document"}
+                              aria-label={
+                                document.isStarred
+                                  ? "Unstar document"
+                                  : "Star document"
+                              }
                               className="shrink-0 rounded-lg"
                               disabled={isStarringId === document.id}
                               onClick={() => void handleToggleStar(document)}
@@ -1652,7 +1713,11 @@ export default function NewLibraryPage() {
                               onClick={() => openFile(document)}
                               type="button"
                             >
-                              <IconTile fileName={document.fileName} size="sm" className="rounded-lg transition-transform group-hover:scale-[1.02]">
+                              <IconTile
+                                fileName={document.fileName}
+                                size="sm"
+                                className="rounded-lg transition-transform group-hover:scale-[1.02]"
+                              >
                                 <FileText aria-hidden="true" />
                               </IconTile>
                               <div className="min-w-0">
@@ -1663,11 +1728,17 @@ export default function NewLibraryPage() {
                                   <span className="truncate text-xs text-muted-foreground">
                                     {document.fileName}
                                   </span>
-                                  <Badge className="h-5 rounded-full px-1.5 text-[0.65rem]" variant="outline">
+                                  <Badge
+                                    className="h-5 rounded-full px-1.5 text-[0.65rem]"
+                                    variant="outline"
+                                  >
                                     {getDocumentFileType(document)}
                                   </Badge>
                                   {document.isShared && (
-                                    <Badge className="h-5 rounded-full px-1.5 text-[0.65rem]" variant="secondary">
+                                    <Badge
+                                      className="h-5 rounded-full px-1.5 text-[0.65rem]"
+                                      variant="secondary"
+                                    >
                                       Shared
                                     </Badge>
                                   )}
@@ -1678,10 +1749,11 @@ export default function NewLibraryPage() {
                         </TableCell>
                         <TableCell className="hidden md:table-cell">
                           {(() => {
-                            const subjectMeta = getDocumentSubjectMeta(document);
+                            const subjectMeta =
+                              getDocumentSubjectMeta(document);
                             return (
                               <span
-                                className="inline-flex max-w-[14rem] items-center gap-2 rounded-full border px-2.5 py-0.5 text-xs font-semibold normal-case text-foreground"
+                                className="inline-flex max-w-56 items-center gap-2 rounded-full border px-2.5 py-0.5 text-xs font-semibold normal-case text-foreground"
                                 style={{
                                   backgroundColor: `color-mix(in srgb, ${subjectMeta.color} 14%, transparent)`,
                                   borderColor: `color-mix(in srgb, ${subjectMeta.color} 55%, transparent)`,
@@ -1691,7 +1763,9 @@ export default function NewLibraryPage() {
                                   className="size-2 shrink-0 rounded-full"
                                   style={{ backgroundColor: subjectMeta.color }}
                                 />
-                                <span className="truncate">{subjectMeta.label}</span>
+                                <span className="truncate">
+                                  {subjectMeta.label}
+                                </span>
                               </span>
                             );
                           })()}
@@ -1701,7 +1775,10 @@ export default function NewLibraryPage() {
                             const access = getAccessPresentation(document);
                             return (
                               <div className="flex min-w-0 flex-col gap-1">
-                                <Badge className={`w-fit rounded-full border px-2 py-0.5 ${access.className}`} variant="outline">
+                                <Badge
+                                  className={`w-fit rounded-full border px-2 py-0.5 ${access.className}`}
+                                  variant="outline"
+                                >
                                   {access.label}
                                 </Badge>
                                 <span className="max-w-40 truncate text-xs text-muted-foreground">
@@ -1718,7 +1795,9 @@ export default function NewLibraryPage() {
                         </TableCell>
                         <TableCell className="hidden lg:table-cell">
                           <span className="text-sm text-muted-foreground">
-                            {formatDate(document.updatedAt ?? document.createdAt)}
+                            {formatDate(
+                              document.updatedAt ?? document.createdAt,
+                            )}
                           </span>
                         </TableCell>
                         <TableCell className="text-right">
@@ -1739,7 +1818,10 @@ export default function NewLibraryPage() {
                                 <MoreHorizontal aria-hidden="true" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-44 rounded-xl">
+                            <DropdownMenuContent
+                              align="end"
+                              className="w-44 rounded-xl"
+                            >
                               <DropdownMenuItem
                                 onSelect={() => openDetails(document)}
                               >
@@ -1766,17 +1848,26 @@ export default function NewLibraryPage() {
                                   void handleToggleStar(document);
                                 }}
                               >
-                                <Star className={document.isStarred ? "fill-amber-400 text-amber-500" : ""} />
+                                <Star
+                                  className={
+                                    document.isStarred
+                                      ? "fill-amber-400 text-amber-500"
+                                      : ""
+                                  }
+                                />
                                 {document.isStarred ? "Unstar" : "Star"}
                               </DropdownMenuItem>
-                              {document.isShared && !canManageDocument(document) && (
-                                <DropdownMenuItem
-                                  onSelect={() => setClassifyingDocument(document)}
-                                >
-                                  <BookOpen />
-                                  Assign subject
-                                </DropdownMenuItem>
-                              )}
+                              {document.isShared &&
+                                !canManageDocument(document) && (
+                                  <DropdownMenuItem
+                                    onSelect={() =>
+                                      setClassifyingDocument(document)
+                                    }
+                                  >
+                                    <BookOpen />
+                                    Assign subject
+                                  </DropdownMenuItem>
+                                )}
                               {canManageDocument(document) && (
                                 <DropdownMenuItem
                                   onSelect={() => openShare(document)}
@@ -1793,21 +1884,23 @@ export default function NewLibraryPage() {
                                     <Pencil />
                                     Edit details
                                   </DropdownMenuItem>
-                                  {canManageDocument(document) && <DropdownMenuSeparator />}
                                   {canManageDocument(document) && (
-                                  <DropdownMenuItem
-                                    disabled={isDeletingId === document.id}
-                                    onSelect={(event) => {
-                                      event.preventDefault();
-                                      void handleDelete(document);
-                                    }}
-                                    variant="destructive"
-                                  >
-                                    <Trash2 />
-                                    {pendingDeleteId === document.id
-                                      ? "Confirm move"
-                                      : "Move to trash"}
-                                  </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                  )}
+                                  {canManageDocument(document) && (
+                                    <DropdownMenuItem
+                                      disabled={isDeletingId === document.id}
+                                      onSelect={(event) => {
+                                        event.preventDefault();
+                                        void handleDelete(document);
+                                      }}
+                                      variant="destructive"
+                                    >
+                                      <Trash2 />
+                                      {pendingDeleteId === document.id
+                                        ? "Confirm move"
+                                        : "Move to trash"}
+                                    </DropdownMenuItem>
                                   )}
                                 </>
                               )}
@@ -1851,7 +1944,7 @@ export default function NewLibraryPage() {
       </div>
 
       <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-125">
           <form
             className="flex min-h-0 flex-1 flex-col"
             onSubmit={handleUpload}
@@ -1859,11 +1952,12 @@ export default function NewLibraryPage() {
             <DialogHeader>
               <DialogTitle>Upload document</DialogTitle>
               <DialogDescription>
-                Documents are stored in Cloudinary, parsed, and indexed for AI chat.
+                Documents are stored in Cloudinary, parsed, and indexed for AI
+                chat.
               </DialogDescription>
             </DialogHeader>
             <Separator className="my-4" />
-            <div className="flex-grow py-2">
+            <div className="grow py-2">
               <DocumentFields
                 disabled={isUploading}
                 fileInput={selectedFile}
@@ -1873,14 +1967,24 @@ export default function NewLibraryPage() {
                 onFormChange={setUploadForm}
                 errors={uploadErrors}
                 touched={uploadTouched}
-                onBlur={(field) => setUploadTouched((prev) => ({ ...prev, [field]: true }))}
+                onBlur={(field) =>
+                  setUploadTouched((prev) => ({ ...prev, [field]: true }))
+                }
                 subjects={subjects}
               />
             </div>
             <DialogFooter className="mt-6">
-              <Button disabled={isUploading} type="submit" className="w-full sm:w-auto">
+              <Button
+                disabled={isUploading}
+                type="submit"
+                className="w-full sm:w-auto"
+              >
                 <UploadCloud data-icon="inline-start" aria-hidden="true" />
-                {isUploading ? <CelestialInlineLoader label="Uploading..." /> : "Upload document"}
+                {isUploading ? (
+                  <CelestialInlineLoader label="Uploading..." />
+                ) : (
+                  "Upload document"
+                )}
               </Button>
             </DialogFooter>
           </form>
@@ -1913,7 +2017,9 @@ export default function NewLibraryPage() {
                 onFormChange={setEditForm}
                 errors={editErrors}
                 touched={editTouched}
-                onBlur={(field) => setEditTouched((prev) => ({ ...prev, [field]: true }))}
+                onBlur={(field) =>
+                  setEditTouched((prev) => ({ ...prev, [field]: true }))
+                }
                 showSubject={canEditSubject}
                 subjects={subjects}
               />
@@ -1929,10 +2035,17 @@ export default function NewLibraryPage() {
       {selectedIds.length > 0 && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-card border border-border/80 rounded-2xl shadow-sm px-5 py-3 flex items-center gap-4 text-xs font-semibold">
           <span className="text-muted-foreground">
-            Selected <span className="text-primary font-bold">{selectedIds.length}</span> item(s)
+            Selected{" "}
+            <span className="text-primary font-bold">{selectedIds.length}</span>{" "}
+            item(s)
           </span>
           <div className="h-4 w-px bg-border" />
-          <Button size="sm" variant="outline" className="rounded-xl flex items-center gap-1.5" onClick={handleBulkDownload}>
+          <Button
+            size="sm"
+            variant="outline"
+            className="rounded-xl flex items-center gap-1.5"
+            onClick={handleBulkDownload}
+          >
             <Download className="size-3.5" />
             Download
           </Button>
@@ -1952,7 +2065,12 @@ export default function NewLibraryPage() {
             <Trash2 className="size-3.5" />
             {isBulkDeleting ? "Moving..." : "Move to trash"}
           </Button>
-          <Button size="sm" variant="ghost" className="rounded-xl" onClick={() => setSelectedIds([])}>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="rounded-xl"
+            onClick={() => setSelectedIds([])}
+          >
             Cancel
           </Button>
         </div>

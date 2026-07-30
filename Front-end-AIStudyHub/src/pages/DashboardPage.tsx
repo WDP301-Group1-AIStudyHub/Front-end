@@ -1,176 +1,202 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { IconTile } from '@/components/shared/IconTile'
-import { Archive, Bell, Database, FileText, Plus, UploadCloud, Sparkles } from 'lucide-react'
-import { motion, AnimatePresence } from 'motion/react'
-import { Button } from '@/components/ui/button'
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
-import { Skeleton } from '@/components/ui/skeleton'
-import { CelestialInlineLoader } from '@/components/shared/CelestialLoading'
-import { listDocuments } from '@/services/documentApi'
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { IconTile } from "@/components/shared/IconTile";
+import {
+  Archive,
+  Bell,
+  Database,
+  FileText,
+  Plus,
+  UploadCloud,
+  Sparkles,
+} from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { Button } from "@/components/ui/button";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import { Skeleton } from "@/components/ui/skeleton";
+import { CelestialInlineLoader } from "@/components/shared/CelestialLoading";
+import { listDocuments } from "@/services/documentApi";
 
-import { useUploadStore } from '@/store/useUploadStore'
-import type { DocumentItem } from '@/types/document'
+import { useUploadStore } from "@/store/useUploadStore";
+import type { DocumentItem } from "@/types/document";
 
-const STORAGE_LIMIT_BYTES = 10 * 1024 * 1024 * 1024
+const STORAGE_LIMIT_BYTES = 10 * 1024 * 1024 * 1024;
 
 function formatRelativeTime(dateStr: string): string {
-  const date = new Date(dateStr)
-  if (Number.isNaN(date.getTime())) return 'Unknown'
-  const diffMs = Date.now() - date.getTime()
-  const diffMins = Math.floor(diffMs / 60_000)
-  if (diffMins < 60) return `${diffMins}m ago`
-  const diffHrs = Math.floor(diffMins / 60)
-  if (diffHrs < 24) return `${diffHrs}h ago`
-  const diffDays = Math.floor(diffHrs / 24)
-  if (diffDays === 1) return 'Yesterday'
-  if (diffDays < 7) return `${diffDays} days ago`
-  return new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' }).format(date)
+  const date = new Date(dateStr);
+  if (Number.isNaN(date.getTime())) return "Unknown";
+  const diffMs = Date.now() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60_000);
+  if (diffMins < 60) return `${diffMins}m ago`;
+  const diffHrs = Math.floor(diffMins / 60);
+  if (diffHrs < 24) return `${diffHrs}h ago`;
+  const diffDays = Math.floor(diffHrs / 24);
+  if (diffDays === 1) return "Yesterday";
+  if (diffDays < 7) return `${diffDays} days ago`;
+  return new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric",
+  }).format(date);
 }
 
 function formatStorageSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  const kb = bytes / 1024
-  if (kb < 1024) return `${kb.toFixed(1)} KB`
-  const mb = kb / 1024
-  if (mb < 1024) return `${mb.toFixed(1)} MB`
-  const gb = mb / 1024
-  return `${gb.toFixed(2)} GB`
+  if (bytes < 1024) return `${bytes} B`;
+  const kb = bytes / 1024;
+  if (kb < 1024) return `${kb.toFixed(1)} KB`;
+  const mb = kb / 1024;
+  if (mb < 1024) return `${mb.toFixed(1)} MB`;
+  const gb = mb / 1024;
+  return `${gb.toFixed(2)} GB`;
 }
 
 export default function DashboardPage() {
-  const [docs, setDocs] = useState<DocumentItem[]>([])
-  const [loading, setLoading] = useState(true)
-  const [isDragActive, setIsDragActive] = useState(false)
-  const [uploadFeedback, setUploadFeedback] = useState<string | null>(null)
+  const [docs, setDocs] = useState<DocumentItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isDragActive, setIsDragActive] = useState(false);
+  const [uploadFeedback, setUploadFeedback] = useState<string | null>(null);
 
   const storageUsedBytes = useMemo(
     () => docs.reduce((sum, d) => sum + (d.fileSize ?? 0), 0),
     [docs],
-  )
+  );
 
   const storagePercent = useMemo(
     () => Math.min((storageUsedBytes / STORAGE_LIMIT_BYTES) * 100, 100),
     [storageUsedBytes],
-  )
+  );
 
   const recentDocs = useMemo(
     () =>
       [...docs]
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        )
         .slice(0, 4),
     [docs],
-  )
+  );
 
   const subjectClusters = useMemo(() => {
-    const map = new Map<string, number>()
+    const map = new Map<string, number>();
     for (const doc of docs) {
-      const subjectName = (typeof doc.subject === 'object' ? doc.subject?.name : doc.subject) || ''
-      const key = subjectName.trim() || 'Uncategorized'
-      map.set(key, (map.get(key) ?? 0) + 1)
+      const subjectName =
+        (typeof doc.subject === "object" ? doc.subject?.name : doc.subject) ||
+        "";
+      const key = subjectName.trim() || "Uncategorized";
+      map.set(key, (map.get(key) ?? 0) + 1);
     }
     return [...map.entries()]
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5)
-      .map(([name, count]) => ({ name, count }))
-  }, [docs])
+      .map(([name, count]) => ({ name, count }));
+  }, [docs]);
 
   const docsPerDay = useMemo(() => {
-    if (docs.length < 2) return null
-    const dates = docs.map((d) => new Date(d.createdAt).getTime()).filter((t) => !Number.isNaN(t))
-    const span = (Math.max(...dates) - Math.min(...dates)) / 86_400_000
-    if (span < 1) return null
-    return (docs.length / span).toFixed(1)
-  }, [docs])
+    if (docs.length < 2) return null;
+    const dates = docs
+      .map((d) => new Date(d.createdAt).getTime())
+      .filter((t) => !Number.isNaN(t));
+    const span = (Math.max(...dates) - Math.min(...dates)) / 86_400_000;
+    if (span < 1) return null;
+    return (docs.length / span).toFixed(1);
+  }, [docs]);
 
   useEffect(() => {
     listDocuments()
       .then((data) => setDocs(data))
       .catch(() => {})
-      .finally(() => setLoading(false))
-  }, [])
+      .finally(() => setLoading(false));
+  }, []);
 
   // Drag and Drop Upload logic
   const handleDrag = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    if (e.type === 'dragenter' || e.type === 'dragover') {
-      setIsDragActive(true)
-    } else if (e.type === 'dragleave') {
-      setIsDragActive(false)
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setIsDragActive(true);
+    } else if (e.type === "dragleave") {
+      setIsDragActive(false);
     }
-  }
+  };
 
   const handleDrop = async (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDragActive(false)
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragActive(false);
 
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const files = Array.from(e.dataTransfer.files)
-      setUploadFeedback(`Queueing ${files.length} document(s)...`)
-      
+      const files = Array.from(e.dataTransfer.files);
+      setUploadFeedback(`Queueing ${files.length} document(s)...`);
+
       for (const file of files) {
         const payload = {
           file,
           title: file.name.replace(/\.[^/.]+$/, ""),
           description: "Uploaded via Quick Dropzone",
-          subject: "General"
-        }
-        
+          subject: "General",
+        };
+
         try {
           useUploadStore.getState().processIncomingUpload(payload, docs, () => {
             // refresh library on successful upload
-            listDocuments().then(setDocs)
-          })
+            listDocuments().then(setDocs);
+          });
         } catch (err) {
-          console.error("Dropzone upload failed:", err)
+          console.error("Dropzone upload failed:", err);
         }
       }
 
-      setTimeout(() => setUploadFeedback(null), 4000)
+      setTimeout(() => setUploadFeedback(null), 4000);
     }
-  }
+  };
 
   const chartData = useMemo(() => {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     const days = Array.from({ length: 7 }, (_, index) => {
-      const date = new Date(today)
-      date.setDate(today.getDate() - (6 - index))
+      const date = new Date(today);
+      date.setDate(today.getDate() - (6 - index));
       return {
         active: index === 6,
         count: 0,
-        day: new Intl.DateTimeFormat(undefined, { weekday: 'short' }).format(date).slice(0, 1),
+        day: new Intl.DateTimeFormat(undefined, { weekday: "short" })
+          .format(date)
+          .slice(0, 1),
         key: date.toISOString().slice(0, 10),
-      }
-    })
+      };
+    });
 
     for (const doc of docs) {
-      const createdAt = new Date(doc.createdAt)
-      if (Number.isNaN(createdAt.getTime())) continue
-      createdAt.setHours(0, 0, 0, 0)
-      const key = createdAt.toISOString().slice(0, 10)
-      const day = days.find((item) => item.key === key)
-      if (day) day.count += 1
+      const createdAt = new Date(doc.createdAt);
+      if (Number.isNaN(createdAt.getTime())) continue;
+      createdAt.setHours(0, 0, 0, 0);
+      const key = createdAt.toISOString().slice(0, 10);
+      const day = days.find((item) => item.key === key);
+      if (day) day.count += 1;
     }
 
-    const maxCount = Math.max(...days.map((day) => day.count), 1)
+    const maxCount = Math.max(...days.map((day) => day.count), 1);
     return days.map((day) => ({
       ...day,
       value: day.count === 0 ? 4 : Math.max((day.count / maxCount) * 100, 18),
-    }))
-  }, [docs])
+    }));
+  }, [docs]);
 
   return (
-    <main 
+    <main
       className="min-h-svh overflow-y-auto p-5 text-foreground md:p-8"
       onDragEnter={handleDrag}
     >
       {/* Absolute Drag & Drop overlay */}
       <AnimatePresence>
         {isDragActive && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -184,7 +210,9 @@ export default function DashboardPage() {
                 <UploadCloud className="size-8" />
               </div>
               <h3 className="text-xl font-bold">Drop your study source here</h3>
-              <p className="text-sm text-muted-foreground">Upload and link directly to your general workspace</p>
+              <p className="text-sm text-muted-foreground">
+                Upload and link directly to your general workspace
+              </p>
             </div>
           </motion.div>
         )}
@@ -192,12 +220,15 @@ export default function DashboardPage() {
 
       <header className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Workspace overview</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Workspace overview
+          </p>
           <h1 className="mt-2 text-2xl font-bold tracking-tight md:text-3xl">
             Dashboard
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            Manage documents, continue recent study work, and review AI activity from one workspace.
+            Manage documents, continue recent study work, and review AI activity
+            from one workspace.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -206,7 +237,12 @@ export default function DashboardPage() {
               {uploadFeedback}
             </span>
           )}
-          <Button className="size-11 rounded-xl" size="icon" type="button" variant="outline">
+          <Button
+            className="size-11 rounded-xl"
+            size="icon"
+            type="button"
+            variant="outline"
+          >
             <Bell aria-hidden="true" className="size-4" />
             <span className="sr-only">Notifications</span>
           </Button>
@@ -216,21 +252,27 @@ export default function DashboardPage() {
       {/* Bento Grid Layout */}
       <section className="mt-8 grid gap-5 xl:grid-cols-12">
         {/* Storage card with organic leaf slider */}
-        <article className="flex flex-col justify-between p-6 xl:col-span-4">
+        <article className="flex flex-col justify-between p-6 xl:col-span-4 border border-border rounded-xl">
           <div className="flex items-start justify-between gap-4">
             <IconTile tone="primary">
               <Database className="size-4" />
             </IconTile>
-            <span className="text-xs font-semibold text-muted-foreground">Space Usage</span>
+            <span className="text-xs font-semibold text-muted-foreground">
+              Space Usage
+            </span>
           </div>
-          
+
           <div className="mt-8">
             {loading ? (
               <Skeleton className="h-10 w-32" />
             ) : (
-              <p className="text-4xl font-bold tracking-tight text-foreground">{formatStorageSize(storageUsedBytes)}</p>
+              <p className="text-4xl font-bold tracking-tight text-foreground">
+                {formatStorageSize(storageUsedBytes)}
+              </p>
             )}
-            <p className="mt-1 text-xs text-muted-foreground">of 10 GB workspace storage used</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              of 10 GB workspace storage used
+            </p>
           </div>
 
           <div className="mt-8">
@@ -239,9 +281,9 @@ export default function DashboardPage() {
             ) : (
               <div className="relative pt-2">
                 <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-                  <div 
-                    className="h-full rounded-full bg-primary transition-all duration-700 ease-out" 
-                    style={{ width: `${storagePercent.toFixed(1)}%` }} 
+                  <div
+                    className="h-full rounded-full bg-primary transition-all duration-700 ease-out"
+                    style={{ width: `${storagePercent.toFixed(1)}%` }}
                   />
                 </div>
               </div>
@@ -250,26 +292,31 @@ export default function DashboardPage() {
         </article>
 
         {/* AI Assistant box */}
-        <article className="flex flex-col justify-between p-6 xl:col-span-5">
+        <article className="flex flex-col justify-between p-6 xl:col-span-5 border border-border rounded-xl">
           <div className="flex items-center gap-2 text-xs font-bold text-primary">
             <Sparkles className="size-4" aria-hidden="true" />
             AI Assistant
           </div>
           <h2 className="mt-6 text-xl font-bold leading-relaxed text-foreground">
-            Chat with your documents for immediate summaries and practice questions.
+            Chat with your documents for immediate summaries and practice
+            questions.
           </h2>
           <div className="mt-8 flex flex-wrap items-center gap-4">
             <Button asChild className="rounded-xl">
               <Link to="/aichatbox">Start AI session</Link>
             </Button>
             <span className="text-xs text-muted-foreground">
-              {loading ? <CelestialInlineLoader label="Loading library..." /> : `Ready to analyze ${docs.length} documents.`}
+              {loading ? (
+                <CelestialInlineLoader label="Loading library..." />
+              ) : (
+                `Ready to analyze ${docs.length} documents.`
+              )}
             </span>
           </div>
         </article>
 
         {/* Study Progress SVG Chart */}
-        <article className="flex flex-col justify-between p-6 xl:col-span-3">
+        <article className="flex flex-col justify-between p-6 xl:col-span-3 border border-border rounded-xl">
           <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground">
             <span>Study Activity</span>
             <span className="text-primary font-bold">7-day library</span>
@@ -278,19 +325,31 @@ export default function DashboardPage() {
           {/* Spring-animated SVG Chart */}
           <div className="h-28 mt-4 flex items-end justify-between gap-2">
             {chartData.map((bar, i) => (
-              <div key={i} className="flex flex-col items-center gap-1.5 flex-1 group relative">
+              <div
+                key={i}
+                className="flex flex-col items-center gap-1.5 flex-1 group relative"
+              >
                 <div className="w-full bg-muted rounded-t-lg overflow-hidden h-20 relative">
                   <motion.div
                     initial={{ height: 0 }}
                     animate={{ height: `${bar.value}%` }}
-                    transition={{ type: 'spring', stiffness: 100, damping: 15, delay: i * 0.05 }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 100,
+                      damping: 15,
+                      delay: i * 0.05,
+                    }}
                     className={`absolute bottom-0 left-0 right-0 rounded-t-md transition-colors ${
-                      bar.active ? 'bg-primary' : 'bg-primary/30 group-hover:bg-primary/50'
+                      bar.active
+                        ? "bg-primary"
+                        : "bg-primary/30 group-hover:bg-primary/50"
                     }`}
                   />
                 </div>
-                <span className="text-[10px] font-semibold text-muted-foreground">{bar.day}</span>
-                
+                <span className="text-[10px] font-semibold text-muted-foreground">
+                  {bar.day}
+                </span>
+
                 {/* Micro tooltip */}
                 <span className="absolute -top-6 scale-0 group-hover:scale-100 bg-foreground text-background text-[9px] font-bold px-1.5 py-0.5 rounded-md transition-transform pointer-events-none">
                   {bar.count} docs
@@ -304,11 +363,13 @@ export default function DashboardPage() {
       {/* Main Section */}
       <section className="mt-6 grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
         {/* Recent Documents */}
-        <article className="overflow-hidden p-0">
+        <article className="overflow-hidden p-0 rounded-xl border border-border">
           <div className="flex items-center justify-between border-b border-border/80 p-5">
             <div className="flex items-center gap-3">
               <Archive className="size-4 text-primary" aria-hidden="true" />
-              <h2 className="text-lg font-bold tracking-tight">Recent documents</h2>
+              <h2 className="text-lg font-bold tracking-tight">
+                Recent documents
+              </h2>
             </div>
             <Button asChild size="sm" variant="outline" className="rounded-xl">
               <Link to="/library">View all</Link>
@@ -317,7 +378,10 @@ export default function DashboardPage() {
           <div className="divide-y divide-border/60">
             {loading ? (
               Array.from({ length: 3 }).map((_, i) => (
-                <div className="grid gap-3 p-5 md:grid-cols-[1fr_180px_auto]" key={i}>
+                <div
+                  className="grid gap-3 p-5 md:grid-cols-[1fr_180px_auto]"
+                  key={i}
+                >
                   <div className="flex items-center gap-3">
                     <Skeleton className="size-10 shrink-0 rounded-xl" />
                     <div className="space-y-1.5">
@@ -335,7 +399,9 @@ export default function DashboardPage() {
                     <Archive className="size-6 text-muted-foreground" />
                   </EmptyMedia>
                   <EmptyTitle>No documents yet</EmptyTitle>
-                  <EmptyDescription>Drag and drop files onto this page to upload.</EmptyDescription>
+                  <EmptyDescription>
+                    Drag and drop files onto this page to upload.
+                  </EmptyDescription>
                 </EmptyHeader>
               </Empty>
             ) : (
@@ -350,14 +416,22 @@ export default function DashboardPage() {
                       <FileText className="size-4" />
                     </IconTile>
                     <div className="min-w-0">
-                      <p className="truncate font-bold text-foreground text-sm">{doc.title}</p>
-                      <p className="text-[10px] text-muted-foreground">{formatRelativeTime(doc.createdAt)}</p>
+                      <p className="truncate font-bold text-foreground text-sm">
+                        {doc.title}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {formatRelativeTime(doc.createdAt)}
+                      </p>
                     </div>
                   </div>
                   <span className="self-center text-xs text-muted-foreground font-medium">
-                    {(typeof doc.subject === 'object' ? doc.subject?.name : doc.subject) || 'Uncategorized'}
+                    {(typeof doc.subject === "object"
+                      ? doc.subject?.name
+                      : doc.subject) || "Uncategorized"}
                   </span>
-                  <span className="self-center text-xs font-bold text-primary group-hover:underline">Open</span>
+                  <span className="self-center text-xs font-bold text-primary group-hover:underline">
+                    Open
+                  </span>
                 </Link>
               ))
             )}
@@ -365,45 +439,71 @@ export default function DashboardPage() {
         </article>
 
         {/* Sidebar panels */}
-        <aside className="flex flex-col gap-5">
+        <aside className="flex flex-col gap-5 ">
           {/* Quick upload card dropzone button */}
-          <div 
+          <div
             onDragOver={handleDrag}
             onDrop={handleDrop}
             className="group flex cursor-pointer items-center justify-between gap-5 rounded-xl border border-dashed border-border bg-card p-5 transition-colors hover:border-primary"
           >
             <div>
-              <h2 className="font-bold tracking-tight text-foreground text-sm">Quick Drop Upload</h2>
-              <p className="mt-1 text-xs text-muted-foreground">Drag and drop source files here</p>
+              <h2 className="font-bold tracking-tight text-foreground text-sm">
+                Quick Drop Upload
+              </h2>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Drag and drop source files here
+              </p>
             </div>
-            <IconTile tone="primary" className="group-hover:scale-105 transition-transform">
+            <IconTile
+              tone="primary"
+              className="group-hover:scale-105 transition-transform"
+            >
               <UploadCloud className="size-4" />
             </IconTile>
           </div>
 
           {/* Subject clusters list */}
           <article className="p-5">
-            <span className="text-xs font-semibold text-muted-foreground">Documents by subject</span>
+            <span className="text-xs font-semibold text-muted-foreground">
+              Documents by subject
+            </span>
             <div className="mt-5 space-y-2">
               {loading ? (
                 Array.from({ length: 3 }).map((_, i) => (
-                  <div className="flex items-center justify-between gap-4 p-1" key={i}>
+                  <div
+                    className="flex items-center justify-between gap-4 p-1"
+                    key={i}
+                  >
                     <Skeleton className="h-4 w-32" />
                     <Skeleton className="h-3 w-6" />
                   </div>
                 ))
               ) : subjectClusters.length === 0 ? (
-                <p className="text-xs text-muted-foreground p-1">No subjects yet.</p>
+                <p className="text-xs text-muted-foreground p-1">
+                  No subjects yet.
+                </p>
               ) : (
                 subjectClusters.map((subject) => (
-                  <Link className="flex items-center justify-between gap-4 rounded-xl px-2 py-1.5 text-sm transition-all hover:bg-muted/40" key={subject.name} to="/library">
-                    <span className="font-semibold text-foreground text-xs">{subject.name}</span>
-                    <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">{subject.count}</span>
+                  <Link
+                    className="flex items-center justify-between gap-4 rounded-xl px-2 py-1.5 text-sm transition-all hover:bg-muted/40"
+                    key={subject.name}
+                    to="/library"
+                  >
+                    <span className="font-semibold text-foreground text-xs">
+                      {subject.name}
+                    </span>
+                    <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                      {subject.count}
+                    </span>
                   </Link>
                 ))
               )}
             </div>
-            <Button asChild className="mt-5 w-full rounded-xl" variant="outline">
+            <Button
+              asChild
+              className="mt-5 w-full rounded-xl"
+              variant="outline"
+            >
               <Link to="/subjects">Manage subjects</Link>
             </Button>
           </article>
@@ -416,30 +516,40 @@ export default function DashboardPage() {
           <span className="size-2 rounded-full bg-primary shrink-0" />
           <p className="text-xs text-muted-foreground leading-relaxed">
             {docs.length === 0
-              ? 'Upload documents to start building your research library.'
+              ? "Upload documents to start building your research library."
               : docsPerDay
                 ? `The library grows at ${docsPerDay} documents per day. ${docs.length} total files available.`
-                : `${docs.length} document${docs.length === 1 ? '' : 's'} in your library.`}
+                : `${docs.length} document${docs.length === 1 ? "" : "s"} in your library.`}
           </p>
         </div>
         <div className="grid grid-cols-2 gap-8 text-xs shrink-0">
           <div>
-            <p className="text-[10px] text-muted-foreground font-semibold">Indexed docs</p>
-            <p className="mt-1 font-bold text-foreground">{docs.filter((doc) => (doc.totalChunks ?? 0) > 0).length}</p>
+            <p className="text-[10px] text-muted-foreground font-semibold">
+              Indexed docs
+            </p>
+            <p className="mt-1 font-bold text-foreground">
+              {docs.filter((doc) => (doc.totalChunks ?? 0) > 0).length}
+            </p>
           </div>
           <div>
-            <p className="text-[10px] text-muted-foreground font-semibold">Workspace</p>
+            <p className="text-[10px] text-muted-foreground font-semibold">
+              Workspace
+            </p>
             <p className="mt-1 font-bold text-primary">Connected</p>
           </div>
         </div>
       </section>
 
       {/* Floating Plus button */}
-      <Button asChild className="fixed bottom-6 right-6 z-40 size-12 rounded-xl shadow-sm hover:scale-105 active:scale-95 transition-transform" title="New document">
+      <Button
+        asChild
+        className="fixed bottom-6 right-6 z-40 size-12 rounded-xl shadow-sm hover:scale-105 active:scale-95 transition-transform"
+        title="New document"
+      >
         <Link to="/library">
           <Plus aria-hidden="true" className="size-5" />
         </Link>
       </Button>
     </main>
-  )
+  );
 }
