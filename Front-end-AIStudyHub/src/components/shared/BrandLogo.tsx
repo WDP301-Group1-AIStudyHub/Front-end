@@ -1,4 +1,3 @@
-import { Leaf } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function BrandLogo({
@@ -11,22 +10,16 @@ export default function BrandLogo({
   return (
     <span
       className={cn(
-        "inline-flex min-w-0 items-center gap-2.5 tracking-tight",
+        "inline-flex h-4.5 items-center tracking-tight",
         compact && "[&_.brand-mark]:size-7",
         className,
       )}
     >
-      <span
-        className="brand-mark inline-grid size-8 shrink-0 place-items-center rounded-xl border border-border bg-[#f8f4df] shadow-[inset_0_-10px_18px_rgb(72_106_77/0.06)]"
-        aria-hidden="true"
-      >
-        <Leaf className="size-4 text-primary shrink-0" />
-      </span>
       {!compact ? (
-        <span className="overflow-hidden text-ellipsis whitespace-nowrap">
-          AI Study Hub
-        </span>
-      ) : null}
+        <img src="/logo.svg" alt="AI Study Hub" className="max-h-4.5" />
+      ) : (
+        <img src="/favicon.svg" alt="AI Study Hub" className="brand-mark" />
+      )}
     </span>
   );
 }

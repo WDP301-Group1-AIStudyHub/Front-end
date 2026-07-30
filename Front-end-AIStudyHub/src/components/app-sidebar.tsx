@@ -14,6 +14,7 @@ import {
   Star,
   Trash2,
   Users,
+  SearchIcon,
 } from "lucide-react";
 
 import { useNavigate, useLocation, Link } from "react-router-dom";
@@ -25,7 +26,6 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-  SidebarRail,
   useSidebar,
 } from "@/components/ui/sidebar";
 import BrandLogo from "@/components/shared/BrandLogo";
@@ -176,6 +176,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   const baseNav = [
     {
+      title: "Search",
+      url: "/#",
+      icon: <SearchIcon />,
+      isActive: activePath === "/#",
+    },
+    {
       title: "Dashboard",
       url: "/dashboard",
       icon: <LayoutDashboardIcon />,
@@ -271,9 +277,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   return (
     <Sidebar className="border-r-0" collapsible="icon" {...props}>
-      <SidebarHeader className="gap-3 p-3 group-data-[collapsible=icon]:p-2">
-        <div className="flex min-h-11 items-center gap-2 rounded-md border border-sidebar-border bg-card px-3 py-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2">
-          <Link className="min-w-0" to="/dashboard">
+      <SidebarHeader className="p-3 group-data-[collapsible=icon]:p-2">
+        <div className="flex items-center gap-2 min-h-9 px-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2">
+          <Link className="min-w-0 h-4.5" to="/dashboard">
             <BrandLogo compact={sidebarState === "collapsed"} />
           </Link>
         </div>
@@ -295,7 +301,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarFooter className="mt-auto group-data-[collapsible=icon]:p-2">
         <NavUser onLogout={handleLogout} user={user} />
       </SidebarFooter>
-      <SidebarRail />
     </Sidebar>
   );
 }
