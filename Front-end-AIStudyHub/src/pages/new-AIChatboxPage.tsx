@@ -22,6 +22,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { Thread } from "@/components/assistant-ui/thread";
 import { Button } from "@/components/ui/button";
+import { PageShell } from "@/components/layout/PageShell";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
  Sheet,
@@ -622,7 +623,7 @@ export default function NewAIChatboxPage() {
  void _selectedContextLabel;
 
  return (
- <main className="flex h-svh min-h-0 w-full flex-col overflow-hidden p-3 pb-24 text-foreground sm:p-5 sm:pb-24 lg:pb-5">
+ <PageShell variant="full">
  <header className="border-b border-border px-2 pb-4 sm:px-3">
  <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
  <div className="flex items-center gap-3">
@@ -925,7 +926,7 @@ export default function NewAIChatboxPage() {
  </div>
  </SheetContent>
  </Sheet>
- </main>
+ </PageShell>
  );
 }
 

@@ -43,6 +43,8 @@ import {
  AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { getAllProgress, type StudyProgressData } from "@/hooks/useStudyProgress";
+import { PageShell } from "@/components/layout/PageShell";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 export default function StudyMaterialsListPage() {
  const location = useLocation();
@@ -252,23 +254,18 @@ export default function StudyMaterialsListPage() {
  return matchesSearch && matchesType;
  });
 
- return (
- <main className="flex min-h-svh w-full min-w-0 flex-col overflow-y-auto text-foreground font-sans">
- <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-5 py-6 sm:px-8 lg:px-10">
- 
- {/* Header */}
- <header className="flex flex-col gap-2">
- <span className="flex items-center gap-1.5 justify-start text-xs font-semibold uppercase tracking-wider text-muted-foreground">
- <Brain className="size-4 text-primary" />
- AI Practice Hub
- </span>
- <h1 className="text-2xl font-bold tracking-tight md:text-3xl break-words">
- Study Materials
- </h1>
- <p className="text-sm text-muted-foreground max-w-xl leading-relaxed">
- Generate and practice multiple choice quizzes and flip flashcard decks based on your library documents.
- </p>
- </header>
+  return (
+    <PageShell>
+      <PageHeader
+        eyebrow={
+          <span className="flex items-center gap-1.5 justify-start text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <Brain className="size-4 text-primary" />
+            AI Practice Hub
+          </span>
+        }
+        title="Study Materials"
+        description="Generate and practice multiple choice quizzes and flip flashcard decks based on your library documents."
+      />
 
  <section className="flex flex-col gap-2 border-y border-border py-4 sm:flex-row">
  {/* MCQ Button */}
@@ -471,8 +468,6 @@ export default function StudyMaterialsListPage() {
  </>
  )}
 
- </div>
-
  {/* Customize Dialog (Image-1 Style Popover Modal) */}
  {isCustomiseOpen && (
  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
@@ -648,7 +643,6 @@ export default function StudyMaterialsListPage() {
  </AlertDialogFooter>
  </AlertDialogContent>
  </AlertDialog>
- </main>
+ </PageShell>
  );
 }
-

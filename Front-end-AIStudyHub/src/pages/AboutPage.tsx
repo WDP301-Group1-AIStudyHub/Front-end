@@ -29,7 +29,7 @@ const values = [
 
 export default function AboutPage() {
   return (
-    <div className="min-h-svh overflow-x-hidden bg-white font-sans text-foreground">
+    <div className="min-h-svh overflow-x-hidden bg-background font-sans text-foreground">
       <PublicNav dashboardHref="/#workflow" />
 
       <main className="pb-20 pt-28 md:pt-32">

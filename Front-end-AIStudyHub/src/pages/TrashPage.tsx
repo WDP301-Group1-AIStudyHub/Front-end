@@ -30,6 +30,8 @@ import {
 } from '@/services/documentApi'
 import type { DocumentItem, DocumentSubject } from '@/types/document'
 import { IconTile } from '@/components/shared/IconTile'
+import { PageShell } from '@/components/layout/PageShell'
+import { PageHeader } from '@/components/layout/PageHeader'
 
 function formatDate(value?: string | null): string {
   if (!value) return 'Unknown'
@@ -161,22 +163,18 @@ export default function TrashPage() {
   }
 
   return (
-    <main className="flex min-h-svh w-full min-w-0 flex-col overflow-y-auto text-foreground">
-      <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-5 py-6 sm:px-8 lg:px-10">
-        <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div className="flex flex-col gap-2">
-            <div className="flex flex-wrap items-center gap-3">
-              <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
-                Trash
-              </h1>
-              <Badge className="rounded-full px-2.5 py-1" variant="secondary">
-                {documents.length} total
-              </Badge>
-            </div>
-            <p className="max-w-2xl text-sm text-muted-foreground">
-              Deleted documents stay here for 30 days before permanent cleanup.
-            </p>
+    <PageShell>
+      <PageHeader
+        title={
+          <div className="flex flex-wrap items-center gap-3">
+            <span>Trash</span>
+            <Badge className="rounded-full px-2.5 py-1" variant="secondary">
+              {documents.length} total
+            </Badge>
           </div>
+        }
+        description="Deleted documents stay here for 30 days before permanent cleanup."
+        actions={
           <Button
             disabled={documents.length === 0 || isEmptying}
             onClick={() => void emptyAll()}
@@ -186,7 +184,8 @@ export default function TrashPage() {
             <Trash2 data-icon="inline-start" aria-hidden="true" />
             {isEmptying ? 'Emptying...' : 'Empty trash'}
           </Button>
-        </header>
+        }
+      />
 
         {feedback ? (
           <div className="px-4 py-3 text-sm" role="status">
@@ -295,7 +294,6 @@ export default function TrashPage() {
             </div>
           ) : null}
         </section>
-      </div>
 
       <AlertDialog open={Boolean(deleteTarget)} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <AlertDialogContent>
@@ -317,6 +315,6 @@ export default function TrashPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </main>
+    </PageShell>
   )
 }

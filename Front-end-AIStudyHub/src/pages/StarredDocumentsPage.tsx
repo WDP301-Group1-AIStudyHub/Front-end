@@ -20,6 +20,8 @@ import {
 } from '@/services/documentApi'
 import type { DocumentItem, DocumentSubject } from '@/types/document'
 import { IconTile } from '@/components/shared/IconTile'
+import { PageShell } from '@/components/layout/PageShell'
+import { PageHeader } from '@/components/layout/PageHeader'
 
 function formatDate(value?: string | null): string {
   if (!value) return 'Unknown'
@@ -120,21 +122,18 @@ export default function StarredDocumentsPage() {
   }
 
   return (
-    <main className="flex min-h-svh w-full min-w-0 flex-col overflow-y-auto text-foreground">
-      <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-5 py-6 sm:px-8 lg:px-10">
-        <header className="flex flex-col gap-3">
+    <PageShell>
+      <PageHeader
+        title={
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
-            Starred documents
-            </h1>
+            <span>Starred documents</span>
             <Badge className="rounded-full px-2.5 py-1" variant="secondary">
               {documents.length} total
             </Badge>
           </div>
-          <p className="max-w-2xl text-sm text-muted-foreground">
-            Documents you marked as important across your own files and shared access.
-          </p>
-        </header>
+        }
+        description="Documents you marked as important across your own files and shared access."
+      />
 
         {error ? (
           <Alert variant="destructive" className="mb-4">
@@ -249,7 +248,6 @@ export default function StarredDocumentsPage() {
             </div>
           ) : null}
         </section>
-      </div>
-    </main>
+    </PageShell>
   )
 }

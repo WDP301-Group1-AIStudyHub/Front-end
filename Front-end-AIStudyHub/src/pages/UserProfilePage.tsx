@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   AtSign,
   CalendarDays,
@@ -11,6 +11,8 @@ import { CelestialInlineLoader } from '@/components/shared/CelestialLoading'
 import { Button } from '@/components/ui/button'
 import { updateProfile } from '@/services/authApi'
 import { getStoredToken, getStoredUser, storeAuthSession } from '@/services/authStorage'
+import { PageShell } from '@/components/layout/PageShell'
+import { PageHeader } from '@/components/layout/PageHeader'
 
 function Field({
   disabled,
@@ -116,20 +118,14 @@ export default function UserProfilePage() {
     : 'Not available'
 
   return (
-    <main className="min-h-svh overflow-y-auto p-5 md:p-8">
-      <header className="flex flex-col gap-2">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Account settings
-        </p>
-        <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
-          My Profile
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Manage your display name and avatar across AI Study Hub.
-        </p>
-      </header>
+    <PageShell>
+      <PageHeader
+        eyebrow="Account settings"
+        title="My Profile"
+        description="Manage your display name and avatar across AI Study Hub."
+      />
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-[280px_1fr]">
+      <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
         <div className="flex flex-col gap-4">
           <div className="flex flex-col items-center gap-4 p-6 text-center">
             <div className="relative">
@@ -288,6 +284,6 @@ export default function UserProfilePage() {
           </div>
         </div>
       </div>
-    </main>
+    </PageShell>
   )
 }

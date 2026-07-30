@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { IconTile } from "@/components/shared/IconTile";
 import {
   Archive,
-  Bell,
   Database,
   FileText,
   Plus,
@@ -25,6 +24,8 @@ import { listDocuments } from "@/services/documentApi";
 
 import { useUploadStore } from "@/store/useUploadStore";
 import type { DocumentItem } from "@/types/document";
+import { PageShell } from "@/components/layout/PageShell";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 const STORAGE_LIMIT_BYTES = 10 * 1024 * 1024 * 1024;
 
@@ -60,6 +61,27 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [isDragActive, setIsDragActive] = useState(false);
   const [uploadFeedback, setUploadFeedback] = useState<string | null>(null);
+
+  const isUploading = useUploadStore((state) =>
+    state.uploads.some(
+      (u) =>
+        u.status === "uploading" ||
+        u.status === "pending" ||
+        u.status === "processing",
+    ),
+  );
+
+  const handleUploadFile = (file: File) => {
+    const payload = {
+      file,
+      title: file.name.replace(/\.[^/.]+$/, ""),
+      description: "Uploaded via Quick Upload",
+      subject: "General",
+    };
+    useUploadStore.getState().processIncomingUpload(payload, docs, () => {
+      listDocuments().then(setDocs);
+    });
+  };
 
   const storageUsedBytes = useMemo(
     () => docs.reduce((sum, d) => sum + (d.fileSize ?? 0), 0),
@@ -189,10 +211,7 @@ export default function DashboardPage() {
   }, [docs]);
 
   return (
-    <main
-      className="min-h-svh overflow-y-auto p-5 text-foreground md:p-8"
-      onDragEnter={handleDrag}
-    >
+    <PageShell onDragEnter={handleDrag}>
       {/* Absolute Drag & Drop overlay */}
       <AnimatePresence>
         {isDragActive && (
@@ -218,36 +237,39 @@ export default function DashboardPage() {
         )}
       </AnimatePresence>
 
-      <header className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Workspace overview
-          </p>
-          <h1 className="mt-2 text-2xl font-bold tracking-tight md:text-3xl">
-            Dashboard
-          </h1>
-          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            Manage documents, continue recent study work, and review AI activity
-            from one workspace.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          {uploadFeedback && (
-            <span className="text-xs text-primary bg-primary/5 border border-primary/20 px-3 py-1.5 rounded-xl animate-pulse">
-              {uploadFeedback}
-            </span>
-          )}
-          <Button
-            className="size-11 rounded-xl"
-            size="icon"
-            type="button"
-            variant="outline"
-          >
-            <Bell aria-hidden="true" className="size-4" />
-            <span className="sr-only">Notifications</span>
-          </Button>
-        </div>
-      </header>
+      <PageHeader
+        eyebrow="Workspace overview"
+        title="Dashboard"
+        description="Manage documents, continue recent study work, and review AI activity from one workspace."
+        actions={
+          <div className="flex items-center gap-3">
+            {uploadFeedback && (
+              <span className="text-xs text-primary bg-primary/5 border border-primary/20 px-3 py-1.5 rounded-xl animate-pulse">
+                {uploadFeedback}
+              </span>
+            )}
+            <Button
+              disabled={isUploading}
+              onClick={() => {
+                const input = document.createElement("input");
+                input.type = "file";
+                input.onchange = (e) => {
+                  const file = (e.target as HTMLInputElement).files?.[0];
+                  if (file) handleUploadFile(file);
+                };
+                input.click();
+              }}
+            >
+              <UploadCloud data-icon="inline-start" aria-hidden="true" />
+              {isUploading ? (
+                <CelestialInlineLoader label="Uploading..." />
+              ) : (
+                "Quick upload"
+              )}
+            </Button>
+          </div>
+        }
+      />
 
       {/* Bento Grid Layout */}
       <section className="mt-8 grid gap-5 xl:grid-cols-12">
@@ -550,6 +572,6 @@ export default function DashboardPage() {
           <Plus aria-hidden="true" className="size-5" />
         </Link>
       </Button>
-    </main>
+    </PageShell>
   );
 }

@@ -53,6 +53,7 @@ import {
 import { listSubjects, type SubjectItem } from '@/services/subjectApi'
 import DocumentShareDialog from '@/components/documents/DocumentShareDialog'
 import SharedDocumentSubjectDialog from '@/components/documents/SharedDocumentSubjectDialog'
+import { PageShell } from '@/components/layout/PageShell'
 import { getStoredUser } from '@/services/authStorage'
 import type {
   DocumentDetail,
@@ -327,8 +328,7 @@ export default function DocumentDetailPage() {
   }
 
   return (
-    <main className="flex min-h-svh w-full min-w-0 flex-col overflow-y-auto text-foreground">
-      <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-5 py-6 sm:px-8 lg:px-10">
+    <PageShell>
         <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0">
             <Button asChild variant="secondary">
@@ -484,7 +484,6 @@ export default function DocumentDetailPage() {
 
           </>
         ) : null}
-      </div>
 
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent>
@@ -664,6 +663,6 @@ export default function DocumentDetailPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </main>
+    </PageShell>
   )
 }

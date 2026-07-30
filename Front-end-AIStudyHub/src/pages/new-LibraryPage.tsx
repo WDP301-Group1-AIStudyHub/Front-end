@@ -4,7 +4,6 @@ import {
   BookOpen,
   BookOpenText,
   ChevronDownIcon,
-  Clock3,
   Download,
   ExternalLink,
   FileIcon,
@@ -16,7 +15,6 @@ import {
   Pencil,
   Star,
   SearchIcon,
-  Settings,
   Trash2,
   UploadCloud,
   Users,
@@ -25,6 +23,7 @@ import {
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
+import { PageShell } from "@/components/layout/PageShell";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -1360,8 +1359,7 @@ export default function NewLibraryPage() {
   }
 
   return (
-    <main className="flex min-h-svh w-full min-w-0 flex-col overflow-y-auto text-foreground">
-      <div className="mx-auto flex w-full min-w-0 max-w-7xl flex-1 flex-col gap-6 px-5 py-6 sm:px-8 lg:px-10">
+    <PageShell>
         <section className="flex flex-1 flex-col gap-4">
           <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
             <div className="flex flex-col gap-4">
@@ -1941,7 +1939,6 @@ export default function NewLibraryPage() {
             )}
           </div>
         </section>
-      </div>
 
       <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
         <DialogContent className="sm:max-w-125">
@@ -2091,6 +2088,6 @@ export default function NewLibraryPage() {
         }}
         onUpdated={handleSharedProfileUpdated}
       />
-    </main>
+    </PageShell>
   );
 }

@@ -32,6 +32,8 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { PageShell } from "@/components/layout/PageShell";
+import { PageHeader } from "@/components/layout/PageHeader";
 import {
   Dialog,
   DialogContent,
@@ -1381,8 +1383,7 @@ function WorkspaceDetail({
   const memberGrants = grants.filter((grant) => grant.granteeType === "USER");
 
   return (
-    <main className="flex min-h-svh w-full min-w-0 flex-col overflow-y-auto text-foreground">
-      <div className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col gap-4 px-4 py-4 sm:px-6 lg:px-8">
+    <PageShell className="max-w-[1440px]">
         <header className="rounded-lg border border-border bg-white px-4 py-3">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="min-w-0">
@@ -1858,7 +1859,6 @@ function WorkspaceDetail({
             ) : null}
           </section>
         </div>
-      </div>
 
       {selectedIds.length ? (
         <div className="fixed inset-x-4 bottom-4 z-40 mx-auto flex max-w-3xl flex-col gap-3 rounded-lg border border-border bg-white p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
@@ -2144,7 +2144,7 @@ function WorkspaceDetail({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </main>
+    </PageShell>
   );
 }
 
@@ -2293,21 +2293,18 @@ export default function SubjectsPage() {
   }
 
   return (
-    <main className="flex min-h-svh w-full min-w-0 flex-col overflow-y-auto text-foreground">
-      <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-5 py-6 sm:px-8 lg:px-10">
-        <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-sm font-bold uppercase tracking-wide text-muted-foreground">Team workspace</p>
-            <h1 className="mt-2 text-2xl font-bold tracking-tight md:text-3xl">Subject Workspaces</h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
-              Drive-style folders for subject documents, members, teams, and access control.
-            </p>
-          </div>
+    <PageShell>
+      <PageHeader
+        eyebrow="Team workspace"
+        title="Subject Workspaces"
+        description="Drive-style folders for subject documents, members, teams, and access control."
+        actions={
           <Button onClick={openCreate} type="button">
             <Plus data-icon="inline-start" aria-hidden="true" />
             Create subject workspace
           </Button>
-        </header>
+        }
+      />
 
         {feedback ? (
           <div
@@ -2464,7 +2461,6 @@ export default function SubjectsPage() {
             </div>
           ) : null}
         </section>
-      </div>
 
       <Dialog open={isEditorOpen} onOpenChange={setIsEditorOpen}>
         <DialogContent>
@@ -2536,6 +2532,6 @@ export default function SubjectsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </main>
+    </PageShell>
   );
 }
