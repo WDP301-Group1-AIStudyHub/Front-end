@@ -7,6 +7,7 @@ import {
 } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { PageShell } from "@/components/layout/PageShell";
 import {
   AlertCircle,
   BookOpen,
@@ -249,9 +250,9 @@ export default function NewQuestion() {
   }
 
   return (
-    <main className="min-h-svh overflow-y-auto px-4 py-5 sm:px-6 lg:px-8">
+    <PageShell variant="narrow">
       <form
-        className="mx-auto flex w-full max-w-[1180px] flex-col gap-5"
+        className="flex w-full flex-col gap-5"
         onSubmit={handleSubmit}
       >
         <header className="flex flex-col gap-4 border-b border-border/60 pb-5 lg:flex-row lg:items-end lg:justify-between">
@@ -512,7 +513,6 @@ export default function NewQuestion() {
           </aside>
         </section>
       </form>
-    </main>
+    </PageShell>
   );
 }
-

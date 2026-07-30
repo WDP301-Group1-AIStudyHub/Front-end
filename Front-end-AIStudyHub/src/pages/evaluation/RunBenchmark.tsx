@@ -1,6 +1,7 @@
-﻿import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { PageShell } from "@/components/layout/PageShell";
 import {
   AlertCircle,
   ArrowDownToLine,
@@ -181,8 +182,7 @@ export default function RunBenchmark() {
   }
 
   return (
-    <main className="min-h-svh overflow-y-auto px-4 py-5 sm:px-6 lg:px-8">
-      <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-5">
+    <PageShell>
         <header className="flex flex-col gap-4 border-b border-border/60 pb-5 xl:flex-row xl:items-end xl:justify-between">
           <div className="min-w-0">
             <div className="mb-3 flex flex-wrap items-center gap-2 text-xs font-semibold text-muted-foreground">
@@ -320,7 +320,6 @@ export default function RunBenchmark() {
             </div>
           </Panel>
         )}
-      </div>
-    </main>
+    </PageShell>
   );
 }

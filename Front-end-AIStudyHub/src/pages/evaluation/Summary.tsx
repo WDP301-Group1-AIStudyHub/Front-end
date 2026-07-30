@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { PageShell } from "@/components/layout/PageShell";
 import { IconTile } from '@/components/shared/IconTile'
 import {
   AlertCircle,
@@ -203,8 +204,7 @@ export default function Summary() {
   }
 
   return (
-    <main className="min-h-svh overflow-y-auto px-4 py-5 sm:px-6 lg:px-8">
-      <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-5">
+    <PageShell>
         <header className="flex flex-col gap-4 border-b border-border/60 pb-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <div className="mb-3 flex flex-wrap items-center gap-2 text-xs font-semibold text-muted-foreground">
@@ -296,7 +296,6 @@ export default function Summary() {
             <MetricBars summary={summary} />
           </>
         )}
-      </div>
-    </main>
+    </PageShell>
   );
 }

@@ -8,6 +8,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
+import { PageShell } from "@/components/layout/PageShell";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { Link } from "react-router-dom";
 import {
   AlertCircle,
@@ -272,23 +274,22 @@ export default function EvaluationPage() {
   }, []);
 
   return (
-    <main className="min-h-svh overflow-y-auto p-5 text-foreground md:p-8">
-      <div className="mx-auto max-w-7xl space-y-8">
-        <header className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">RAG research</p>
-            <h1 className="mt-2 text-2xl font-bold tracking-tight md:text-3xl">
-              Evaluation
-            </h1>
-            <p className="mt-2 text-sm text-muted-foreground">
+    <PageShell>
+      <PageHeader
+        eyebrow="RAG research"
+        title="Evaluation"
+        description={
+          <>
+            <span className="block">
               Create benchmark questions with expected answers, then score the DR-RAG pipeline.
-            </p>
-            <p className="mt-2 text-xs text-muted-foreground">
+            </span>
+            <span className="mt-1 block text-xs">
               {questions.length} questions across {subjectCount || 0} subjects.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
+            </span>
+          </>
+        }
+        actions={
+          <>
             <Link
               className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 text-sm font-bold text-foreground transition-all hover:bg-muted active:scale-[0.98]"
               to="/evaluation/summary"
@@ -301,10 +302,11 @@ export default function EvaluationPage() {
               to="/evaluation/new"
             >
               <Plus className="size-4" />
-              New question
+              New Question
             </Link>
-          </div>
-        </header>
+          </>
+        }
+      />
 
         {error && (
           <div className="flex flex-col gap-3 rounded-[20px] border border-border bg-destructive/10 p-4 text-sm text-foreground sm:flex-row sm:items-center sm:justify-between">
@@ -585,7 +587,6 @@ export default function EvaluationPage() {
             </div>
           </div>
         )}
-      </div>
-    </main>
+    </PageShell>
   );
 }
