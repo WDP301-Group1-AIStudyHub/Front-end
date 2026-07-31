@@ -1029,10 +1029,10 @@ export default function NewLibraryPage() {
     const matchedSubject = document.subjectId
       ? subjectById.get(document.subjectId)
       : undefined;
-    const subjectName =
-      populatedSubject?.name ??
-      matchedSubject?.name ??
-      (typeof document.subject === "string" ? document.subject : "Unsorted");
+    // const subjectName =
+    //   populatedSubject?.name ??
+    //   matchedSubject?.name ??
+    //   (typeof document.subject === "string" ? document.subject : "Unsorted");
     const subjectCode = populatedSubject?.code ?? matchedSubject?.code;
     const subjectColor =
       populatedSubject?.color ?? matchedSubject?.color ?? DEFAULT_SUBJECT_COLOR;
