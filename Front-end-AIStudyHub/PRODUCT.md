@@ -14,11 +14,23 @@ AI Study Hub provides one trusted workspace for managing academic documents and 
 
 ## Brand Personality
 
-Clear, trustworthy, and focused. The interface should feel calm and capable, with familiar document-management patterns and concise feedback.
+Clear, trustworthy, and focused. The interface should feel calm and capable — closer to reference software than to a consumer app. It is plain on purpose: nothing decorative competes with the document, and the product never performs effort it hasn't done.
+
+In practice this resolves to four commitments the interface already makes:
+
+**Institutional, not playful.** A single deep blue (`--primary`) against cool neutral greys and white surfaces. The blue signals trust and does not change to signal mood.
+
+**One voice, plainly spoken.** Inter for everything — headings use the same face as body text, at a larger size. There is no display typeface, because a second voice would be decoration.
+
+**Flat by default.** Surfaces are separated by a hairline border, not by depth. Shadow is reserved for things that genuinely float above the page — dialogs, menus, popovers. Elevation carries meaning; it is not texture.
+
+**Colour means something.** Colour is information, never atmosphere. It appears in exactly three roles: brand (primary actions and active state), status (success, warning, destructive, info), and data encoding (file-type badges). A surface that is not communicating state stays neutral.
 
 ## Anti-references
 
-Avoid pale blue-green page washes, botanical decoration, marketing-style dashboard composition, excessive cards, oversized rounded surfaces, low-contrast text, decorative gradients, and unfamiliar controls. The product should not feel whimsical, ornamental, or visually submerged.
+Avoid tinted page backgrounds, botanical or organic decoration, marketing-style dashboard composition, excessive cards, oversized rounded surfaces, low-contrast text, glow and blur effects, and unfamiliar controls. The product should not feel whimsical, ornamental, or visually submerged.
+
+Gradients belong to the brand assets — the logo and favicon — and nowhere else. No gradient should appear on an interface surface.
 
 ## Design Principles
 
