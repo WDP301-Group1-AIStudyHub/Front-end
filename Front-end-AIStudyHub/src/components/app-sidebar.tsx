@@ -15,6 +15,7 @@ import {
   Trash2,
   Users,
   SearchIcon,
+  PlusIcon,
 } from "lucide-react";
 
 import { useNavigate, useLocation, Link } from "react-router-dom";
@@ -38,6 +39,7 @@ import {
   updateChatThread,
 } from "@/services/chatApi";
 import type { ChatThreadNavItem } from "@/components/nav-chats";
+import { Button } from "./ui/button";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { state: sidebarState } = useSidebar();
@@ -283,6 +285,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <BrandLogo compact={sidebarState === "collapsed"} />
           </Link>
         </div>
+        <Button variant={"outline"} className="shadow-2xs">
+          <PlusIcon data-icon="inline-start" />
+          Add
+        </Button>
         <NavMain items={isAdmin ? adminNav : baseNav} />
       </SidebarHeader>
       <SidebarContent>

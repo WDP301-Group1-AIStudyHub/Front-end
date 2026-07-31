@@ -1,14 +1,24 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/inter";
-@import "@fontsource-variable/outfit";
 @import "tw-shimmer";
 
 @custom-variant dark (&:is(.dark *));
 
+:root {
+  font-family: "Inter", sans-serif;
+  font-feature-settings:
+    "liga" 1,
+    "calt" 1; /* fix for Chrome */
+}
+@supports (font-variation-settings: normal) {
+  :root {
+    font-family: "InterVariable", sans-serif;
+  }
+}
+
 @theme inline {
-  --font-sans: "Inter Variable", sans-serif;
+  --font-sans: "InterVariable", "Inter", sans-serif;
   --font-heading: var(--font-sans);
   --font-mono: "Geist Mono", "SF Mono", "JetBrains Mono", monospace;
 
@@ -180,8 +190,9 @@
 
   html {
     color-scheme: light;
-    font-family: var(--font-sans);
-    @apply font-sans;
+    @media (prefers-color-scheme: dark) {
+      color-scheme: dark;
+    }
   }
 
   body {
@@ -189,7 +200,7 @@
     overflow-x: hidden;
     background: var(--background);
     color: var(--foreground);
-    font-family: "Inter Variable", "SF Pro Text", system-ui, sans-serif;
+    font-family: var(--font-sans), "SF Pro Text", system-ui, sans-serif;
     font-size: 0.9375rem;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;

@@ -57,11 +57,11 @@ export function NavUser({
                 </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold text-sidebar-foreground">
+                <span className="truncate font-medium text-sidebar-foreground">
                   {user.name}
                 </span>
-                <span className="truncate text-xs font-medium text-muted-foreground">
-                  {user.email}
+                <span className="truncate text-xs  text-muted-foreground">
+                  Free (hardcoded)
                 </span>
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
