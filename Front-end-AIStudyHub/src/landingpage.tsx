@@ -24,7 +24,7 @@ const workflow = [
   {
     icon: UploadCloud,
     title: 'Keep every source organized',
-    description: 'Upload common document formats, assign subjects, track versions, and recover deleted files from one workspace.',
+    description: 'Upload common document formats, assign subjects, and recover deleted files from one workspace.',
   },
   {
     icon: Share2,
@@ -129,7 +129,7 @@ export default function LandingPage() {
                 </div>
               </div>
               <div className="mt-8 hidden flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground sm:flex">
-                {['Protected sharing', 'Version history', 'Grounded AI chat'].map((item) => (
+                {['Protected sharing', 'Grounded AI chat'].map((item) => (
                   <span className="inline-flex items-center gap-2" key={item}>
                     <CheckCircle2 className="size-4 text-primary" aria-hidden="true" />
                     {item}
@@ -177,7 +177,7 @@ export default function LandingPage() {
                 AI answers stay tied to your study context
               </h2>
               <p className="mt-5 max-w-[65ch] text-base leading-7 text-muted-foreground">
-                Select a subject, document, or version before asking. AI Study Hub keeps retrieval scope visible so you always know what informed an answer.
+                Select a subject or document before asking. AI Study Hub keeps retrieval scope visible so you always know what informed an answer.
               </p>
             </div>
             <div className="border-y border-border py-4">
