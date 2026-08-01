@@ -607,7 +607,7 @@ function SubjectDetailsPanel({
           </div>
         </dl>
         <p className="mt-5 rounded-md border border-border bg-slate-50 p-3 text-xs leading-5 text-muted-foreground">
-          Select a document to inspect metadata, access grants, processing status, and version information.
+          Select a document to inspect metadata, access grants, and processing status.
         </p>
       </aside>
     );
@@ -653,8 +653,6 @@ function SubjectDetailsPanel({
           <dd className="min-w-0 break-words text-right font-semibold">{formatDate(document.updatedAt)}</dd>
         </div>
         <div className="grid grid-cols-[112px_minmax(0,1fr)] items-start gap-3">
-          <dt className="text-muted-foreground">Versions</dt>
-          <dd className="min-w-0 text-right font-semibold">{document.totalVersions ?? 0}</dd>
         </div>
       </dl>
       <div className="mt-5 border-t border-border pt-4">
@@ -850,7 +848,7 @@ function SubjectDocumentPreviewDialog({
           {canEdit ? (
             <Button onClick={() => window.location.assign(`/documents/${documentKey(document)}`)} type="button" variant="secondary">
               <Pencil data-icon="inline-start" aria-hidden="true" />
-              Edit / versions
+              Edit details
             </Button>
           ) : null}
           {canManage ? (
