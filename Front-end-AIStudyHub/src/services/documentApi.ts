@@ -21,11 +21,22 @@ const API_BASE_URL = API_ORIGIN.replace(/\/api$/, '')
 
 export class DocumentApiError extends Error {
   status: number
+  /** Machine-readable code from the backend, e.g. STORAGE_QUOTA_EXCEEDED. */
+  code?: string
+  /** Structured payload accompanying the code. */
+  details?: Record<string, unknown>
 
-  constructor(message: string, status: number) {
+  constructor(
+    message: string,
+    status: number,
+    code?: string,
+    details?: Record<string, unknown>,
+  ) {
     super(message)
     this.name = 'DocumentApiError'
     this.status = status
+    this.code = code
+    this.details = details
   }
 }
 
@@ -65,7 +76,10 @@ async function request<T>(
   const payload = (await response.json().catch(() => ({
     success: false,
     message: 'Unexpected server response',
-  }))) as ApiResponse<T>
+  }))) as ApiResponse<T> & {
+    code?: string
+    details?: Record<string, unknown>
+  }
 
   if (!response.ok) {
     if (response.status === 401) {
@@ -75,7 +89,12 @@ async function request<T>(
       }
     }
 
-    throw new DocumentApiError(payload.message || 'Request failed', response.status)
+    throw new DocumentApiError(
+      payload.message || 'Request failed',
+      response.status,
+      payload.code,
+      payload.details,
+    )
   }
 
   return payload

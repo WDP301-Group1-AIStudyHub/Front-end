@@ -558,3 +558,37 @@ textarea::placeholder {
     animation-iteration-count: 1 !important;
   }
 }
+
+/* Storage cards use a dedicated native action, isolated from the global Button outline skin. */
+.storage-plan-action {
+  min-height: 2.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  color: var(--foreground);
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+.storage-plan-action:disabled {
+  cursor: default;
+}
+
+.storage-plan-action.storage-plan-button-current,
+.storage-plan-action.storage-plan-button-current:disabled {
+  border-color: var(--primary) !important;
+  background: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+  opacity: 1 !important;
+}
+
+.storage-plan-action.storage-plan-button-selectable:not(:disabled):hover,
+.storage-plan-action.storage-plan-button-selectable:not(:disabled):focus-visible {
+  border-color: var(--primary) !important;
+  background: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+}

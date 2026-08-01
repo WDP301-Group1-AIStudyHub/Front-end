@@ -2,7 +2,10 @@ import { create } from 'zustand'
 import axios from 'axios'
 import { getStoredToken } from '../services/authStorage'
 import { findOrCreateSubjectByName } from '../services/subjectApi'
+import { buildQuotaErrorMessage } from '../utils/formatStorage'
+import { useStorageStore } from './useStorageStore'
 import type { DocumentItem } from '../types/document'
+import type { StorageQuotaDetails } from '../types/storage'
 
 const API_ORIGIN =
   import.meta.env.VITE_API_BASE_URL?.replace(/\/+$/, '') ??
@@ -113,6 +116,27 @@ export const useUploadStore = create<UploadState>((set, get) => ({
 
     set((state) => ({ uploads: [newItem, ...state.uploads] }))
 
+    // Every upload entry point funnels through here, so one guard covers the
+    // library dialog, the dashboard dropzone and any future caller. The server
+    // is still authoritative; this only avoids a pointless round trip.
+    const capacity = useStorageStore.getState().hasCapacityFor(payload.file.size)
+    if (capacity.known && !capacity.ok) {
+      const message = buildQuotaErrorMessage({
+        availableBytes: capacity.available,
+        packageName: useStorageStore.getState().storage?.package?.name ?? '',
+        quotaBytes: useStorageStore.getState().storage?.quotaBytes ?? 0,
+        requiredBytes: capacity.needed,
+        reservedBytes: useStorageStore.getState().storage?.reservedBytes ?? 0,
+        usedBytes: useStorageStore.getState().storage?.usedBytes ?? 0,
+      })
+      set((state) => ({
+        uploads: state.uploads.map((item) =>
+          item.id === id ? { ...item, status: 'failed', error: message } : item
+        ),
+      }))
+      return
+    }
+
     try {
       // Step 1: Resolve subject name to subjectId
       set((state) => ({
@@ -184,6 +208,7 @@ export const useUploadStore = create<UploadState>((set, get) => ({
             item.id === id ? { ...item, status: 'success', progress: 100 } : item
           ),
         }))
+        useStorageStore.getState().applyUploadedBytes(payload.file.size)
         if (onSuccess) {
           onSuccess()
         }
@@ -194,11 +219,28 @@ export const useUploadStore = create<UploadState>((set, get) => ({
       if (axios.isCancel(err) || (err instanceof Error && err.name === 'CanceledError')) {
         return
       }
-      const errorMessage = axios.isAxiosError<{ message?: string }>(err)
-        ? err.response?.data?.message || err.message
-        : err instanceof Error
-          ? err.message
-          : 'Upload failed'
+      const quotaDetails = axios.isAxiosError<{
+        code?: string
+        details?: StorageQuotaDetails
+      }>(err)
+        ? err.response?.data?.code === 'STORAGE_QUOTA_EXCEEDED'
+          ? err.response?.data?.details
+          : undefined
+        : undefined
+
+      // The server rejected on quota: refresh so the bar reflects the truth
+      // that made it reject, then show the specific numbers instead of a code.
+      if (quotaDetails) {
+        void useStorageStore.getState().loadStorage({ force: true })
+      }
+
+      const errorMessage = quotaDetails
+        ? buildQuotaErrorMessage(quotaDetails)
+        : axios.isAxiosError<{ message?: string }>(err)
+          ? err.response?.data?.message || err.message
+          : err instanceof Error
+            ? err.message
+            : 'Upload failed'
       set((state) => ({
         uploads: state.uploads.map((item) =>
           item.id === id ? { ...item, status: 'failed', error: errorMessage } : item

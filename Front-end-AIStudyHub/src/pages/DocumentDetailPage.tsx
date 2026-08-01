@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/table'
 import {
   deleteDocument,
+  DocumentApiError,
   downloadDocumentFile,
   getDocument,
   listDocumentVersions,
@@ -29,6 +30,8 @@ import {
   updateDocument,
   uploadDocumentVersion,
 } from '../services/documentApi'
+import { buildQuotaErrorMessage, formatStorageBytes } from '../utils/formatStorage'
+import { useStorageStore } from '../store/useStorageStore'
 import { listSubjects, type SubjectItem } from '../services/subjectApi'
 import DocumentShareDialog from '../components/documents/DocumentShareDialog'
 import SharedDocumentSubjectDialog from '../components/documents/SharedDocumentSubjectDialog'
@@ -38,6 +41,10 @@ import type {
   DocumentSubject,
   DocumentVersion,
 } from '../types/document'
+import type { StorageQuotaDetails } from '../types/storage'
+
+/** Matches the multer limit in the backend and Cloudinary's raw-file cap. */
+const MAX_VERSION_FILE_SIZE = 10 * 1024 * 1024
 
 function formatDate(value?: string | null): string {
   if (!value) return 'Unknown'
@@ -281,6 +288,25 @@ export default function DocumentDetailPage() {
     event.preventDefault()
     if (!id || !versionFile) return
 
+    if (versionFile.size > MAX_VERSION_FILE_SIZE) {
+      setError('File must be 10 MB or smaller')
+      return
+    }
+
+    // The server charges the DOCUMENT OWNER, but this client only knows its own
+    // quota. For a shared editor those are different people, so pre-checking
+    // here would wrongly block an editor whose owner has plenty of room. Only
+    // owners get the client-side check; everyone else relies on the 413.
+    if (accessRole === 'OWNER') {
+      const capacity = useStorageStore.getState().hasCapacityFor(versionFile.size)
+      if (capacity.known && !capacity.ok) {
+        setError(
+          `Not enough storage. This file needs ${formatStorageBytes(versionFile.size)} but only ${formatStorageBytes(capacity.available)} is free.`,
+        )
+        return
+      }
+    }
+
     setIsUploadingVersion(true)
     setError(null)
     try {
@@ -299,11 +325,24 @@ export default function DocumentDetailPage() {
       setVersionFile(null)
       setVersionReason('')
       setIsVersionOpen(false)
+      void useStorageStore.getState().loadStorage({ force: true })
     } catch (caughtError) {
+      const quotaDetails =
+        caughtError instanceof DocumentApiError &&
+        caughtError.code === 'STORAGE_QUOTA_EXCEEDED'
+          ? (caughtError.details as StorageQuotaDetails | undefined)
+          : undefined
+
+      if (quotaDetails) {
+        void useStorageStore.getState().loadStorage({ force: true })
+      }
+
       setError(
-        caughtError instanceof Error
-          ? caughtError.message
-          : 'Unable to upload document version',
+        quotaDetails
+          ? buildQuotaErrorMessage(quotaDetails)
+          : caughtError instanceof Error
+            ? caughtError.message
+            : 'Unable to upload document version',
       )
     } finally {
       setIsUploadingVersion(false)

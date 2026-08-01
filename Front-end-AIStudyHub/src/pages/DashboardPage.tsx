@@ -7,10 +7,17 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { CelestialInlineLoader } from '../components/shared/CelestialLoading'
 import { listDocuments } from '../services/documentApi'
 import { getFileBadgeClass } from '../utils/formatters'
+import { formatStorageBytes } from '../utils/formatStorage'
+import { StorageUsageBar } from '../components/storage/StorageUsageBar'
+import { StoragePackageCard } from '../components/storage/StoragePackageCard'
+import { PurchaseConfirmDialog } from '../components/storage/PurchaseConfirmDialog'
+import { useStoragePurchase } from '../hooks/useStoragePurchase'
 import { useUploadStore } from '../store/useUploadStore'
+import { useStorageStore } from '../store/useStorageStore'
 import type { DocumentItem } from '../types/document'
 
-const STORAGE_LIMIT_BYTES = 10 * 1024 * 1024 * 1024
+/** Matches the multer limit in the backend and Cloudinary's raw-file cap. */
+const MAX_FILE_SIZE = 10 * 1024 * 1024
 
 function formatRelativeTime(dateStr: string): string {
   const date = new Date(dateStr)
@@ -26,30 +33,32 @@ function formatRelativeTime(dateStr: string): string {
   return new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' }).format(date)
 }
 
-function formatStorageSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  const kb = bytes / 1024
-  if (kb < 1024) return `${kb.toFixed(1)} KB`
-  const mb = kb / 1024
-  if (mb < 1024) return `${mb.toFixed(1)} MB`
-  const gb = mb / 1024
-  return `${gb.toFixed(2)} GB`
-}
-
 export default function DashboardPage() {
   const [docs, setDocs] = useState<DocumentItem[]>([])
   const [loading, setLoading] = useState(true)
   const [isDragActive, setIsDragActive] = useState(false)
   const [uploadFeedback, setUploadFeedback] = useState<string | null>(null)
 
-  const storageUsedBytes = useMemo(
-    () => docs.reduce((sum, d) => sum + (d.fileSize ?? 0), 0),
-    [docs],
-  )
+  const storage = useStorageStore((state) => state.storage)
+  const storageLoading = useStorageStore((state) => state.loading)
+  const loadStorage = useStorageStore((state) => state.loadStorage)
+  const packages = useStorageStore((state) => state.packages)
+  const currentPackageId = useStorageStore((state) => state.currentPackageId)
+  const loadPackages = useStorageStore((state) => state.loadPackages)
 
-  const storagePercent = useMemo(
-    () => Math.min((storageUsedBytes / STORAGE_LIMIT_BYTES) * 100, 100),
-    [storageUsedBytes],
+  // Same hook the plans page uses, so buying from here behaves identically —
+  // including the post-payment redirect landing back on /dashboard.
+  const { blockReason, confirmPurchase, isSubmitting, setTarget, target } =
+    useStoragePurchase()
+
+  useEffect(() => {
+    void loadStorage()
+    void loadPackages()
+  }, [loadPackages, loadStorage])
+
+  const upgradeOptions = useMemo(
+    () => packages.filter((pkg) => pkg.id !== currentPackageId),
+    [currentPackageId, packages],
   )
 
   const recentDocs = useMemo(
@@ -106,16 +115,45 @@ export default function DashboardPage() {
 
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const files = Array.from(e.dataTransfer.files)
-      setUploadFeedback(`Queueing ${files.length} document(s)...`)
-      
-      for (const file of files) {
+
+      // This dropzone historically had no validation at all — not even the
+      // 10 MB per-file limit the library dialog enforces. Check both here, and
+      // check the batch as a whole so ten files that each fit but together do
+      // not cannot slip through.
+      const oversized = files.filter((file) => file.size > MAX_FILE_SIZE)
+      if (oversized.length > 0) {
+        setUploadFeedback(
+          `${oversized.length} file(s) exceed the 10 MB limit and were skipped: ${oversized.map((f) => f.name).join(', ')}`,
+        )
+      }
+
+      const accepted = files.filter((file) => file.size <= MAX_FILE_SIZE)
+      const totalBytes = accepted.reduce((sum, file) => sum + file.size, 0)
+      const capacity = useStorageStore.getState().hasCapacityFor(totalBytes)
+
+      if (capacity.known && !capacity.ok) {
+        setUploadFeedback(
+          `Not enough storage. These files need ${formatStorageBytes(totalBytes)} but only ${formatStorageBytes(capacity.available)} is free. Delete some documents or upgrade your plan.`,
+        )
+        setTimeout(() => setUploadFeedback(null), 6000)
+        return
+      }
+
+      if (accepted.length === 0) {
+        setTimeout(() => setUploadFeedback(null), 6000)
+        return
+      }
+
+      setUploadFeedback(`Queueing ${accepted.length} document(s)...`)
+
+      for (const file of accepted) {
         const payload = {
           file,
           title: file.name.replace(/\.[^/.]+$/, ""),
           description: "Uploaded via Quick Dropzone",
           subject: "General"
         }
-        
+
         try {
           useUploadStore.getState().processIncomingUpload(payload, docs, () => {
             // refresh library on successful upload
@@ -213,37 +251,87 @@ export default function DashboardPage() {
 
       {/* Bento Grid Layout */}
       <section className="mt-8 grid gap-5 xl:grid-cols-12">
-        {/* Storage card with organic leaf slider */}
+        {/* Storage plan + usage. The plan name is the headline here: without it
+            a user cannot tell what they are paying for or why the cap is what
+            it is. */}
         <article className="botanical-bento flex flex-col justify-between p-6 xl:col-span-4">
           <div className="flex items-start justify-between gap-4">
             <span className="admin-icon-badge">
               <Database className="size-4" />
             </span>
-            <span className="text-xs font-semibold text-muted-foreground">Space Usage</span>
-          </div>
-          
-          <div className="mt-8">
-            {loading ? (
-              <Skeleton className="h-10 w-32" />
-            ) : (
-              <p className="text-4xl font-bold tracking-tight text-foreground">{formatStorageSize(storageUsedBytes)}</p>
-            )}
-            <p className="mt-1 text-xs text-muted-foreground">of 10 GB workspace storage used</p>
+            <span className="text-xs font-semibold text-muted-foreground">
+              Storage plan
+            </span>
           </div>
 
-          <div className="mt-8">
-            {loading ? (
-              <div className="h-2 w-full rounded-full bg-muted animate-pulse" />
+          <div className="mt-6">
+            {storageLoading && !storage ? (
+              <Skeleton className="h-7 w-40" />
             ) : (
-              <div className="relative pt-2">
-                <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-                  <div 
-                    className="h-full rounded-full bg-primary transition-all duration-700 ease-out" 
-                    style={{ width: `${storagePercent.toFixed(1)}%` }} 
-                  />
-                </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-xl font-bold tracking-tight text-foreground">
+                  {storage?.package?.name ?? 'Free'}
+                </p>
+                <span
+                  className={`status-badge ${
+                    storage?.status === 'FULL' || storage?.status === 'CRITICAL'
+                      ? 'status-error'
+                      : storage?.status === 'WARNING'
+                        ? 'status-warning'
+                        : 'status-active'
+                  }`}
+                >
+                  {storage?.status === 'FULL'
+                    ? 'Full'
+                    : storage?.status === 'CRITICAL'
+                      ? 'Almost full'
+                      : storage?.status === 'WARNING'
+                        ? 'Filling up'
+                        : 'Active'}
+                </span>
               </div>
             )}
+            <p className="mt-1 text-xs text-muted-foreground">
+              {storage
+                ? `${formatStorageBytes(storage.availableBytes)} free · 10 MB max per file`
+                : 'loading storage...'}
+            </p>
+          </div>
+
+          <div className="mt-6">
+            {storageLoading && !storage ? (
+              <Skeleton className="h-9 w-28" />
+            ) : (
+              <p className="text-3xl font-bold tracking-tight text-foreground">
+                {formatStorageBytes(storage?.usedBytes ?? 0)}
+                <span className="ml-1 text-base font-medium text-muted-foreground">
+                  / {formatStorageBytes(storage?.quotaBytes ?? 0)}
+                </span>
+              </p>
+            )}
+          </div>
+
+          <div className="mt-4">
+            {storageLoading && !storage ? (
+              <div className="h-2 w-full rounded-full bg-muted animate-pulse" />
+            ) : (
+              <StorageUsageBar
+                quotaBytes={storage?.quotaBytes ?? 0}
+                showLabel={false}
+                status={storage?.status ?? 'OK'}
+                usedBytes={storage?.usedBytes ?? 0}
+              />
+            )}
+            <Link
+              className="mt-4 inline-flex text-xs font-semibold text-primary underline-offset-4 hover:underline"
+              to="/storage"
+            >
+              {storage?.status === 'FULL'
+                ? 'Storage is full — upgrade your plan'
+                : storage?.status === 'CRITICAL' || storage?.status === 'WARNING'
+                  ? 'Running low — compare plans'
+                  : 'Manage plan'}
+            </Link>
           </div>
         </article>
 
@@ -298,6 +386,61 @@ export default function DashboardPage() {
           </div>
         </article>
       </section>
+
+      {/* Upgrade options, so buying never requires leaving the dashboard. Only
+          plans other than the current one are shown — a card that says "this is
+          your plan" is noise here, unlike on the dedicated plans page. */}
+      {upgradeOptions.length > 0 ? (
+        <section className="mt-6">
+          <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-bold tracking-tight">
+                Need more storage?
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Upgrade in a couple of clicks. Your documents stay exactly where
+                they are.
+              </p>
+            </div>
+            <Link
+              className="text-xs font-semibold text-primary underline-offset-4 hover:underline"
+              to="/storage"
+            >
+              Compare all plans
+            </Link>
+          </div>
+
+          <div
+            className={`grid gap-4 grid-cols-1 sm:grid-cols-2 ${
+              upgradeOptions.length >= 3 ? 'lg:grid-cols-3' : ''
+            }`}
+          >
+            {upgradeOptions.map((pkg) => (
+              <StoragePackageCard
+                hideAction={
+                  pkg.priceVnd === 0 &&
+                  Boolean(storage?.package && storage.package.priceVnd > 0)
+                }
+                isCurrent={false}
+                key={pkg.id}
+                onSelect={setTarget}
+                pkg={pkg}
+                unavailableReason={blockReason(pkg)}
+              />
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      <PurchaseConfirmDialog
+        isSubmitting={isSubmitting}
+        onConfirm={confirmPurchase}
+        onOpenChange={(open) => {
+          if (!open) setTarget(null)
+        }}
+        storage={storage}
+        target={target}
+      />
 
       {/* Main Section */}
       <section className="mt-6 grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
