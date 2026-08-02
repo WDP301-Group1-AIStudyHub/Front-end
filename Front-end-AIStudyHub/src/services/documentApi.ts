@@ -5,7 +5,6 @@ import type {
   DocumentShare,
   DocumentSharePermission,
   DocumentSubject,
-  DocumentVersion,
   DocumentsResponse,
   UpdateSharedDocumentProfilePayload,
   UpdateDocumentPayload,
@@ -21,22 +20,11 @@ const API_BASE_URL = API_ORIGIN.replace(/\/api$/, '')
 
 export class DocumentApiError extends Error {
   status: number
-  /** Machine-readable code from the backend, e.g. STORAGE_QUOTA_EXCEEDED. */
-  code?: string
-  /** Structured payload accompanying the code. */
-  details?: Record<string, unknown>
 
-  constructor(
-    message: string,
-    status: number,
-    code?: string,
-    details?: Record<string, unknown>,
-  ) {
+  constructor(message: string, status: number) {
     super(message)
     this.name = 'DocumentApiError'
     this.status = status
-    this.code = code
-    this.details = details
   }
 }
 
@@ -76,10 +64,7 @@ async function request<T>(
   const payload = (await response.json().catch(() => ({
     success: false,
     message: 'Unexpected server response',
-  }))) as ApiResponse<T> & {
-    code?: string
-    details?: Record<string, unknown>
-  }
+  }))) as ApiResponse<T>
 
   if (!response.ok) {
     if (response.status === 401) {
@@ -89,12 +74,7 @@ async function request<T>(
       }
     }
 
-    throw new DocumentApiError(
-      payload.message || 'Request failed',
-      response.status,
-      payload.code,
-      payload.details,
-    )
+    throw new DocumentApiError(payload.message || 'Request failed', response.status)
   }
 
   return payload
@@ -253,50 +233,6 @@ export async function getDocument(documentId: string): Promise<DocumentDetail> {
   return normalizeDocument(
     unwrapData(response, 'Document response was empty'),
   ) as DocumentDetail
-}
-
-export async function listDocumentVersions(
-  documentId: string,
-): Promise<DocumentVersion[]> {
-  const response = await request<DocumentVersion[]>(
-    `/api/documents/${documentId}/versions?limit=100`,
-  )
-
-  return unwrapData(response, 'Document versions response was empty')
-}
-
-export async function uploadDocumentVersion(
-  documentId: string,
-  payload: {
-    file: File
-    uploadMode: 'OVERRIDE' | 'APPEND'
-    uploadReason?: string
-    makeActive: boolean
-  },
-): Promise<DocumentVersion> {
-  const formData = new FormData()
-  formData.set('file', payload.file)
-  formData.set('uploadMode', payload.uploadMode)
-  formData.set('makeActive', String(payload.makeActive))
-  if (payload.uploadReason?.trim()) {
-    formData.set('uploadReason', payload.uploadReason.trim())
-  }
-
-  const response = await request<DocumentVersion>(
-    `/api/documents/${documentId}/versions`,
-    { body: formData, method: 'POST' },
-  )
-  return unwrapData(response, 'Uploaded version response was empty')
-}
-
-export async function deleteDocumentVersion(
-  documentId: string,
-  versionId: string,
-): Promise<void> {
-  await request<unknown>(
-    `/api/documents/${documentId}/versions/${versionId}`,
-    { method: 'DELETE' },
-  )
 }
 
 export async function uploadDocument({

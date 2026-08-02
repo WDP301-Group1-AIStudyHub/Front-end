@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ArrowLeft, BookOpen, Download, FileText, Pencil, Star, Trash2, UploadCloud, Users } from 'lucide-react'
+import { ArrowLeft, BookOpen, Download, Pencil, Star, Trash2, Users } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import {
@@ -13,26 +13,12 @@ import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Textarea } from '@/components/ui/textarea'
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import {
-  deleteDocumentVersion,
   deleteDocument,
-  DocumentApiError,
   downloadDocumentFile,
   getDocument,
-  listDocumentVersions,
   setDocumentStar,
   updateDocument,
-  uploadDocumentVersion,
 } from '../services/documentApi'
-import { buildQuotaErrorMessage, formatStorageBytes } from '../utils/formatStorage'
-import { useStorageStore } from '../store/useStorageStore'
 import { listSubjects, type SubjectItem } from '../services/subjectApi'
 import DocumentShareDialog from '../components/documents/DocumentShareDialog'
 import SharedDocumentSubjectDialog from '../components/documents/SharedDocumentSubjectDialog'
@@ -40,12 +26,7 @@ import { getStoredUser } from '../services/authStorage'
 import type {
   DocumentDetail,
   DocumentSubject,
-  DocumentVersion,
 } from '../types/document'
-import type { StorageQuotaDetails } from '../types/storage'
-
-/** Matches the multer limit in the backend and Cloudinary's raw-file cap. */
-const MAX_VERSION_FILE_SIZE = 10 * 1024 * 1024
 
 function formatDate(value?: string | null): string {
   if (!value) return 'Unknown'
@@ -67,16 +48,6 @@ function formatFileSize(bytes?: number): string {
   )
   const value = bytes / 1024 ** index
   return `${value >= 10 || index === 0 ? value.toFixed(0) : value.toFixed(1)} ${units[index]}`
-}
-
-function statusClass(status?: string): string {
-  const normalized = status?.toUpperCase()
-  if (normalized === 'ACTIVE' || normalized === 'INDEXED' || normalized === 'COMPLETED') {
-    return 'status-success'
-  }
-  if (normalized === 'FAILED' || normalized === 'DELETED') return 'status-error'
-  if (normalized === 'PROCESSING' || normalized === 'PENDING') return 'status-warning'
-  return 'status-info'
 }
 
 function InfoCard({
@@ -108,26 +79,18 @@ export default function DocumentDetailPage() {
   const navigate = useNavigate()
   const currentUser = getStoredUser()
   const [document, setDocument] = useState<DocumentDetail | null>(null)
-  const [versions, setVersions] = useState<DocumentVersion[]>([])
   const [subjects, setSubjects] = useState<SubjectItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [isSubjectProfileOpen, setIsSubjectProfileOpen] = useState(false)
   const [isShareOpen, setIsShareOpen] = useState(false)
-  const [isVersionOpen, setIsVersionOpen] = useState(false)
-  const [isUploadingVersion, setIsUploadingVersion] = useState(false)
   const [isSavingEdit, setIsSavingEdit] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
-  const [deletingVersionId, setDeletingVersionId] = useState<string | null>(null)
   const [isStarring, setIsStarring] = useState(false)
   const [editTitle, setEditTitle] = useState('')
   const [editDescription, setEditDescription] = useState('')
   const [editSubjectId, setEditSubjectId] = useState('')
   const [editVisibility, setEditVisibility] = useState<'PUBLIC' | 'PRIVATE'>('PRIVATE')
-  const [versionFile, setVersionFile] = useState<File | null>(null)
-  const [versionMode, setVersionMode] = useState<'OVERRIDE' | 'APPEND'>('OVERRIDE')
-  const [versionReason, setVersionReason] = useState('')
-  const [makeVersionActive, setMakeVersionActive] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -143,13 +106,11 @@ export default function DocumentDetailPage() {
 
     Promise.all([
       getDocument(id),
-      listDocumentVersions(id),
       listSubjects().catch(() => []),
     ])
-      .then(([nextDocument, nextVersions, nextSubjects]) => {
+      .then(([nextDocument, nextSubjects]) => {
         if (cancelled) return
         setDocument(nextDocument)
-        setVersions(nextVersions)
         setSubjects(nextSubjects)
       })
       .catch((caughtError) => {
@@ -286,100 +247,6 @@ export default function DocumentDetailPage() {
     }
   }
 
-  async function submitVersion(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    if (!id || !versionFile) return
-
-    if (versionFile.size > MAX_VERSION_FILE_SIZE) {
-      setError('File must be 10 MB or smaller')
-      return
-    }
-
-    // The server charges the DOCUMENT OWNER, but this client only knows its own
-    // quota. For a shared editor those are different people, so pre-checking
-    // here would wrongly block an editor whose owner has plenty of room. Only
-    // owners get the client-side check; everyone else relies on the 413.
-    if (accessRole === 'OWNER') {
-      const capacity = useStorageStore.getState().hasCapacityFor(versionFile.size)
-      if (capacity.known && !capacity.ok) {
-        setError(
-          `Not enough storage. This file needs ${formatStorageBytes(versionFile.size)} but only ${formatStorageBytes(capacity.available)} is free.`,
-        )
-        return
-      }
-    }
-
-    setIsUploadingVersion(true)
-    setError(null)
-    try {
-      await uploadDocumentVersion(id, {
-        file: versionFile,
-        makeActive: makeVersionActive,
-        uploadMode: versionMode,
-        uploadReason: versionReason,
-      })
-      const [nextDocument, nextVersions] = await Promise.all([
-        getDocument(id),
-        listDocumentVersions(id),
-      ])
-      setDocument(nextDocument)
-      setVersions(nextVersions)
-      setVersionFile(null)
-      setVersionReason('')
-      setIsVersionOpen(false)
-      void useStorageStore.getState().loadStorage({ force: true })
-    } catch (caughtError) {
-      const quotaDetails =
-        caughtError instanceof DocumentApiError &&
-        caughtError.code === 'STORAGE_QUOTA_EXCEEDED'
-          ? (caughtError.details as StorageQuotaDetails | undefined)
-          : undefined
-
-      if (quotaDetails) {
-        void useStorageStore.getState().loadStorage({ force: true })
-      }
-
-      setError(
-        quotaDetails
-          ? buildQuotaErrorMessage(quotaDetails)
-          : caughtError instanceof Error
-            ? caughtError.message
-            : 'Unable to upload document version',
-      )
-    } finally {
-      setIsUploadingVersion(false)
-    }
-  }
-
-  async function confirmDeleteVersion(version: DocumentVersion) {
-    if (!id || !canManage || version.isActive) return
-
-    const ok = window.confirm(
-      `Delete version v${version.versionNumber} (${version.fileName})? This action cannot be undone.`,
-    )
-    if (!ok) return
-
-    setDeletingVersionId(version.id)
-    setError(null)
-    try {
-      await deleteDocumentVersion(id, version.id)
-      const [nextDocument, nextVersions] = await Promise.all([
-        getDocument(id),
-        listDocumentVersions(id),
-      ])
-      setDocument(nextDocument)
-      setVersions(nextVersions)
-    } catch (caughtError) {
-      setError(
-        caughtError instanceof Error
-          ? caughtError.message
-          : 'Unable to delete document version',
-      )
-    } finally {
-      setDeletingVersionId(null)
-    }
-  }
-
   return (
     <main className="botanical-page flex min-h-svh w-full min-w-0 flex-col overflow-y-auto text-foreground">
       <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-5 py-6 sm:px-8 lg:px-10">
@@ -415,12 +282,6 @@ export default function DocumentDetailPage() {
                 <BookOpen data-icon="inline-start" aria-hidden="true" />
                 Assign subject
               </Button>
-            )}
-            {canEdit && (
-            <Button disabled={!document} onClick={() => setIsVersionOpen(true)} type="button" variant="secondary">
-              <UploadCloud data-icon="inline-start" aria-hidden="true" />
-              Upload version
-            </Button>
             )}
             {canEdit && (
             <Button disabled={!document} onClick={openEdit} type="button" variant="secondary">
@@ -488,74 +349,10 @@ export default function DocumentDetailPage() {
                   { label: 'File size', value: formatFileSize(document.fileSize) },
                   { label: 'Extraction', value: document.extractionStatus || 'Unknown' },
                   { label: 'Chunks', value: document.totalChunks ?? 0 },
-                  { label: 'Versions', value: document.totalVersions ?? versions.length },
                   { label: 'Last indexed', value: formatDate(document.lastIndexedAt) },
                 ]}
               />
             </div>
-
-            <section className="botanical-bento moonlit-table tone-surface tone-sapphire overflow-x-auto">
-              <div className="flex items-center gap-3 p-5">
-                <FileText aria-hidden="true" />
-                <h2 className="text-lg font-black">Version history</h2>
-              </div>
-              <Table className="min-w-[860px]">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Version</TableHead>
-                    <TableHead>File</TableHead>
-                    <TableHead>Upload mode</TableHead>
-                    <TableHead>Processing</TableHead>
-                    <TableHead>Chunks</TableHead>
-                    <TableHead>Uploaded</TableHead>
-                    {canManage ? <TableHead className="text-right">Actions</TableHead> : null}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {versions.map((version) => (
-                    <TableRow key={version.id}>
-                      <TableCell className="font-bold">
-                        v{version.versionNumber}{version.isActive ? ' (Active)' : ''}
-                      </TableCell>
-                      <TableCell>{version.fileName}</TableCell>
-                      <TableCell>{version.uploadMode}</TableCell>
-                      <TableCell>
-                        <span className={`status-badge ${statusClass(version.processingStatus)}`}>
-                          {version.processingStatus || 'UNKNOWN'}
-                        </span>
-                      </TableCell>
-                      <TableCell>{version.totalChunks}</TableCell>
-                      <TableCell>{formatDate(version.createdAt)}</TableCell>
-                      {canManage ? (
-                        <TableCell className="text-right">
-                          {version.isActive ? (
-                            <span className="text-xs font-semibold text-muted-foreground">
-                              Active version
-                            </span>
-                          ) : (
-                            <Button
-                              disabled={deletingVersionId === version.id}
-                              onClick={() => void confirmDeleteVersion(version)}
-                              size="xs"
-                              type="button"
-                              variant="destructive"
-                            >
-                              <Trash2 data-icon="inline-start" aria-hidden="true" />
-                              {deletingVersionId === version.id ? 'Deleting...' : 'Delete'}
-                            </Button>
-                          )}
-                        </TableCell>
-                      ) : null}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              {versions.length === 0 ? (
-                <div className="border-t border-border p-8 text-center text-sm text-muted-foreground">
-                  No version history available.
-                </div>
-              ) : null}
-            </section>
 
           </>
         ) : null}
@@ -630,69 +427,6 @@ export default function DocumentDetailPage() {
               </Button>
               <Button disabled={isSavingEdit} type="submit">
                 {isSavingEdit ? 'Saving...' : 'Save changes'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-      <Dialog open={isVersionOpen} onOpenChange={setIsVersionOpen}>
-        <DialogContent>
-          <form className="flex flex-col gap-4" onSubmit={submitVersion}>
-            <DialogHeader>
-              <DialogTitle>Upload new version</DialogTitle>
-            </DialogHeader>
-            <label className="flex flex-col gap-2 text-sm font-semibold">
-              Document file
-              <Input
-                accept=".pdf,.docx,.pptx,.xlsx,.txt,.md"
-                disabled={isUploadingVersion}
-                onChange={(event) => setVersionFile(event.target.files?.[0] || null)}
-                required
-                type="file"
-              />
-            </label>
-            <label className="flex flex-col gap-2 text-sm font-semibold">
-              Upload mode
-              <select
-                className="h-9 rounded-md border border-input bg-background px-3 text-sm outline-none"
-                disabled={isUploadingVersion}
-                onChange={(event) => {
-                  const nextMode = event.target.value === 'APPEND' ? 'APPEND' : 'OVERRIDE'
-                  setVersionMode(nextMode)
-                  if (nextMode === 'OVERRIDE') setMakeVersionActive(true)
-                }}
-                value={versionMode}
-              >
-                <option value="OVERRIDE">Replace active content</option>
-                <option value="APPEND">Append to existing content</option>
-              </select>
-            </label>
-            <label className="flex flex-col gap-2 text-sm font-semibold">
-              Change note
-              <Textarea
-                disabled={isUploadingVersion || versionMode === 'OVERRIDE'}
-                maxLength={500}
-                onChange={(event) => setVersionReason(event.target.value)}
-                placeholder="What changed in this version?"
-                value={versionReason}
-              />
-            </label>
-            <label className="flex items-center gap-2 text-sm font-semibold">
-              <input
-                checked={makeVersionActive}
-                className="size-4 accent-primary"
-                disabled={isUploadingVersion}
-                onChange={(event) => setMakeVersionActive(event.target.checked)}
-                type="checkbox"
-              />
-              Make this the active version
-            </label>
-            <DialogFooter>
-              <Button disabled={isUploadingVersion} onClick={() => setIsVersionOpen(false)} type="button" variant="secondary">
-                Cancel
-              </Button>
-              <Button disabled={!versionFile || isUploadingVersion} type="submit">
-                {isUploadingVersion ? 'Uploading...' : 'Upload version'}
               </Button>
             </DialogFooter>
           </form>
