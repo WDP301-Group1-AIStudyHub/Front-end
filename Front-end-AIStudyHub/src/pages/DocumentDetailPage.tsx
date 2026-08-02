@@ -21,6 +21,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import {
+  deleteDocumentVersion,
   deleteDocument,
   DocumentApiError,
   downloadDocumentFile,
@@ -117,6 +118,7 @@ export default function DocumentDetailPage() {
   const [isUploadingVersion, setIsUploadingVersion] = useState(false)
   const [isSavingEdit, setIsSavingEdit] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [deletingVersionId, setDeletingVersionId] = useState<string | null>(null)
   const [isStarring, setIsStarring] = useState(false)
   const [editTitle, setEditTitle] = useState('')
   const [editDescription, setEditDescription] = useState('')
@@ -349,6 +351,35 @@ export default function DocumentDetailPage() {
     }
   }
 
+  async function confirmDeleteVersion(version: DocumentVersion) {
+    if (!id || !canManage || version.isActive) return
+
+    const ok = window.confirm(
+      `Delete version v${version.versionNumber} (${version.fileName})? This action cannot be undone.`,
+    )
+    if (!ok) return
+
+    setDeletingVersionId(version.id)
+    setError(null)
+    try {
+      await deleteDocumentVersion(id, version.id)
+      const [nextDocument, nextVersions] = await Promise.all([
+        getDocument(id),
+        listDocumentVersions(id),
+      ])
+      setDocument(nextDocument)
+      setVersions(nextVersions)
+    } catch (caughtError) {
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : 'Unable to delete document version',
+      )
+    } finally {
+      setDeletingVersionId(null)
+    }
+  }
+
   return (
     <main className="botanical-page flex min-h-svh w-full min-w-0 flex-col overflow-y-auto text-foreground">
       <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-5 py-6 sm:px-8 lg:px-10">
@@ -468,7 +499,7 @@ export default function DocumentDetailPage() {
                 <FileText aria-hidden="true" />
                 <h2 className="text-lg font-black">Version history</h2>
               </div>
-              <Table className="min-w-[760px]">
+              <Table className="min-w-[860px]">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Version</TableHead>
@@ -477,6 +508,7 @@ export default function DocumentDetailPage() {
                     <TableHead>Processing</TableHead>
                     <TableHead>Chunks</TableHead>
                     <TableHead>Uploaded</TableHead>
+                    {canManage ? <TableHead className="text-right">Actions</TableHead> : null}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -494,6 +526,26 @@ export default function DocumentDetailPage() {
                       </TableCell>
                       <TableCell>{version.totalChunks}</TableCell>
                       <TableCell>{formatDate(version.createdAt)}</TableCell>
+                      {canManage ? (
+                        <TableCell className="text-right">
+                          {version.isActive ? (
+                            <span className="text-xs font-semibold text-muted-foreground">
+                              Active version
+                            </span>
+                          ) : (
+                            <Button
+                              disabled={deletingVersionId === version.id}
+                              onClick={() => void confirmDeleteVersion(version)}
+                              size="xs"
+                              type="button"
+                              variant="destructive"
+                            >
+                              <Trash2 data-icon="inline-start" aria-hidden="true" />
+                              {deletingVersionId === version.id ? 'Deleting...' : 'Delete'}
+                            </Button>
+                          )}
+                        </TableCell>
+                      ) : null}
                     </TableRow>
                   ))}
                 </TableBody>

@@ -289,6 +289,16 @@ export async function uploadDocumentVersion(
   return unwrapData(response, 'Uploaded version response was empty')
 }
 
+export async function deleteDocumentVersion(
+  documentId: string,
+  versionId: string,
+): Promise<void> {
+  await request<unknown>(
+    `/api/documents/${documentId}/versions/${versionId}`,
+    { method: 'DELETE' },
+  )
+}
+
 export async function uploadDocument({
   description,
   file,
