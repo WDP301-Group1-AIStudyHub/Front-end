@@ -4,12 +4,15 @@ import { BrowserRouter } from "react-router-dom";
 import "./index.css";
 import App from "./App.tsx";
 import { Toaster } from "@/components/ui/sonner";
+import { ToastProvider } from "./hooks/useToast.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
-      <App />
-      <Toaster theme="light" />
+      <ToastProvider>
+        <App />
+        <Toaster theme="light" />
+      </ToastProvider>
     </BrowserRouter>
   </StrictMode>,
 );
