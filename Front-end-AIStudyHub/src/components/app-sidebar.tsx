@@ -16,6 +16,7 @@ import {
   SearchIcon,
   PlusIcon,
   SparklesIcon,
+  HardDrive,
 } from "lucide-react";
 
 import { useNavigate, useLocation, Link } from "react-router-dom";
@@ -146,6 +147,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: "/subjects",
       icon: <BookMarked />,
       isActive: activePath === "/subjects",
+    },
+    {
+      title: "Storage",
+      url: "/storage",
+      icon: <HardDrive />,
+      isActive: activePath === "/storage",
     },
     {
       title: "Study Materials",

@@ -96,6 +96,8 @@ import SharedDocumentSubjectDialog from "@/components/documents/SharedDocumentSu
 import { Badge } from "@/components/ui/badge";
 import { IconTile } from "@/components/shared/IconTile";
 import DocumentPreviewPage from "@/pages/DocumentPreviewPage";
+import { formatStorageBytes } from "../utils/formatStorage";
+import { useStorageStore } from "../store/useStorageStore";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const SEARCH_DEBOUNCE_MS = 350;
@@ -291,7 +293,14 @@ function getUploadErrors(
   } else if (file.size > MAX_FILE_SIZE) {
     errors.file = "Document must be 10 MB or smaller";
   } else {
-    errors.file = null;
+    // Tell the user before they submit rather than after a round trip. The
+    // check reports "unknown" until quota loads, in which case the server
+    // decides — a permissive client here is safe.
+    const capacity = useStorageStore.getState().hasCapacityFor(file.size);
+    errors.file =
+      capacity.known && !capacity.ok
+        ? `Not enough storage. This file needs ${formatStorageBytes(file.size)} but only ${formatStorageBytes(capacity.available)} is free.`
+        : null;
   }
 
   // Title validation

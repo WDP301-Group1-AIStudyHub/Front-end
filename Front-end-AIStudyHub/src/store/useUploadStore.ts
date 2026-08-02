@@ -1,47 +1,59 @@
-import { create } from 'zustand'
-import axios from 'axios'
-import { getStoredToken } from '@/services/authStorage'
-import { findOrCreateSubjectByName } from '@/services/subjectApi'
-import type { DocumentItem } from '@/types/document'
+import { create } from "zustand";
+import axios from "axios";
+import { getStoredToken } from "../services/authStorage";
+import { findOrCreateSubjectByName } from "../services/subjectApi";
+import { buildQuotaErrorMessage } from "../utils/formatStorage";
+import { useStorageStore } from "./useStorageStore";
+import type { DocumentItem } from "../types/document";
+import type { StorageQuotaDetails } from "../types/storage";
 
-const API_ORIGIN =
-  import.meta.env.VITE_API_BASE_URL?.replace(/\/+$/, '') ??
-  ''
-const API_BASE_URL = API_ORIGIN.replace(/\/api$/, '')
+const API_ORIGIN = import.meta.env.VITE_API_BASE_URL?.replace(/\/+$/, "") ?? "";
+const API_BASE_URL = API_ORIGIN.replace(/\/api$/, "");
 
 export interface UploadItem {
-  id: string
-  fileName: string
-  progress: number
-  status: 'pending' | 'uploading' | 'processing' | 'success' | 'failed'
-  error?: string
-  abortController?: AbortController
+  id: string;
+  fileName: string;
+  progress: number;
+  status: "pending" | "uploading" | "processing" | "success" | "failed";
+  error?: string;
+  abortController?: AbortController;
 }
 
 interface UploadDocumentPayload {
-  file: File
-  title: string
-  description?: string
-  subject?: string
+  file: File;
+  title: string;
+  description?: string;
+  subject?: string;
 }
 
 export interface ConflictItem {
-  id: string
-  payload: UploadDocumentPayload
-  existingDocumentMeta: DocumentItem
-  onSuccess?: () => void
+  id: string;
+  payload: UploadDocumentPayload;
+  existingDocumentMeta: DocumentItem;
+  onSuccess?: () => void;
 }
 
 interface UploadState {
-  uploads: UploadItem[]
-  stagedConflicts: Record<string, ConflictItem>
-  uploadFile: (payload: UploadDocumentPayload, onSuccess?: () => void, overwriteId?: string) => Promise<void>
-  processIncomingUpload: (payload: UploadDocumentPayload, existingDocuments: DocumentItem[], onSuccess?: () => void) => void
-  resolveConflict: (conflictId: string, action: 'REPLACE' | 'KEEP_BOTH' | 'CANCEL') => void
-  cancelUpload: (id: string) => void
-  cancelAll: () => void
-  removeUpload: (id: string) => void
-  clearFinished: () => void
+  uploads: UploadItem[];
+  stagedConflicts: Record<string, ConflictItem>;
+  uploadFile: (
+    payload: UploadDocumentPayload,
+    onSuccess?: () => void,
+    overwriteId?: string,
+  ) => Promise<void>;
+  processIncomingUpload: (
+    payload: UploadDocumentPayload,
+    existingDocuments: DocumentItem[],
+    onSuccess?: () => void,
+  ) => void;
+  resolveConflict: (
+    conflictId: string,
+    action: "REPLACE" | "KEEP_BOTH" | "CANCEL",
+  ) => void;
+  cancelUpload: (id: string) => void;
+  cancelAll: () => void;
+  removeUpload: (id: string) => void;
+  clearFinished: () => void;
 }
 
 export const useUploadStore = create<UploadState>((set, get) => ({
@@ -50,11 +62,13 @@ export const useUploadStore = create<UploadState>((set, get) => ({
 
   processIncomingUpload: (payload, existingDocuments, onSuccess) => {
     const duplicate = existingDocuments.find(
-      (doc) => doc.fileName.trim().toLowerCase() === payload.file.name.trim().toLowerCase()
-    )
+      (doc) =>
+        doc.fileName.trim().toLowerCase() ===
+        payload.file.name.trim().toLowerCase(),
+    );
 
     if (duplicate) {
-      const conflictId = crypto.randomUUID()
+      const conflictId = crypto.randomUUID();
       set((state) => ({
         stagedConflicts: {
           ...state.stagedConflicts,
@@ -65,197 +79,257 @@ export const useUploadStore = create<UploadState>((set, get) => ({
             onSuccess,
           },
         },
-      }))
-      return
+      }));
+      return;
     }
 
-    get().uploadFile(payload, onSuccess)
+    get().uploadFile(payload, onSuccess);
   },
 
   resolveConflict: (conflictId, action) => {
-    const conflict = get().stagedConflicts[conflictId]
-    if (!conflict) return
+    const conflict = get().stagedConflicts[conflictId];
+    if (!conflict) return;
 
-    const { payload, existingDocumentMeta, onSuccess } = conflict
+    const { payload, existingDocumentMeta, onSuccess } = conflict;
 
     set((state) => {
-      const updated = { ...state.stagedConflicts }
-      delete updated[conflictId]
-      return { stagedConflicts: updated }
-    })
+      const updated = { ...state.stagedConflicts };
+      delete updated[conflictId];
+      return { stagedConflicts: updated };
+    });
 
-    if (action === 'REPLACE') {
-      get().uploadFile(payload, onSuccess, existingDocumentMeta.id)
-    } else if (action === 'KEEP_BOTH') {
-      const file = payload.file
-      const dotIndex = file.name.lastIndexOf(".")
-      const name = dotIndex !== -1 ? file.name.substring(0, dotIndex) : file.name
-      const ext = dotIndex !== -1 ? file.name.substring(dotIndex) : ""
-      const uniqueName = `${name} (1)${ext}`
+    if (action === "REPLACE") {
+      get().uploadFile(payload, onSuccess, existingDocumentMeta.id);
+    } else if (action === "KEEP_BOTH") {
+      const file = payload.file;
+      const dotIndex = file.name.lastIndexOf(".");
+      const name =
+        dotIndex !== -1 ? file.name.substring(0, dotIndex) : file.name;
+      const ext = dotIndex !== -1 ? file.name.substring(dotIndex) : "";
+      const uniqueName = `${name} (1)${ext}`;
 
-      const renamedFile = new File([file], uniqueName, { type: file.type })
-      const renamedPayload = { ...payload, file: renamedFile }
-      get().uploadFile(renamedPayload, onSuccess)
+      const renamedFile = new File([file], uniqueName, { type: file.type });
+      const renamedPayload = { ...payload, file: renamedFile };
+      get().uploadFile(renamedPayload, onSuccess);
     }
   },
 
   uploadFile: async (payload, onSuccess, overwriteId) => {
-    const id = crypto.randomUUID()
-    const abortController = new AbortController()
+    const id = crypto.randomUUID();
+    const abortController = new AbortController();
 
     const newItem: UploadItem = {
       id,
       fileName: payload.file.name,
       progress: 0,
-      status: 'pending',
+      status: "pending",
       abortController,
-    }
+    };
 
-    set((state) => ({ uploads: [newItem, ...state.uploads] }))
+    set((state) => ({ uploads: [newItem, ...state.uploads] }));
+
+    // Every upload entry point funnels through here, so one guard covers the
+    // library dialog, the dashboard dropzone and any future caller. The server
+    // is still authoritative; this only avoids a pointless round trip.
+    const capacity = useStorageStore
+      .getState()
+      .hasCapacityFor(payload.file.size);
+    if (capacity.known && !capacity.ok) {
+      const message = buildQuotaErrorMessage({
+        availableBytes: capacity.available,
+        packageName: useStorageStore.getState().storage?.package?.name ?? "",
+        quotaBytes: useStorageStore.getState().storage?.quotaBytes ?? 0,
+        requiredBytes: capacity.needed,
+        reservedBytes: useStorageStore.getState().storage?.reservedBytes ?? 0,
+        usedBytes: useStorageStore.getState().storage?.usedBytes ?? 0,
+      });
+      set((state) => ({
+        uploads: state.uploads.map((item) =>
+          item.id === id ? { ...item, status: "failed", error: message } : item,
+        ),
+      }));
+      return;
+    }
 
     try {
       // Step 1: Resolve subject name to subjectId
       set((state) => ({
         uploads: state.uploads.map((item) =>
-          item.id === id ? { ...item, status: 'processing', progress: 5 } : item
+          item.id === id
+            ? { ...item, status: "processing", progress: 5 }
+            : item,
         ),
-      }))
+      }));
 
-      let subjectId = ''
+      let subjectId = "";
       if (payload.subject?.trim()) {
-        subjectId = await findOrCreateSubjectByName(payload.subject.trim())
+        subjectId = await findOrCreateSubjectByName(payload.subject.trim());
       } else {
-        throw new Error('Subject is required')
+        throw new Error("Subject is required");
       }
 
       // Step 2: Upload binary using Axios
       set((state) => ({
         uploads: state.uploads.map((item) =>
-          item.id === id ? { ...item, status: 'uploading', progress: 10 } : item
+          item.id === id
+            ? { ...item, status: "uploading", progress: 10 }
+            : item,
         ),
-      }))
+      }));
 
-      const formData = new FormData()
-      formData.set('file', payload.file)
-      formData.set('title', payload.title.trim())
-      formData.set('subjectId', subjectId)
+      const formData = new FormData();
+      formData.set("file", payload.file);
+      formData.set("title", payload.title.trim());
+      formData.set("subjectId", subjectId);
       if (payload.description?.trim()) {
-        formData.set('description', payload.description.trim())
+        formData.set("description", payload.description.trim());
       }
       if (payload.subject?.trim()) {
-        formData.set('subject', payload.subject.trim())
+        formData.set("subject", payload.subject.trim());
       }
       if (overwriteId) {
-        formData.set('overwriteId', overwriteId)
+        formData.set("overwriteId", overwriteId);
       }
 
-      const token = getStoredToken()
-      const headers: Record<string, string> = {}
+      const token = getStoredToken();
+      const headers: Record<string, string> = {};
       if (token) {
-        headers['Authorization'] = `Bearer ${token}`
+        headers["Authorization"] = `Bearer ${token}`;
       }
 
-      const response = await axios.post(`${API_BASE_URL}/api/documents/upload`, formData, {
-        headers,
-        signal: abortController.signal,
-        onUploadProgress: (progressEvent) => {
-          if (progressEvent.total) {
-            const percentage = Math.round((progressEvent.loaded * 100) / progressEvent.total)
-            set((state) => ({
-              uploads: state.uploads.map((item) => {
-                if (item.id === id) {
-                  const status = percentage >= 100 ? 'processing' : 'uploading'
-                  return {
-                    ...item,
-                    progress: Math.min(percentage, 99),
-                    status,
+      const response = await axios.post(
+        `${API_BASE_URL}/api/documents/upload`,
+        formData,
+        {
+          headers,
+          signal: abortController.signal,
+          onUploadProgress: (progressEvent) => {
+            if (progressEvent.total) {
+              const percentage = Math.round(
+                (progressEvent.loaded * 100) / progressEvent.total,
+              );
+              set((state) => ({
+                uploads: state.uploads.map((item) => {
+                  if (item.id === id) {
+                    const status =
+                      percentage >= 100 ? "processing" : "uploading";
+                    return {
+                      ...item,
+                      progress: Math.min(percentage, 99),
+                      status,
+                    };
                   }
-                }
-                return item
-              }),
-            }))
-          }
+                  return item;
+                }),
+              }));
+            }
+          },
         },
-      })
+      );
 
       if (response.data?.success) {
         set((state) => ({
           uploads: state.uploads.map((item) =>
-            item.id === id ? { ...item, status: 'success', progress: 100 } : item
+            item.id === id
+              ? { ...item, status: "success", progress: 100 }
+              : item,
           ),
-        }))
+        }));
+        useStorageStore.getState().applyUploadedBytes(payload.file.size);
         if (onSuccess) {
-          onSuccess()
+          onSuccess();
         }
       } else {
-        throw new Error(response.data?.message || 'Server upload failed')
+        throw new Error(response.data?.message || "Server upload failed");
       }
     } catch (err: unknown) {
-      if (axios.isCancel(err) || (err instanceof Error && err.name === 'CanceledError')) {
-        return
+      if (
+        axios.isCancel(err) ||
+        (err instanceof Error && err.name === "CanceledError")
+      ) {
+        return;
       }
-      const errorMessage = axios.isAxiosError<{ message?: string }>(err)
-        ? err.response?.data?.message || err.message
-        : err instanceof Error
-          ? err.message
-          : 'Upload failed'
+      const quotaDetails = axios.isAxiosError<{
+        code?: string;
+        details?: StorageQuotaDetails;
+      }>(err)
+        ? err.response?.data?.code === "STORAGE_QUOTA_EXCEEDED"
+          ? err.response?.data?.details
+          : undefined
+        : undefined;
+
+      // The server rejected on quota: refresh so the bar reflects the truth
+      // that made it reject, then show the specific numbers instead of a code.
+      if (quotaDetails) {
+        void useStorageStore.getState().loadStorage({ force: true });
+      }
+
+      const errorMessage = quotaDetails
+        ? buildQuotaErrorMessage(quotaDetails)
+        : axios.isAxiosError<{ message?: string }>(err)
+          ? err.response?.data?.message || err.message
+          : err instanceof Error
+            ? err.message
+            : "Upload failed";
       set((state) => ({
         uploads: state.uploads.map((item) =>
-          item.id === id ? { ...item, status: 'failed', error: errorMessage } : item
+          item.id === id
+            ? { ...item, status: "failed", error: errorMessage }
+            : item,
         ),
-      }))
+      }));
     }
   },
 
   cancelUpload: (id) => {
     set((state) => {
-      const item = state.uploads.find((u) => u.id === id)
+      const item = state.uploads.find((u) => u.id === id);
       if (
         item &&
-        (item.status === 'uploading' ||
-          item.status === 'processing' ||
-          item.status === 'pending')
+        (item.status === "uploading" ||
+          item.status === "processing" ||
+          item.status === "pending")
       ) {
-        item.abortController?.abort()
+        item.abortController?.abort();
         return {
           uploads: state.uploads.map((u) =>
             u.id === id
-              ? { ...u, status: 'failed', error: 'Cancelled by user' }
-              : u
+              ? { ...u, status: "failed", error: "Cancelled by user" }
+              : u,
           ),
-        }
+        };
       }
-      return state
-    })
+      return state;
+    });
   },
 
   cancelAll: () => {
-    const { uploads, cancelUpload } = get()
+    const { uploads, cancelUpload } = get();
     uploads.forEach((item) => {
       if (
-        item.status === 'uploading' ||
-        item.status === 'processing' ||
-        item.status === 'pending'
+        item.status === "uploading" ||
+        item.status === "processing" ||
+        item.status === "pending"
       ) {
-        cancelUpload(item.id)
+        cancelUpload(item.id);
       }
-    })
+    });
   },
 
   removeUpload: (id) => {
     set((state) => ({
       uploads: state.uploads.filter((u) => u.id !== id),
-    }))
+    }));
   },
 
   clearFinished: () => {
     set((state) => ({
       uploads: state.uploads.filter(
         (u) =>
-          u.status === 'uploading' ||
-          u.status === 'processing' ||
-          u.status === 'pending'
+          u.status === "uploading" ||
+          u.status === "processing" ||
+          u.status === "pending",
       ),
-    }))
+    }));
   },
-}))
+}));

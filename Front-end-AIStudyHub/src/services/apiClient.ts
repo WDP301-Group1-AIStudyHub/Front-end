@@ -7,11 +7,22 @@ const API_BASE_URL = API_ORIGIN.replace(/\/api$/, '')
 
 export class ApiClientError extends Error {
   status: number
+  /** Machine-readable code from the backend, e.g. STORAGE_QUOTA_EXCEEDED. */
+  code?: string
+  /** Structured payload accompanying the code. */
+  details?: Record<string, unknown>
 
-  constructor(message: string, status: number) {
+  constructor(
+    message: string,
+    status: number,
+    code?: string,
+    details?: Record<string, unknown>,
+  ) {
     super(message)
     this.name = 'ApiClientError'
     this.status = status
+    this.code = code
+    this.details = details
   }
 }
 
@@ -31,7 +42,14 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 
 apiClient.interceptors.response.use(
   (response) => response,
-  (error: AxiosError<{ message?: string; error?: string }>) => {
+  (
+    error: AxiosError<{
+      message?: string
+      error?: string
+      code?: string
+      details?: Record<string, unknown>
+    }>,
+  ) => {
     const status = error.response?.status ?? 0
 
     if (status === 401) {
@@ -47,7 +65,12 @@ apiClient.interceptors.response.use(
       error.message ||
       'Request failed'
 
-    throw new ApiClientError(message, status)
+    throw new ApiClientError(
+      message,
+      status,
+      error.response?.data?.code,
+      error.response?.data?.details,
+    )
   },
 )
 

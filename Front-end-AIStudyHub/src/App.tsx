@@ -20,6 +20,7 @@ import {
 } from "@/services/authStorage";
 import type { AuthUser } from "@/types/auth";
 import AskPage from "./pages/AskPage";
+import StoragePackagesPage from "./pages/StoragePackagesPage";
 
 const LandingPage = lazy(() => import("./landingpage"));
 const AboutPage = lazy(() => import("@/pages/AboutPage"));
@@ -292,6 +293,14 @@ function App() {
             element={
               <ProtectedRoute userOnly>
                 {() => routeWithShell(<SubjectsPage />)}
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/storage"
+            element={
+              <ProtectedRoute userOnly>
+                {() => routeWithShell(<StoragePackagesPage />)}
               </ProtectedRoute>
             }
           />

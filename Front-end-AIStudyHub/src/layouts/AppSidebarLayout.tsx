@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   Activity,
@@ -22,6 +22,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { getStoredUser } from "@/services/authStorage";
 import { cn } from "@/lib/utils";
 import StudyMaterialNotificationTray from "@/components/shared/StudyMaterialNotificationTray";
+import { useStorageStore } from "../store/useStorageStore";
 
 type AppSidebarLayoutProps = {
   children: ReactNode;
@@ -93,6 +94,15 @@ function MobileAppNav() {
 }
 
 export default function AppSidebarLayout({ children }: AppSidebarLayoutProps) {
+  const loadStorage = useStorageStore((state) => state.loadStorage);
+
+  // Loaded once at the shell so every page — library dialog, dashboard
+  // dropzone, document detail — can answer "does this file fit?" without each
+  // one fetching for itself.
+  useEffect(() => {
+    void loadStorage();
+  }, [loadStorage]);
+
   return (
     <TooltipProvider>
       <SidebarProvider>
