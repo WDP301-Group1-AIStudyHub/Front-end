@@ -1,112 +1,113 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { RefreshCw } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/skeleton'
-import { CurrentPlanDropZone } from '../components/storage/CurrentPlanDropZone'
-import { PurchaseConfirmDialog } from '../components/storage/PurchaseConfirmDialog'
-import { StoragePackageCard } from '../components/storage/StoragePackageCard'
-import { useStorageStore } from '../store/useStorageStore'
-import { useToast } from '../hooks/useToast'
-import { useStoragePurchase } from '../hooks/useStoragePurchase'
-import { fetchTransactions, reconcileStorage } from '../services/storageApi'
-import { formatStorageBytes, formatVnd } from '../utils/formatStorage'
-import type { StorageTransaction } from '../types/storage'
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { CurrentPlanDropZone } from "../components/storage/CurrentPlanDropZone";
+import { PurchaseConfirmDialog } from "../components/storage/PurchaseConfirmDialog";
+import { StoragePackageCard } from "../components/storage/StoragePackageCard";
+import { useStorageStore } from "../store/useStorageStore";
+import { useToast } from "../hooks/useToast";
+import { useStoragePurchase } from "../hooks/useStoragePurchase";
+import { fetchTransactions, reconcileStorage } from "../services/storageApi";
+import { formatStorageBytes, formatVnd } from "../utils/formatStorage";
+import type { StorageTransaction } from "../types/storage";
 
 const STATUS_LABEL: Record<string, string> = {
-  PENDING: 'Pending',
-  COMPLETED: 'Completed',
-  FAILED: 'Failed',
-  CANCELLED: 'Cancelled',
-  EXPIRED: 'Expired',
-}
+  PENDING: "Pending",
+  COMPLETED: "Completed",
+  FAILED: "Failed",
+  CANCELLED: "Cancelled",
+  EXPIRED: "Expired",
+};
 
 function formatDateTime(value: string): string {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return '—'
-  return new Intl.DateTimeFormat('en-GB', {
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  }).format(date)
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(date);
 }
 
 export default function StoragePackagesPage() {
-  const { showToast } = useToast()
+  const { showToast } = useToast();
 
-  const storage = useStorageStore((state) => state.storage)
-  const packages = useStorageStore((state) => state.packages)
-  const currentPackageId = useStorageStore((state) => state.currentPackageId)
-  const loading = useStorageStore((state) => state.loading)
-  const loadStorage = useStorageStore((state) => state.loadStorage)
-  const loadPackages = useStorageStore((state) => state.loadPackages)
-  const setStorage = useStorageStore((state) => state.setStorage)
+  const storage = useStorageStore((state) => state.storage);
+  const packages = useStorageStore((state) => state.packages);
+  const currentPackageId = useStorageStore((state) => state.currentPackageId);
+  const loading = useStorageStore((state) => state.loading);
+  const loadStorage = useStorageStore((state) => state.loadStorage);
+  const loadPackages = useStorageStore((state) => state.loadPackages);
+  const setStorage = useStorageStore((state) => state.setStorage);
 
-  const [transactions, setTransactions] = useState<StorageTransaction[]>([])
-  const [isReconciling, setIsReconciling] = useState(false)
+  const [transactions, setTransactions] = useState<StorageTransaction[]>([]);
+  const [isReconciling, setIsReconciling] = useState(false);
 
   // Track the plan count so the grid fills the row instead of leaving a gap
   // where a fourth card would be. Tailwind needs whole class names, hence the
   // lookup rather than an interpolated column count.
   const gridClass = useMemo(() => {
     const columns: Record<number, string> = {
-      1: 'grid gap-4 grid-cols-1 sm:max-w-sm',
-      2: 'grid gap-4 grid-cols-1 sm:grid-cols-2',
-      3: 'grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
-      4: 'grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4',
-    }
+      1: "grid gap-4 grid-cols-1 sm:max-w-sm",
+      2: "grid gap-4 grid-cols-1 sm:grid-cols-2",
+      3: "grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
+      4: "grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4",
+    };
 
     // While loading, packages is empty and three skeletons are rendered.
-    return columns[packages.length] ?? columns[3]
-  }, [packages.length])
+    return columns[packages.length] ?? columns[3];
+  }, [packages.length]);
 
   // Native HTML5 drag is pointer-only; on touch the card button is the path.
   const supportsDrag = useMemo(
     () =>
-      typeof window !== 'undefined' &&
-      window.matchMedia('(pointer: fine)').matches,
+      typeof window !== "undefined" &&
+      window.matchMedia("(pointer: fine)").matches,
     [],
-  )
+  );
 
   const refreshTransactions = useCallback(() => {
     fetchTransactions()
       .then(setTransactions)
-      .catch(() => setTransactions([]))
-  }, [])
+      .catch(() => setTransactions([]));
+  }, []);
 
   useEffect(() => {
-    void loadStorage({ force: true })
-    void loadPackages()
-    refreshTransactions()
-  }, [loadPackages, loadStorage, refreshTransactions])
-
+    void loadStorage({ force: true });
+    void loadPackages();
+    refreshTransactions();
+  }, [loadPackages, loadStorage, refreshTransactions]);
 
   const { blockReason, confirmPurchase, isSubmitting, setTarget, target } =
-    useStoragePurchase({ onSettled: refreshTransactions })
+    useStoragePurchase({ onSettled: refreshTransactions });
 
   const handleReconcile = async () => {
-    setIsReconciling(true)
+    setIsReconciling(true);
     try {
-      const result = await reconcileStorage()
-      setStorage(result)
+      const result = await reconcileStorage();
+      setStorage(result);
       showToast({
-        tone: 'success',
+        tone: "success",
         message:
           result.drift === 0
-            ? 'Usage already matches your actual files.'
+            ? "Usage already matches your actual files."
             : `Adjusted by ${formatStorageBytes(Math.abs(result.drift))}.`,
-      })
+      });
     } catch (error) {
       showToast({
-        tone: 'error',
+        tone: "error",
         message:
-          error instanceof Error ? error.message : 'Could not recalculate usage',
-      })
+          error instanceof Error
+            ? error.message
+            : "Could not recalculate usage",
+      });
     } finally {
-      setIsReconciling(false)
+      setIsReconciling(false);
     }
-  }
+  };
 
   return (
     <main className="moonlit-page flex min-h-svh w-full min-w-0 flex-col overflow-y-auto text-foreground">
@@ -129,7 +130,7 @@ export default function StoragePackagesPage() {
           >
             <RefreshCw
               aria-hidden="true"
-              className={`size-4 ${isReconciling ? 'animate-spin' : ''}`}
+              className={`size-4 ${isReconciling ? "animate-spin" : ""}`}
             />
             Recalculate usage
           </Button>
@@ -161,9 +162,7 @@ export default function StoragePackagesPage() {
                   draggable={supportsDrag}
                   hideAction={
                     pkg.priceVnd === 0 &&
-                    Boolean(
-                      storage?.package && storage.package.priceVnd > 0,
-                    )
+                    Boolean(storage?.package && storage.package.priceVnd > 0)
                   }
                   isCurrent={pkg.id === currentPackageId}
                   key={pkg.id}
@@ -200,7 +199,7 @@ export default function StoragePackagesPage() {
                       </span>
                     </div>
                     <p className="mt-2 text-sm text-muted-foreground">
-                      {formatVnd(item.amountVnd)} ·{' '}
+                      {formatVnd(item.amountVnd)} ·{" "}
                       {formatDateTime(item.createdAt)}
                     </p>
                     <p className="mt-1 font-mono text-xs text-muted-foreground">
@@ -249,11 +248,11 @@ export default function StoragePackagesPage() {
         isSubmitting={isSubmitting}
         onConfirm={confirmPurchase}
         onOpenChange={(open) => {
-          if (!open) setTarget(null)
+          if (!open) setTarget(null);
         }}
         storage={storage}
         target={target}
       />
     </main>
-  )
+  );
 }

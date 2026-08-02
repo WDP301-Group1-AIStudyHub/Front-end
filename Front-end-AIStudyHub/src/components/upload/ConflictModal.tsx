@@ -1,6 +1,9 @@
-import { useUploadStore } from "../../store/useUploadStore";
+import { useUploadStore } from "@/store/useUploadStore";
 import { AlertTriangle, FileText, Files } from "lucide-react";
-import { getFileIconColorClass } from "../../utils/formatters";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { IconTile } from '@/components/shared/IconTile';
+import { getFileIconColorClass } from "@/utils/formatters";
 
 export default function ConflictModal() {
   const stagedConflicts = useUploadStore((state) => state.stagedConflicts);
@@ -18,11 +21,11 @@ export default function ConflictModal() {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/70 p-4 animate-fade-in">
-      <div className="moonlit-card flex w-full max-w-md flex-col gap-5 p-6 text-card-foreground">
+      <Card className="flex w-full max-w-md flex-col gap-5 p-6 text-card-foreground">
         <div className="flex items-center gap-3">
-          <div className="admin-icon-badge admin-tone-gold flex size-12 shrink-0 items-center justify-center rounded-xl">
+          <IconTile tone="warning" size="lg">
             <AlertTriangle className="size-6" aria-hidden="true" />
-          </div>
+          </IconTile>
           <div>
             <h3 className="text-lg font-semibold tracking-tight">Duplicate document found</h3>
             <p className="text-xs text-muted-foreground">Filename conflict detected</p>
@@ -41,32 +44,37 @@ export default function ConflictModal() {
         </p>
 
         <div className="flex flex-col gap-2.5 mt-2">
-          <button
+          <Button
+            className="w-full"
             onClick={() => resolveConflict(currentId, "REPLACE")}
-            className="w-full cursor-pointer rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-[color-mix(in_oklab,var(--primary),black_12%)]"
+            size="lg"
             type="button"
           >
             Replace existing document
-          </button>
-          
-          <button
-            onClick={() => resolveConflict(currentId, "KEEP_BOTH")}
-            className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-border bg-card py-2.5 text-sm font-semibold text-secondary-foreground transition-colors hover:bg-muted"
-            type="button"
-          >
-            <Files className="size-4" />
-            Keep both (renames incoming file)
-          </button>
+          </Button>
 
-          <button
-            onClick={() => resolveConflict(currentId, "CANCEL")}
-            className="w-full cursor-pointer rounded-lg py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          <Button
+            className="w-full"
+            onClick={() => resolveConflict(currentId, "KEEP_BOTH")}
+            size="lg"
             type="button"
+            variant="outline"
+          >
+            <Files data-icon="inline-start" aria-hidden="true" />
+            Keep both (renames incoming file)
+          </Button>
+
+          <Button
+            className="w-full text-muted-foreground"
+            onClick={() => resolveConflict(currentId, "CANCEL")}
+            size="lg"
+            type="button"
+            variant="ghost"
           >
             Cancel upload
-          </button>
+          </Button>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

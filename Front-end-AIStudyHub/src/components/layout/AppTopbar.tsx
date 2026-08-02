@@ -5,7 +5,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { SidebarTrigger } from '@/components/ui/sidebar'
-import { getStoredUser } from '@/src/services/authStorage'
+import { getStoredUser } from '@/services/authStorage'
 
 const routeLabels: Record<string, string> = {
   '/dashboard': 'Dashboard',
@@ -54,7 +54,7 @@ export default function AppTopbar() {
   }
 
   return (
-    <header className="app-topbar">
+    <header className="sticky top-0 z-30 flex min-h-14 items-center gap-3 border-b border-border bg-background/95 px-4 py-2">
       <SidebarTrigger aria-label="Toggle navigation" className="shrink-0" />
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold text-foreground">
@@ -66,7 +66,7 @@ export default function AppTopbar() {
       </div>
 
       {!isAdmin ? (
-        <form className="app-topbar__search relative" onSubmit={handleSearch} role="search">
+        <form className="relative w-[min(32rem,42vw)] max-md:hidden" onSubmit={handleSearch} role="search">
           <Search
             aria-hidden="true"
             className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"

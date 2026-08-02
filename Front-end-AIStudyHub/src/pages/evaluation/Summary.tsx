@@ -1,5 +1,8 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { PageShell } from "@/components/layout/PageShell";
+import { IconTile } from '@/components/shared/IconTile'
 import {
   AlertCircle,
   ArrowDownToLine,
@@ -9,8 +12,8 @@ import {
   RefreshCw,
   Sigma,
 } from "lucide-react";
-import { getBenchmarkSummary } from "../../services/chatApi";
-import type { BenchmarkScores, BenchmarkSummary } from "../../types/chat";
+import { getBenchmarkSummary } from "@/services/chatApi";
+import type { BenchmarkScores, BenchmarkSummary } from "@/types/chat";
 
 type MetricKey = keyof Omit<BenchmarkScores, "totalScore">;
 
@@ -50,7 +53,7 @@ function Panel({
   className?: string;
 }) {
   return (
-    <section className={`moonlit-panel ${className}`}>{children}</section>
+    <section className={className}>{children}</section>
   );
 }
 
@@ -64,11 +67,11 @@ function KpiCard({
   detail: string;
   icon: ReactNode;
   label: string;
-  tone: string;
+  tone: 'blue' | 'emerald' | 'coral' | 'gold' | 'teal' | 'mist';
   value: string;
 }) {
   return (
-    <article className={`moonlit-card tone-surface tone-${tone} p-4`}>
+    <article className="p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
@@ -77,7 +80,7 @@ function KpiCard({
           <p className="mt-3 text-3xl font-semibold tracking-tight">{value}</p>
           <p className="mt-2 text-sm text-muted-foreground">{detail}</p>
         </div>
-        <div className={`admin-icon-badge admin-tone-${tone}`}>{icon}</div>
+        <IconTile tone={tone === 'emerald' ? 'success' : tone === 'coral' ? 'destructive' : tone === 'gold' ? 'warning' : 'info'}>{icon}</IconTile>
       </div>
     </article>
   );
@@ -201,8 +204,7 @@ export default function Summary() {
   }
 
   return (
-    <main className="botanical-page min-h-svh overflow-y-auto px-4 py-5 sm:px-6 lg:px-8">
-      <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-5">
+    <PageShell>
         <header className="flex flex-col gap-4 border-b border-border/60 pb-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <div className="mb-3 flex flex-wrap items-center gap-2 text-xs font-semibold text-muted-foreground">
@@ -215,7 +217,7 @@ export default function Summary() {
                 DR-RAG
               </span>
             </div>
-            <h1 className="moonlit-title page-title">
+            <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
               Benchmark Summary
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">
@@ -223,14 +225,16 @@ export default function Summary() {
             </p>
           </div>
 
-          <button
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-border bg-background/60 px-4 text-sm font-semibold transition hover:border-primary"
+          <Button
+            className="px-4"
             onClick={exportJson}
+            size="lg"
             type="button"
+            variant="outline"
           >
-            <ArrowDownToLine className="size-4" />
+            <ArrowDownToLine data-icon="inline-start" aria-hidden="true" />
             Export
-          </button>
+          </Button>
         </header>
 
         {error && (
@@ -239,14 +243,16 @@ export default function Summary() {
               <AlertCircle className="size-4" />
               {error}
             </span>
-            <button
-              className="inline-flex items-center justify-center gap-2 rounded-md border border-destructive/40 px-3 py-2 font-semibold"
+            <Button
+              className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
               onClick={loadSummary}
+              size="sm"
               type="button"
+              variant="outline"
             >
-              <RefreshCw className="size-4" />
+              <RefreshCw data-icon="inline-start" aria-hidden="true" />
               Retry
-            </button>
+            </Button>
           </div>
         )}
 
@@ -290,7 +296,6 @@ export default function Summary() {
             <MetricBars summary={summary} />
           </>
         )}
-      </div>
-    </main>
+    </PageShell>
   );
 }

@@ -15,7 +15,7 @@ export default function PublicNav({
   showLogin = true,
 }: PublicNavProps) {
   return (
-    <nav className="public-nav fixed inset-x-0 top-0 z-50 border-b border-border bg-white/95">
+    <nav className="fixed inset-x-0 top-0 z-50 border-b border-border bg-white/95">
       <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between gap-4 px-5 text-foreground sm:px-8 lg:px-12">
         <a className="flex min-w-0 items-center gap-2" href="/">
           <BrandLogo />

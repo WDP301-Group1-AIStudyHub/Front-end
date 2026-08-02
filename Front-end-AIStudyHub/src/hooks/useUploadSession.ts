@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { getUploadSession } from '../services/documentApi'
-import type { UploadSession } from '../types/document'
+import { getUploadSession } from '@/services/documentApi'
+import type { UploadSession } from '@/types/document'
 
 const POLL_INTERVAL_MS = 2500
 

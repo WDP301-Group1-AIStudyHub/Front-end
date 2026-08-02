@@ -5,12 +5,12 @@ import {
   searchDocuments,
   updateDocument,
   uploadDocument,
-} from '../services/documentApi'
+} from '@/services/documentApi'
 import type {
   DocumentItem,
   UpdateDocumentPayload,
   UploadDocumentPayload,
-} from '../types/document'
+} from '@/types/document'
 
 export function useDocuments() {
   const [documents, setDocuments] = useState<DocumentItem[]>([])

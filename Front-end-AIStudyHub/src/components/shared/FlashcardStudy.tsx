@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
+import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import {
   type IFlashcardItem,
   type StudyMaterial,
   explainCardConcept,
-} from "../../services/studyMaterialApi";
+} from "@/services/studyMaterialApi";
 import {
   ArrowLeft,
   ArrowRight,
@@ -19,14 +20,20 @@ import {
   Shuffle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useStudyProgress, type FlashcardProgressData } from "../../hooks/useStudyProgress";
+import {
+  useStudyProgress,
+  type FlashcardProgressData,
+} from "@/hooks/useStudyProgress";
 
 interface FlashcardStudyProps {
   material: StudyMaterial;
   title: string;
 }
 
-export default function FlashcardStudy({ material, title }: FlashcardStudyProps) {
+export default function FlashcardStudy({
+  material,
+  title,
+}: FlashcardStudyProps) {
   const navigate = useNavigate();
 
   // Active recall deck state (supports filtering by missed)
@@ -38,7 +45,9 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
   const [isFlipped, setIsFlipped] = useState(false);
 
   // Ratings: Record<itemIndex, "GOT_IT" | "MISSED_IT" | "SKIPPED">
-  const [ratings, setRatings] = useState<Record<number, "GOT_IT" | "MISSED_IT" | "SKIPPED">>({});
+  const [ratings, setRatings] = useState<
+    Record<number, "GOT_IT" | "MISSED_IT" | "SKIPPED">
+  >({});
 
   // Elapsed Timer state
   const [startTime, setStartTime] = useState<number>(Date.now());
@@ -62,13 +71,20 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
     resume,
     restart,
     saveProgress,
-  } = useStudyProgress<FlashcardProgressData>(material._id || material.id, "FLASHCARD");
+  } = useStudyProgress<FlashcardProgressData>(
+    material._id || material.id,
+    "FLASHCARD",
+  );
 
   // Load progress if resumed
   useEffect(() => {
     if (isResumed && savedProgress) {
       if (savedProgress.orderMap) {
-        setActiveItems(savedProgress.orderMap.map(idx => (material.items || [])[idx] as IFlashcardItem));
+        setActiveItems(
+          savedProgress.orderMap.map(
+            (idx) => (material.items || [])[idx] as IFlashcardItem,
+          ),
+        );
       }
       setCurrentIndex(savedProgress.currentIndex || 0);
       setRatings(savedProgress.ratings || {});
@@ -88,7 +104,9 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
       elapsedTime,
       isFinished,
       totalItems: activeItems.length,
-      orderMap: activeItems.map(item => (material.items || []).indexOf(item as any)),
+      orderMap: activeItems.map((item) =>
+        (material.items || []).indexOf(item as any),
+      ),
     });
   }, [
     currentIndex,
@@ -135,32 +153,40 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
 
   if (activeItems.length === 0) {
     return (
-      <div className="moonlit-card p-8 text-center text-muted-foreground font-sans">
+      <Card className="p-8 text-center text-muted-foreground ">
         No flashcards found.
-      </div>
+      </Card>
     );
   }
 
   // Resume Prompt UI
   if (showResumePrompt && savedProgress) {
-    const pPercent = Math.round((savedProgress.currentIndex / activeItems.length) * 100);
+    const pPercent = Math.round(
+      (savedProgress.currentIndex / activeItems.length) * 100,
+    );
     return (
-      <div className="mx-auto max-w-lg bg-card border border-border rounded-2xl p-8 font-sans space-y-6 text-center shadow-soft">
+      <div className="mx-auto max-w-lg bg-card border border-border rounded-2xl p-8  space-y-6 text-center shadow-soft">
         <div className="inline-flex items-center justify-center p-4 bg-primary/10 rounded-full text-primary mb-2">
           <Play className="size-8" />
         </div>
         <h2 className="text-2xl font-black text-foreground">Resume Deck?</h2>
         <p className="text-muted-foreground text-sm max-w-md mx-auto">
-          You have an unfinished session for this flashcard deck. Would you like to pick up where you left off?
+          You have an unfinished session for this flashcard deck. Would you like
+          to pick up where you left off?
         </p>
-        
+
         <div className="bg-muted/30 border border-border/50 rounded-xl p-4 text-left space-y-3">
           <div className="flex justify-between text-xs font-bold">
             <span>Progress: {pPercent}%</span>
-            <span className="text-primary">{savedProgress.currentIndex} / {activeItems.length} cards</span>
+            <span className="text-primary">
+              {savedProgress.currentIndex} / {activeItems.length} cards
+            </span>
           </div>
           <div className="h-1.5 w-full bg-border rounded-full overflow-hidden">
-            <div className="h-full bg-primary rounded-full" style={{ width: `${pPercent}%` }} />
+            <div
+              className="h-full bg-primary rounded-full"
+              style={{ width: `${pPercent}%` }}
+            />
           </div>
         </div>
 
@@ -217,10 +243,15 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
       setIsExplainModalOpen(true);
       setExplanationLoading(true);
       setExplanationText(null);
-      const explanation = await explainCardConcept(material._id || material.id, currentIndex);
+      const explanation = await explainCardConcept(
+        material._id || material.id,
+        currentIndex,
+      );
       setExplanationText(explanation);
     } catch (err: any) {
-      setExplanationText(err.message || "Failed to fetch grounded explanation from document.");
+      setExplanationText(
+        err.message || "Failed to fetch grounded explanation from document.",
+      );
     } finally {
       setExplanationLoading(false);
     }
@@ -236,10 +267,15 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
   };
 
   // Stats
-  const gotItCount = Object.values(ratings).filter((r) => r === "GOT_IT").length;
-  const missedItCount = Object.values(ratings).filter((r) => r === "MISSED_IT").length;
+  const gotItCount = Object.values(ratings).filter(
+    (r) => r === "GOT_IT",
+  ).length;
+  const missedItCount = Object.values(ratings).filter(
+    (r) => r === "MISSED_IT",
+  ).length;
   const skippedCount = activeItems.length - gotItCount - missedItCount;
-  const accuracyPercent = Math.round((gotItCount / activeItems.length) * 100) || 0;
+  const accuracyPercent =
+    Math.round((gotItCount / activeItems.length) * 100) || 0;
 
   // Re-practice modes
   const restartAll = () => {
@@ -255,7 +291,9 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
   };
 
   const restartShuffled = () => {
-    const shuffled = [...(material.items || [])].sort(() => Math.random() - 0.5) as IFlashcardItem[];
+    const shuffled = [...(material.items || [])].sort(
+      () => Math.random() - 0.5,
+    ) as IFlashcardItem[];
     setActiveItems(shuffled);
     setCurrentIndex(0);
     setIsFlipped(false);
@@ -301,16 +339,19 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
     const radius = 55;
     const strokeWidth = 10;
     const circumference = 2 * Math.PI * radius;
-    const strokeDashoffset = circumference - (accuracyPercent / 100) * circumference;
+    const strokeDashoffset =
+      circumference - (accuracyPercent / 100) * circumference;
 
     return (
-      <div className="w-[min(100%,480px)] font-sans mx-auto botanical-bento p-8 text-center space-y-6 shadow-2xl relative overflow-hidden bg-card/95 border border-border">
+      <Card className="w-[min(100%,480px)]  mx-auto p-8 text-center space-y-6 shadow-sm relative overflow-hidden bg-card/95">
         {/* Soft glowing effect */}
         <div className="absolute -top-24 -left-24 size-48 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
         <div className="absolute -bottom-24 -right-24 size-48 rounded-full bg-blue-500/10 blur-3xl pointer-events-none" />
 
         <h2 className="text-2xl font-black text-foreground tracking-tight">
-          {accuracyPercent >= 70 ? "Fantastic Effort!" : "You'll get it next time"}
+          {accuracyPercent >= 70
+            ? "Fantastic Effort!"
+            : "You'll get it next time"}
         </h2>
 
         {/* Circular Progress Ring */}
@@ -337,8 +378,12 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
             />
           </svg>
           <div className="absolute flex flex-col items-center justify-center text-center">
-            <span className="text-2xl font-black text-foreground">{gotItCount}/{activeItems.length}</span>
-            <span className="text-xs font-bold text-primary">{accuracyPercent}% accuracy</span>
+            <span className="text-2xl font-black text-foreground">
+              {gotItCount}/{activeItems.length}
+            </span>
+            <span className="text-xs font-bold text-primary">
+              {accuracyPercent}% accuracy
+            </span>
             <span className="text-3xs text-muted-foreground flex items-center gap-1 mt-0.5 uppercase tracking-wide">
               <Clock className="size-3" />
               {formatTime(elapsedTime)}
@@ -349,21 +394,36 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
         {/* Detailed Stats Grid */}
         <div className="grid grid-cols-3 gap-2 bg-muted/20 border border-border/80 rounded-xl p-4 text-sm font-semibold">
           <div className="text-center">
-            <div className="text-xs text-muted-foreground uppercase tracking-wide">Got it</div>
-            <div className="mt-1 text-lg font-black text-emerald-600 dark:text-emerald-400">{gotItCount}</div>
+            <div className="text-xs text-muted-foreground uppercase tracking-wide">
+              Got it
+            </div>
+            <div className="mt-1 text-lg font-black text-emerald-600 ">
+              {gotItCount}
+            </div>
           </div>
           <div className="text-center border-x border-border/50">
-            <div className="text-xs text-muted-foreground uppercase tracking-wide">Missed it</div>
-            <div className="mt-1 text-lg font-black text-red-500 dark:text-red-400">{missedItCount}</div>
+            <div className="text-xs text-muted-foreground uppercase tracking-wide">
+              Missed it
+            </div>
+            <div className="mt-1 text-lg font-black text-red-500 ">
+              {missedItCount}
+            </div>
           </div>
           <div className="text-center">
-            <div className="text-xs text-muted-foreground uppercase tracking-wide">Skipped</div>
-            <div className="mt-1 text-lg font-black text-muted-foreground">{skippedCount}</div>
+            <div className="text-xs text-muted-foreground uppercase tracking-wide">
+              Skipped
+            </div>
+            <div className="mt-1 text-lg font-black text-muted-foreground">
+              {skippedCount}
+            </div>
           </div>
         </div>
 
         <div className="space-y-3 pt-2">
-          <Button onClick={() => setShowReport(true)} className="w-full font-bold">
+          <Button
+            onClick={() => setShowReport(true)}
+            className="w-full font-bold"
+          >
             See full report
           </Button>
           <Button variant="secondary" onClick={restartAll} className="w-full">
@@ -371,7 +431,7 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
             Practise again
           </Button>
         </div>
-      </div>
+      </Card>
     );
   }
 
@@ -380,17 +440,26 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
     const radius = 45;
     const strokeWidth = 8;
     const circumference = 2 * Math.PI * radius;
-    const strokeDashoffset = circumference - (accuracyPercent / 100) * circumference;
+    const strokeDashoffset =
+      circumference - (accuracyPercent / 100) * circumference;
 
-    const topicsList = material.topicsCovered && material.topicsCovered.length > 0
-      ? material.topicsCovered
-      : ["General facts and concepts"];
-    const followUps = material.sourceStatus !== "DELETED" && material.followUpTopics && material.followUpTopics.length > 0
-      ? material.followUpTopics
-      : ["Advanced applications", "Key vocabulary terms", "Formulas and practices"];
+    const topicsList =
+      material.topicsCovered && material.topicsCovered.length > 0
+        ? material.topicsCovered
+        : ["General facts and concepts"];
+    const followUps =
+      material.sourceStatus !== "DELETED" &&
+      material.followUpTopics &&
+      material.followUpTopics.length > 0
+        ? material.followUpTopics
+        : [
+            "Advanced applications",
+            "Key vocabulary terms",
+            "Formulas and practices",
+          ];
 
     return (
-      <div className="w-full max-w-2xl font-sans mx-auto botanical-bento p-6 space-y-6 shadow-2xl bg-card border border-border">
+      <Card className="w-full max-w-2xl  mx-auto p-6 space-y-6 shadow-sm">
         {/* Top Mini-Stats Section */}
         <div className="flex flex-col sm:flex-row items-center gap-6 bg-muted/15 border border-border/80 rounded-2xl p-5 justify-between">
           <div className="flex items-center gap-4">
@@ -417,14 +486,21 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
                 />
               </svg>
               <div className="absolute flex flex-col items-center justify-center text-center">
-                <span className="text-sm font-black text-foreground">{accuracyPercent}%</span>
-                <span className="text-4xs text-muted-foreground uppercase">{formatTime(elapsedTime)}</span>
+                <span className="text-sm font-black text-foreground">
+                  {accuracyPercent}%
+                </span>
+                <span className="text-4xs text-muted-foreground uppercase">
+                  {formatTime(elapsedTime)}
+                </span>
               </div>
             </div>
             <div>
-              <h3 className="text-base font-black text-foreground">Practice Session Finished</h3>
+              <h3 className="text-base font-black text-foreground">
+                Practice Session Finished
+              </h3>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Completed {activeItems.length} cards based on your library document.
+                Completed {activeItems.length} cards based on your library
+                document.
               </p>
             </div>
           </div>
@@ -432,15 +508,21 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
           <div className="flex gap-4 text-center font-semibold text-xs border-t sm:border-t-0 sm:border-l border-border/60 pt-4 sm:pt-0 sm:pl-6 w-full sm:w-auto justify-around">
             <div>
               <span className="text-muted-foreground">Got it:</span>
-              <span className="ml-1.5 text-emerald-600 dark:text-emerald-400 font-black">{gotItCount}</span>
+              <span className="ml-1.5 text-emerald-600 font-black">
+                {gotItCount}
+              </span>
             </div>
             <div>
               <span className="text-muted-foreground">Missed:</span>
-              <span className="ml-1.5 text-red-500 dark:text-red-400 font-black">{missedItCount}</span>
+              <span className="ml-1.5 text-red-500 font-black">
+                {missedItCount}
+              </span>
             </div>
             <div>
               <span className="text-muted-foreground">Skipped:</span>
-              <span className="ml-1.5 text-muted-foreground font-black">{skippedCount}</span>
+              <span className="ml-1.5 text-muted-foreground font-black">
+                {skippedCount}
+              </span>
             </div>
           </div>
         </div>
@@ -461,7 +543,8 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
               ))}
             </ul>
             <div className="pt-4 text-xs text-muted-foreground leading-normal">
-              Need more topics? You can always generate a new flashcard set focusing on customized contexts.
+              Need more topics? You can always generate a new flashcard set
+              focusing on customized contexts.
             </div>
           </div>
 
@@ -472,7 +555,8 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
                 Keep learning
               </h4>
               <p className="text-xs text-muted-foreground leading-normal">
-                Select a follow-up topic below and generate a new set of flashcards to deepen your study.
+                Select a follow-up topic below and generate a new set of
+                flashcards to deepen your study.
               </p>
               <div className="space-y-2">
                 {followUps.map((topic, i) => {
@@ -481,7 +565,7 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
                     <button
                       key={i}
                       onClick={() => setSelectedFollowUp(topic)}
-                      className={`w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold border transition-all ${
+                      className={`w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold border outline-none focus-visible:ring-3 focus-visible:ring-ring/50 transition-all ${
                         isSelected
                           ? "bg-primary border-primary text-primary-foreground"
                           : "bg-background border-border text-foreground hover:bg-muted"
@@ -511,10 +595,20 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
             Practise again
           </h4>
           <div className="grid grid-cols-3 gap-2">
-            <Button variant="outline" size="sm" onClick={restartAll} className="text-2xs font-bold py-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={restartAll}
+              className="text-2xs font-bold py-2"
+            >
               All Cards
             </Button>
-            <Button variant="outline" size="sm" onClick={restartShuffled} className="text-2xs font-bold py-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={restartShuffled}
+              className="text-2xs font-bold py-2"
+            >
               Shuffle Cards
             </Button>
             <Button
@@ -528,35 +622,37 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
             </Button>
           </div>
         </div>
-      </div>
+      </Card>
     );
   }
 
   // 3. Main Interactive recall screen (Image 3)
-  const progressPercent = Math.round(((currentIndex + 1) / activeItems.length) * 100);
+  const progressPercent = Math.round(
+    ((currentIndex + 1) / activeItems.length) * 100,
+  );
 
   return (
-    <div className="mx-auto max-w-xl w-full space-y-5 font-sans relative">
+    <div className="mx-auto max-w-xl w-full space-y-5  relative">
       <style>{`
-        .flashcard-perspective {
-          perspective: 1000px;
-        }
-        .flashcard-preserve {
-          transform-style: preserve-3d;
-          transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .flashcard-preserve.is-flipped {
-          transform: rotateY(180deg);
-        }
-        .flashcard-face {
-          backface-visibility: hidden;
-          position: absolute;
-          inset: 0;
-        }
-        .flashcard-back {
-          transform: rotateY(180deg);
-        }
-      `}</style>
+ .flashcard-perspective {
+ perspective: 1000px;
+ }
+ .flashcard-preserve {
+ transform-style: preserve-3d;
+ transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+ }
+ .flashcard-preserve.is-flipped {
+ transform: rotateY(180deg);
+ }
+ .flashcard-face {
+ backface-visibility: hidden;
+ position: absolute;
+ inset: 0;
+ }
+ .flashcard-back {
+ transform: rotateY(180deg);
+ }
+ `}</style>
 
       {/* Header and Keyboard shortcuts */}
       <div className="flex flex-col items-center justify-center gap-1.5 text-center text-xs text-muted-foreground/60 select-none pb-1 relative">
@@ -582,7 +678,7 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
         <div className="absolute -inset-1 rounded-2xl bg-gradient-to-tr from-emerald-500/10 via-sky-500/5 to-purple-500/15 blur-lg pointer-events-none opacity-80" />
 
         <div
-          className={`flashcard-preserve w-full h-full relative rounded-2xl border border-border/80 bg-card shadow-lg ${
+          className={`flashcard-preserve w-full h-full relative rounded-2xl border border-border/80 bg-card shadow-sm ${
             isFlipped ? "is-flipped" : ""
           }`}
         >
@@ -592,33 +688,38 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
               <span className="text-xs text-muted-foreground font-black">
                 {currentIndex + 1} / {activeItems.length}
               </span>
-              
+
               {/* Three dot action menu */}
               <div className="relative">
-                <button
+                <Button
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     setShowMenu(!showMenu);
                   }}
-                  className="text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-muted/80 transition-colors"
+                  aria-label="Card actions"
+                  className="text-muted-foreground"
+                  size="icon-sm"
+                  variant="ghost"
                 >
                   <MoreVertical className="size-4" />
-                </button>
+                </Button>
                 {showMenu && (
-                  <div className="absolute right-0 top-7 z-10 w-36 bg-card border border-border rounded-xl shadow-lg p-1 animate-in fade-in slide-in-from-top-1 duration-100">
-                    <button
+                  <div className="absolute right-0 top-7 z-10 w-36 bg-card border border-border rounded-xl shadow-sm p-1 animate-in fade-in slide-in-from-top-1 duration-100">
+                    <Button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         setShowMenu(false);
                         handleExplain();
                       }}
-                      className="w-full text-left px-3 py-2 text-xs font-bold text-foreground hover:bg-muted rounded-lg flex items-center gap-1.5"
+                      className="w-full justify-start text-xs"
+                      size="sm"
+                      variant="ghost"
                     >
                       <Sparkles className="size-3.5 text-amber-500" />
                       Explain Concept
-                    </button>
+                    </Button>
                   </div>
                 )}
               </div>
@@ -642,32 +743,37 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
               <span className="text-xs text-muted-foreground font-black">
                 {currentIndex + 1} / {activeItems.length}
               </span>
-              
+
               <div className="relative">
-                <button
+                <Button
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     setShowMenu(!showMenu);
                   }}
-                  className="text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-muted/85"
+                  aria-label="Card actions"
+                  className="text-muted-foreground"
+                  size="icon-sm"
+                  variant="ghost"
                 >
                   <MoreVertical className="size-4" />
-                </button>
+                </Button>
                 {showMenu && (
-                  <div className="absolute right-0 top-7 z-10 w-36 bg-card border border-border rounded-xl shadow-lg p-1 animate-in fade-in slide-in-from-top-1 duration-100">
-                    <button
+                  <div className="absolute right-0 top-7 z-10 w-36 bg-card border border-border rounded-xl shadow-sm p-1 animate-in fade-in slide-in-from-top-1 duration-100">
+                    <Button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         setShowMenu(false);
                         handleExplain();
                       }}
-                      className="w-full text-left px-3 py-2 text-xs font-bold text-foreground hover:bg-muted rounded-lg flex items-center gap-1.5"
+                      className="w-full justify-start text-xs"
+                      size="sm"
+                      variant="ghost"
                     >
                       <Sparkles className="size-3.5 text-amber-500" />
                       Explain Concept
-                    </button>
+                    </Button>
                   </div>
                 )}
               </div>
@@ -701,28 +807,30 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
         </Button>
 
         {/* Missed it X button */}
-        <button
+        <Button
           onClick={(e) => handleRate(e, "MISSED_IT")}
-          className="flex-1 h-11 flex items-center justify-center gap-1.5 rounded-full border border-red-500/20 bg-red-500/5 text-red-650 hover:bg-red-500/10 hover:border-red-500/30 transition-all font-bold text-xs"
+          className="h-11 flex-1 rounded-full border-red-500/20 bg-red-500/5 text-xs text-red-600 hover:border-red-500/30 hover:bg-red-500/10"
+          variant="outline"
         >
           <X className="size-4" />
           <span>Missed it</span>
           <span className="bg-red-500/15 text-red-650 px-2 py-0.5 rounded-full text-2xs">
             {missedItCount}
           </span>
-        </button>
+        </Button>
 
         {/* Got it V button */}
-        <button
+        <Button
           onClick={(e) => handleRate(e, "GOT_IT")}
-          className="flex-1 h-11 flex items-center justify-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/5 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/30 transition-all font-bold text-xs"
+          className="h-11 flex-1 rounded-full border-emerald-500/20 bg-emerald-500/5 text-xs text-emerald-700 hover:border-emerald-500/30 hover:bg-emerald-500/10"
+          variant="outline"
         >
           <Check className="size-4" />
           <span>Got it</span>
-          <span className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded-full text-2xs">
+          <span className="bg-emerald-500/15 text-emerald-700 px-2 py-0.5 rounded-full text-2xs">
             {gotItCount}
           </span>
-        </button>
+        </Button>
 
         {/* Next Arrow */}
         <Button
@@ -745,20 +853,25 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
 
       {/* AI Explanation Popover Dialog */}
       {isExplainModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 font-sans">
-          <div className="bg-card border border-border rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 ">
+          <div className="bg-card border border-border rounded-2xl max-w-lg w-full overflow-hidden shadow-sm animate-in fade-in zoom-in-95 duration-200">
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-border/80 px-6 py-4 bg-muted/10">
               <div className="flex items-center gap-2">
                 <Sparkles className="size-5 text-amber-500" />
-                <h3 className="text-sm font-black text-foreground">AI Concept Explanation</h3>
+                <h3 className="text-sm font-black text-foreground">
+                  AI Concept Explanation
+                </h3>
               </div>
-              <button
+              <Button
                 onClick={() => setIsExplainModalOpen(false)}
-                className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-lg hover:bg-muted"
+                aria-label="Close"
+                className="text-muted-foreground"
+                size="icon-sm"
+                variant="ghost"
               >
                 <X className="size-4" />
-              </button>
+              </Button>
             </div>
 
             {/* Modal Body */}
@@ -766,7 +879,9 @@ export default function FlashcardStudy({ material, title }: FlashcardStudyProps)
               {explanationLoading ? (
                 <div className="flex flex-col items-center justify-center py-10 space-y-3">
                   <div className="size-8 rounded-full border-4 border-muted border-t-primary animate-spin" />
-                  <span className="text-xs text-muted-foreground font-semibold">Consulting source documents...</span>
+                  <span className="text-xs text-muted-foreground font-semibold">
+                    Consulting source documents...
+                  </span>
                 </div>
               ) : (
                 <div className="whitespace-pre-line text-foreground/90 font-medium">

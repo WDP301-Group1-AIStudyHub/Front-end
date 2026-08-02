@@ -1,3 +1,5 @@
+import type { UploadSession } from '@/types/document'
+
 export function formatFileSize(bytes: number): string {
   if (!Number.isFinite(bytes) || bytes <= 0) {
     return '0 B'
@@ -28,16 +30,8 @@ export function formatDate(value: string | undefined): string {
   }).format(date)
 }
 
-export function getFileBadgeClass(fileName: string | undefined): string {
-  if (!fileName) return "file-txt-badge";
-  const ext = fileName.split(".").pop()?.toLowerCase();
-  if (ext === "pdf") return "file-pdf-badge";
-  if (ext === "docx" || ext === "doc") return "file-docx-badge";
-  if (ext === "xlsx" || ext === "xls") return "file-xlsx-badge";
-  if (ext === "pptx" || ext === "ppt") return "file-pptx-badge";
-  return "file-txt-badge";
-}
-
+// Data-driven extension colors (PDF red, DOCX blue, XLSX green, PPTX orange).
+// Intentional literal data encoding - do not tokenize.
 export function getFileIconColorClass(fileName: string | undefined): string {
   if (!fileName) return "text-muted-foreground";
   const ext = fileName.split(".").pop()?.toLowerCase();
@@ -46,5 +40,24 @@ export function getFileIconColorClass(fileName: string | undefined): string {
   if (ext === "xlsx" || ext === "xls") return "text-green-600";
   if (ext === "pptx" || ext === "ppt") return "text-orange-500";
   return "text-muted-foreground";
+}
+
+export function getUploadStageLabel(stage: UploadSession['stage'] | undefined): string {
+  switch (stage) {
+    case 'UPLOADED':
+      return 'Uploading'
+    case 'EXTRACTING_TEXT':
+      return 'Extracting Text'
+    case 'CHUNKING':
+      return 'Chunking'
+    case 'EMBEDDING':
+      return 'Creating Embeddings'
+    case 'UPSERTING_VECTOR':
+      return 'Indexing Vectors'
+    case 'COMPLETED':
+      return 'Completed'
+    default:
+      return 'Uploading'
+  }
 }
 

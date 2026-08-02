@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { getStudyMaterialById } from "../services/studyMaterialApi";
+import { getStudyMaterialById } from "@/services/studyMaterialApi";
 
 export interface MaterialTask {
   id: string;

@@ -20,8 +20,10 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
-import { Thread } from "@/components/assistant-ui/thread";
+import { Thread } from "@/components/assistant-ui/thread copy";
 import { Button } from "@/components/ui/button";
+import { PageShell } from "@/components/layout/PageShell";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Sheet,
   SheetContent,
@@ -29,33 +31,33 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { ArtifactsPanel } from "../components/chat/ArtifactsPanel";
+import { ArtifactsPanel } from "@/components/chat/ArtifactsPanel";
 import {
   CelestialLoader,
   LoadingState,
-} from "../components/shared/CelestialLoading";
+} from "@/components/shared/CelestialLoading";
 import {
   deleteArtifact,
   initiateArtifact,
   listArtifacts,
-} from "../services/artifactApi";
-import type { ArtifactRecord, ArtifactType } from "../services/artifactApi";
+} from "@/services/artifactApi";
+import type { ArtifactRecord, ArtifactType } from "@/services/artifactApi";
 import {
   ChatApiError,
   askAgentStream,
   getChatThreadById,
-} from "../services/chatApi";
-import { listDocuments } from "../services/documentApi";
-import { extractArtifacts } from "../utils/extractArtifacts";
-import { getFileBadgeClass } from "../utils/formatters";
-import { normalizeSubjectColor } from "../utils/subjectColor";
+} from "@/services/chatApi";
+import { listDocuments } from "@/services/documentApi";
+import { extractArtifacts } from "@/utils/extractArtifacts";
+import { IconTile } from "@/components/shared/IconTile";
+import { normalizeSubjectColor } from "@/utils/subjectColor";
 import type {
   AskChatPayload,
   ChatEvaluation,
   ChatScope,
   ChatSource,
-} from "../types/chat";
-import type { DocumentItem } from "../types/document";
+} from "@/types/chat";
+import type { DocumentItem } from "@/types/document";
 
 // ── Inner component: owns the runtime so key-remount works correctly ──────────
 type ChatThreadProps = {
@@ -621,12 +623,12 @@ export default function NewAIChatboxPage() {
   void _selectedContextLabel;
 
   return (
-    <main className="botanical-page flex h-svh min-h-0 w-full flex-col overflow-hidden p-3 pb-24 text-foreground sm:p-5 sm:pb-24 lg:pb-5">
+    <PageShell variant="full">
       <header className="border-b border-border px-2 pb-4 sm:px-3">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-3">
             <div>
-              <h1 className="moonlit-title page-title page-title--compact">
+              <h1 className="text-xl font-bold tracking-tight md:text-2xl">
                 AI Study Chat
               </h1>
               <p className="text-sm text-muted-foreground">
@@ -658,13 +660,12 @@ export default function NewAIChatboxPage() {
               <Library className="size-4" aria-hidden="true" />
               Study context
             </Button>
-
           </div>
         </div>
       </header>
 
       <div
-        className="botanical-bento mt-4 grid min-h-0 w-full flex-1 grid-cols-1 overflow-hidden lg:grid-cols-[minmax(0,1fr)_12px_var(--context-panel-width)]"
+        className="mt-4 grid min-h-0 w-full flex-1 grid-cols-1 overflow-hidden lg:grid-cols-[minmax(0,1fr)_12px_var(--context-panel-width)]"
         style={
           {
             "--context-panel-width": `${contextPanelWidth}px`,
@@ -712,7 +713,7 @@ export default function NewAIChatboxPage() {
           </div>
         </div>
 
-        <aside className="hidden min-h-0 border-l border-border bg-[#f7f8f7] p-5 lg:block">
+        <aside className="hidden min-h-0 border-l border-border bg-sidebar p-5 lg:block">
           <div className="flex h-full flex-col gap-5 overflow-y-auto">
             {/* Document context selector */}
             <section className="border-b border-border pb-5">
@@ -924,7 +925,7 @@ export default function NewAIChatboxPage() {
           </div>
         </SheetContent>
       </Sheet>
-    </main>
+    </PageShell>
   );
 }
 
@@ -1067,7 +1068,7 @@ function DocumentPickerList({
       {/* "All documents" button */}
       <button
         onClick={onClearSelection}
-        className={`w-full rounded-md border px-3 py-2 text-left text-xs transition-colors flex items-center justify-between ${
+        className={`w-full rounded-md border px-3 py-2 text-left text-xs transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50 flex items-center justify-between ${
           selectedDocIds.length === 0
             ? "border-primary/60 bg-primary/10 text-primary font-medium"
             : "border-border/70 bg-background text-muted-foreground hover:border-primary/35 hover:text-foreground"
@@ -1106,7 +1107,7 @@ function DocumentPickerList({
                     return (
                       <div key={subjectOpenKey} className="space-y-1">
                         {/* Subject lightweight row */}
-                        <div className="flex items-center justify-between py-1 px-1.5 hover:bg-black/5 dark:hover:bg-white/5 rounded-md transition-colors">
+                        <div className="flex items-center justify-between py-1 px-1.5 hover:bg-black/5 rounded-md transition-colors">
                           <button
                             type="button"
                             onClick={() => {
@@ -1120,7 +1121,7 @@ function DocumentPickerList({
                                 return next;
                               });
                             }}
-                            className="flex flex-1 min-w-0 items-center gap-2 text-left"
+                            className="flex flex-1 min-w-0 items-center gap-2 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                           >
                             {/* Tinted dot representing the subject color */}
                             <span
@@ -1148,15 +1149,12 @@ function DocumentPickerList({
                                 : "border-border/70 bg-background text-muted-foreground hover:border-primary/35 hover:text-foreground"
                             }`}
                           >
-                            <input
-                              type="checkbox"
+                            <Checkbox
                               checked={
                                 allSubjectDocsSelected &&
                                 docs.some((d) => selectedDocIds.includes(d.id))
                               }
-                              onChange={() => onToggleSubject(docs)}
-                              className="size-3 rounded border-border"
-                              style={{ accentColor: subjectColor }}
+                              onCheckedChange={() => onToggleSubject(docs)}
                             />
                             All
                           </label>
@@ -1186,21 +1184,20 @@ function DocumentPickerList({
                                       : undefined
                                   }
                                 >
-                                  <input
-                                    type="checkbox"
+                                  <Checkbox
                                     checked={isSelected}
-                                    onChange={() => onToggleDoc(doc)}
-                                    className="size-3.5 shrink-0 rounded border-border"
-                                    style={{ accentColor: subjectColor }}
+                                    onCheckedChange={() => onToggleDoc(doc)}
                                   />
-                                  <span
-                                    className={`admin-icon-badge ${getFileBadgeClass(doc.fileName)} flex size-5 shrink-0 items-center justify-center rounded`}
+                                  <IconTile
+                                    fileName={doc.fileName}
+                                    size="sm"
+                                    className="size-5 rounded"
                                   >
                                     <FileText
                                       className="size-3"
                                       aria-hidden="true"
                                     />
-                                  </span>
+                                  </IconTile>
                                   <span className="min-w-0 flex-1 truncate text-[11px]">
                                     {doc.fileName}
                                   </span>

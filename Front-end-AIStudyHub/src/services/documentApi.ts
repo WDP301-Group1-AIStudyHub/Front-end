@@ -1,4 +1,4 @@
-import type { ApiResponse } from '../types/auth'
+import type { ApiResponse } from '@/types/auth'
 import type {
   DocumentDetail,
   DocumentItem,
@@ -10,7 +10,7 @@ import type {
   UpdateDocumentPayload,
   UploadDocumentPayload,
   UploadSession,
-} from '../types/document'
+} from '@/types/document'
 import { clearAuthSession, getStoredToken } from './authStorage'
 
 const API_ORIGIN =

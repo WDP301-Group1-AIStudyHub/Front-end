@@ -1,23 +1,24 @@
-﻿import { Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
+import { Card } from '@/components/ui/card'
+import { Progress } from '@/components/ui/progress'
+import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
-
-type Tone = 'sapphire' | 'teal' | 'gold' | 'mist' | 'coral' | 'emerald' | 'cyan'
 
 export function CelestialLoader({
   className,
   label = 'Loading...',
   size = 'md',
-  tone = 'sapphire',
 }: {
   className?: string
   label?: string
   size?: 'sm' | 'md' | 'lg'
-  tone?: Tone
+  tone?: string
 }) {
+  const iconSize = size === 'sm' ? 'size-3.5' : size === 'lg' ? 'size-6' : 'size-4'
   return (
-    <div className={cn('moonlit-loader', `tone-${tone}`, `moonlit-loader-${size}`, className)} role="status">
-      <span className="moonlit-loader-mark" aria-hidden="true" />
-      <span className="moonlit-loader-label">{label}</span>
+    <div className={cn('inline-flex items-center gap-2 text-sm font-medium text-muted-foreground', className)} role="status">
+      <Loader2 className={cn('animate-spin text-primary', iconSize)} aria-hidden="true" />
+      {label ? <span>{label}</span> : null}
     </div>
   )
 }
@@ -30,42 +31,36 @@ export function CelestialInlineLoader({
   label: string
 }) {
   return (
-    <span className={cn('inline-flex items-center gap-2', className)}>
-      <Loader2 className="size-4 animate-spin text-current" aria-hidden="true" />
-      <span className="moonlit-shimmer-text">{label}</span>
+    <span className={cn('inline-flex items-center gap-2 text-sm font-medium text-muted-foreground', className)}>
+      <Loader2 className="size-4 animate-spin text-primary" aria-hidden="true" />
+      <span>{label}</span>
     </span>
   )
 }
 
 export function CelestialSkeleton({
   className,
-  tone = 'sapphire',
+  tone: _tone,
   ...props
-}: React.ComponentProps<'div'> & { tone?: Tone }) {
-  return (
-    <div
-      data-slot="skeleton"
-      className={cn('moonlit-skeleton', `tone-${tone}`, className)}
-      {...props}
-    />
-  )
+}: React.ComponentProps<'div'> & { tone?: string }) {
+  return <Skeleton className={className} {...props} />
 }
 
 export function CelestialProgress({
   className,
   label,
-  tone = 'cyan',
+  tone: _tone,
+  value,
 }: {
   className?: string
   label?: string
-  tone?: Tone
+  tone?: string
+  value?: number
 }) {
   return (
-    <div className={cn('moonlit-progress-wrap', `tone-${tone}`, className)}>
-      {label ? <div className="moonlit-progress-label">{label}</div> : null}
-      <div className="moonlit-progress-track" aria-hidden="true">
-        <span className="moonlit-progress-comet" />
-      </div>
+    <div className={cn('grid gap-1.5', className)}>
+      {label ? <div className="text-xs font-semibold text-muted-foreground">{label}</div> : null}
+      <Progress value={value ?? 50} />
     </div>
   )
 }
@@ -73,15 +68,15 @@ export function CelestialProgress({
 export function LoadingState({
   className,
   label = 'Loading...',
-  tone = 'sapphire',
+  tone: _tone,
 }: {
   className?: string
   label?: string
-  tone?: Tone
+  tone?: string
 }) {
   return (
-    <div className={cn('moonlit-card tone-surface grid min-h-40 place-items-center p-6', `tone-${tone}`, className)}>
-      <CelestialLoader label={label} tone={tone} />
-    </div>
+    <Card className={cn('grid min-h-40 place-items-center p-6', className)}>
+      <CelestialLoader label={label} />
+    </Card>
   )
 }

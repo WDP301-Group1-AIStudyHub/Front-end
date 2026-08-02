@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Download, ExternalLink, FileText, Star } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
@@ -16,9 +17,11 @@ import {
   downloadDocumentFile,
   listStarredDocuments,
   setDocumentStar,
-} from '../services/documentApi'
-import type { DocumentItem, DocumentSubject } from '../types/document'
-import { getFileBadgeClass } from '../utils/formatters'
+} from '@/services/documentApi'
+import type { DocumentItem, DocumentSubject } from '@/types/document'
+import { IconTile } from '@/components/shared/IconTile'
+import { PageShell } from '@/components/layout/PageShell'
+import { PageHeader } from '@/components/layout/PageHeader'
 
 function formatDate(value?: string | null): string {
   if (!value) return 'Unknown'
@@ -119,29 +122,26 @@ export default function StarredDocumentsPage() {
   }
 
   return (
-    <main className="moonlit-page flex min-h-svh w-full min-w-0 flex-col overflow-y-auto text-foreground">
-      <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-5 py-6 sm:px-8 lg:px-10">
-        <header className="flex flex-col gap-3">
+    <PageShell>
+      <PageHeader
+        title={
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="moonlit-title page-title">
-            Starred documents
-            </h1>
+            <span>Starred documents</span>
             <Badge className="rounded-full px-2.5 py-1" variant="secondary">
               {documents.length} total
             </Badge>
           </div>
-          <p className="max-w-2xl text-sm text-muted-foreground">
-            Documents you marked as important across your own files and shared access.
-          </p>
-        </header>
+        }
+        description="Documents you marked as important across your own files and shared access."
+      />
 
         {error ? (
-          <div className="moonlit-card tone-surface tone-coral px-4 py-3 text-sm" role="alert">
-            {error}
-          </div>
+          <Alert variant="destructive" className="mb-4">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         ) : null}
 
-        <section className="moonlit-card moonlit-table tone-surface tone-sapphire overflow-x-auto">
+        <section className="overflow-x-auto">
           <Table className="min-w-[420px] md:min-w-[820px]">
             <TableHeader>
               <TableRow>
@@ -158,13 +158,13 @@ export default function StarredDocumentsPage() {
                 <TableRow key={document.id}>
                   <TableCell>
                     <button
-                      className="flex min-w-0 items-center gap-3 text-left group"
+                      className="flex min-w-0 items-center gap-3 text-left group outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                       onClick={() => navigate(`/documents/${document.id}`)}
                       type="button"
                     >
-                      <div className={`admin-icon-badge ${getFileBadgeClass(document.fileName)} flex size-9 shrink-0 items-center justify-center rounded-lg`}>
+                      <IconTile fileName={document.fileName} size="sm" className="rounded-lg">
                         <FileText aria-hidden="true" />
-                      </div>
+                      </IconTile>
                       <div className="min-w-0">
                         <div className="truncate text-sm font-semibold text-foreground group-hover:text-primary">
                           {document.title || document.fileName}
@@ -248,7 +248,6 @@ export default function StarredDocumentsPage() {
             </div>
           ) : null}
         </section>
-      </div>
-    </main>
+    </PageShell>
   )
 }

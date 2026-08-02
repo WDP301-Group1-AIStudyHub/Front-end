@@ -1,4 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Ban, Search, ShieldCheck, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,10 +18,12 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import { Textarea } from '@/components/ui/textarea'
-import { LoadingState } from '../../components/shared/CelestialLoading'
-import { listAdminUsers, banUser, unbanUser } from '../../services/adminApi'
-import type { AdminUser } from '../../types/admin'
-import { AdminPageHeader, formatDateTime, StatusBadge } from './adminPageUtils'
+import { LoadingState } from '@/components/shared/CelestialLoading'
+import { listAdminUsers, banUser, unbanUser } from '@/services/adminApi'
+import type { AdminUser } from '@/types/admin'
+import { formatDateTime, StatusBadge } from './adminPageUtils'
+import { PageShell } from '@/components/layout/PageShell'
+import { PageHeader } from '@/components/layout/PageHeader'
 
 export default function AdminUsersPage() {
   const [isLoading, setIsLoading] = useState(true)
@@ -87,14 +96,14 @@ export default function AdminUsersPage() {
 
 
   return (
-    <main className="botanical-page min-h-svh overflow-y-auto p-5 md:p-8">
-      <AdminPageHeader
+    <PageShell>
+      <PageHeader
         description="View users, update roles, and ban or unban accounts."
         eyebrow="Admin users"
         title="User Management"
       />
 
-      <section className="botanical-bento moonlit-table tone-surface tone-teal mt-8 overflow-hidden">
+      <section className="overflow-hidden">
         {/* ── Toolbar ── */}
         <div className="flex flex-col gap-3 border-b border-border/70 p-5 xl:flex-row xl:items-center xl:justify-between">
           <label className="relative max-w-md flex-1">
@@ -110,15 +119,19 @@ export default function AdminUsersPage() {
             {/* Status filter */}
             <div className="flex items-center gap-1.5">
               <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Status:</span>
-              <select
-                className="h-8 rounded-md border border-input bg-background px-2.5 text-sm"
+              <Select
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
+                onValueChange={(val) => setStatusFilter(val as typeof statusFilter)}
               >
-                <option value="all">All statuses</option>
-                <option value="active">Active</option>
-                <option value="inactive">Banned</option>
-              </select>
+                <SelectTrigger className="h-8 w-[130px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All statuses</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Banned</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <StatusBadge severity="info">{filteredUsers.length} users</StatusBadge>
           </div>
@@ -242,6 +255,6 @@ export default function AdminUsersPage() {
           </SheetFooter>
         </SheetContent>
       </Sheet>
-    </main>
+    </PageShell>
   )
 }

@@ -4,8 +4,8 @@ import {
   deleteSubject,
   listSubjects,
   updateSubject,
-} from '../services/subjectApi'
-import type { Subject, SubjectPayload } from '../types/subject'
+} from '@/services/subjectApi'
+import type { Subject, SubjectPayload } from '@/types/subject'
 
 export function useSubjects() {
   const [subjects, setSubjects] = useState<Subject[]>([])

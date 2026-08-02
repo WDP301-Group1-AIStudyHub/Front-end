@@ -1,4 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { IconTile } from '@/components/shared/IconTile'
 import { Eye, FileCog, Search, FileText, Database, User, Shield, Info } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -6,10 +14,12 @@ import {
   Dialog,
   DialogContent,
 } from '@/components/ui/dialog'
-import { LoadingState } from '../../components/shared/CelestialLoading'
-import { listAdminDocuments } from '../../services/adminApi'
-import type { AdminDocument } from '../../types/admin'
-import { AdminPageHeader, StatusBadge } from './adminPageUtils'
+import { LoadingState } from '@/components/shared/CelestialLoading'
+import { listAdminDocuments } from '@/services/adminApi'
+import type { AdminDocument } from '@/types/admin'
+import { StatusBadge } from './adminPageUtils'
+import { PageShell } from '@/components/layout/PageShell'
+import { PageHeader } from '@/components/layout/PageHeader'
 
 
 
@@ -63,14 +73,14 @@ export default function AdminDocumentsPage() {
 
 
   return (
-    <main className="botanical-page min-h-svh overflow-y-auto p-5 md:p-8">
-      <AdminPageHeader
+    <PageShell>
+      <PageHeader
         description="Review all uploaded documents across the platform. Change status, visibility, or remove documents."
         eyebrow="Admin documents"
         title="Document Oversight"
       />
 
-      <section className="botanical-bento moonlit-table tone-surface tone-gold mt-8 overflow-hidden">
+      <section className="overflow-hidden">
         {/* ── Toolbar ── */}
         <div className="flex flex-col gap-3 border-b border-border/70 p-5 md:flex-row md:items-center md:justify-between">
           <label className="relative max-w-lg flex-1">
@@ -85,16 +95,20 @@ export default function AdminDocumentsPage() {
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-1.5">
               <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Extraction:</span>
-              <select
-                className="h-8 rounded-md border border-input bg-background px-2.5 text-sm"
+              <Select
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
+                onValueChange={(val) => setStatusFilter(val as typeof statusFilter)}
               >
-                <option value="all">All</option>
-                <option value="indexed">Indexed</option>
-                <option value="processing">Processing</option>
-                <option value="failed">Failed</option>
-              </select>
+                <SelectTrigger className="h-8 w-[140px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="indexed">Indexed</SelectItem>
+                  <SelectItem value="processing">Processing</SelectItem>
+                  <SelectItem value="failed">Failed</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <StatusBadge severity="info">{filteredDocuments.length} documents</StatusBadge>
           </div>
@@ -124,9 +138,9 @@ export default function AdminDocumentsPage() {
             paginatedDocuments.map((document) => (
               <article className="grid gap-4 p-5 transition-colors hover:bg-muted/35 xl:grid-cols-[1.4fr_1fr_110px_140px_220px]" key={document.id}>
                 <div className="flex min-w-0 items-center gap-3">
-                  <span className="admin-icon-badge admin-tone-gold size-10">
+                  <IconTile fileName={document.fileName}>
                     <FileCog className="size-4" />
-                  </span>
+                  </IconTile>
                   <div className="min-w-0">
                     <h2 className="truncate font-semibold text-foreground">{document.title}</h2>
                     <p className="truncate text-xs text-muted-foreground">
@@ -181,12 +195,12 @@ export default function AdminDocumentsPage() {
 
       <Dialog open={Boolean(viewingDocument)} onOpenChange={(open) => !open && setViewingDocument(null)}>
         <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto p-0 border-0 bg-background/95 backdrop-blur-md">
-          <div className="botanical-bento moonlit-table tone-surface tone-gold flex flex-col h-full border-0 shadow-none">
+          <div className="flex flex-col h-full border-0 shadow-none">
             <div className="flex flex-col gap-2 border-b border-border/70 p-6">
               <div className="flex items-center gap-3">
-                <span className="admin-icon-badge admin-tone-gold size-12 shadow-sm">
+                <IconTile size="lg" fileName={viewingDocument?.fileName}>
                   <FileText className="size-6" />
-                </span>
+                </IconTile>
                 <div>
                   <h2 className="text-xl font-bold tracking-tight text-foreground">Document Metadata</h2>
                   <p className="text-sm text-muted-foreground mt-0.5">
@@ -281,6 +295,6 @@ export default function AdminDocumentsPage() {
           </div>
         </DialogContent>
       </Dialog>
-    </main>
+    </PageShell>
   )
 }

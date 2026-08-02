@@ -3,6 +3,13 @@ import { BookOpen } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -10,9 +17,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { updateSharedDocumentProfile } from '../../services/documentApi'
-import type { SubjectItem } from '../../services/subjectApi'
-import type { DocumentItem } from '../../types/document'
+import { updateSharedDocumentProfile } from '@/services/documentApi'
+import type { SubjectItem } from '@/services/subjectApi'
+import type { DocumentItem } from '@/types/document'
 
 type SharedDocumentSubjectDialogProps = {
   document: DocumentItem | null
@@ -97,22 +104,26 @@ export default function SharedDocumentSubjectDialog({
             </div>
           ) : null}
 
-          <label className="flex flex-col gap-2 text-sm font-semibold">
-            Subject
-            <select
-              className="h-10 w-full rounded-md border border-border bg-background px-3 text-sm outline-none disabled:opacity-50"
+          <div className="flex flex-col gap-2 text-sm font-semibold">
+            <span>Subject</span>
+            <Select
               disabled={isSaving}
-              onChange={(event) => setSelectedSubjectId(event.target.value)}
-              value={selectedSubjectId}
+              onValueChange={(val) => setSelectedSubjectId(val === 'unassigned' ? '' : val)}
+              value={selectedSubjectId || 'unassigned'}
             >
-              <option value="">Unassigned</option>
-              {subjects.map((subject) => (
-                <option key={subject._id} value={subject._id}>
-                  {subjectLabel(subject)}
-                </option>
-              ))}
-            </select>
-          </label>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select subject" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="unassigned">Unassigned</SelectItem>
+                {subjects.map((subject) => (
+                  <SelectItem key={subject._id} value={subject._id}>
+                    {subjectLabel(subject)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
           <DialogFooter>
             <Button
