@@ -55,7 +55,7 @@ function MobileAppNav() {
     >
       <div
         className={cn(
-          "grid items-center gap-1 rounded-[20px] border border-border/80 bg-card/95 px-2 py-2 shadow-[0_16px_40px_rgb(72_106_77_/_0.16)] backdrop-blur-md",
+          "grid items-center gap-1 rounded-[20px] border border-border/80 bg-card/95 px-2 py-2 shadow-[0_16px_40px_rgb(72_106_77/0.16)] backdrop-blur-md",
           isAdmin ? "grid-cols-5" : "grid-cols-6",
         )}
       >

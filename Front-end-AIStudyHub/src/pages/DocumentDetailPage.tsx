@@ -10,7 +10,6 @@ import {
 } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { StatusBadge } from "@/pages/admin/adminPageUtils";
 import {
   Dialog,
   DialogContent,
@@ -33,6 +32,25 @@ import DocumentShareDialog from "../components/documents/DocumentShareDialog";
 import SharedDocumentSubjectDialog from "../components/documents/SharedDocumentSubjectDialog";
 import { getStoredUser } from "../services/authStorage";
 import type { DocumentDetail, DocumentSubject } from "../types/document";
+import { PageShell } from "@/components/layout/PageShell";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 function formatDate(value?: string | null): string {
   if (!value) return "Unknown";
@@ -72,7 +90,9 @@ function InfoCard({
             <dt className="text-xs font-black uppercase tracking-[0.12em] text-muted-foreground">
               {item.label}
             </dt>
-            <dd className="mt-1 break-words text-sm">{item.value || "None"}</dd>
+            <dd className="mt-1 wrap-break-word text-sm">
+              {item.value || "None"}
+            </dd>
           </div>
         ))}
       </dl>
@@ -265,7 +285,7 @@ export default function DocumentDetailPage() {
               Back to My Document
             </Link>
           </Button>
-          <h1 className="mt-4 text-2xl font-bold tracking-tight md:text-3xl break-words">
+          <h1 className="mt-4 text-2xl font-bold tracking-tight md:text-3xl wrap-break-word">
             {document?.title || "Document detail"}
           </h1>
         </div>

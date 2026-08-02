@@ -426,7 +426,7 @@ const UserMessage: FC = () => {
         <div className="aui-user-message-content wrap-break-word rounded-2xl rounded-tr-none bg-primary px-4 py-2.5 text-primary-foreground shadow-sm empty:hidden">
           <MessagePrimitive.Parts />
         </div>
-        <div className="aui-user-action-bar-wrapper absolute start-0 top-1/2 -translate-x-full -translate-y-1/2 pe-2 peer-empty:hidden">
+        <div className="aui-user-action-bar-wrapper absolute inset-s-0 top-1/2 -translate-x-full -translate-y-1/2 pe-2 peer-empty:hidden">
           <UserActionBar />
         </div>
       </div>
