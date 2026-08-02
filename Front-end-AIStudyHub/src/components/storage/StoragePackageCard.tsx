@@ -33,7 +33,7 @@ export function StoragePackageCard({
 
   return (
     <article
-      className={`botanical-bento flex h-full flex-col p-6 ${
+      className={`botanical-bento min-w-0 flex h-full flex-col p-6 ${
         pkg.highlight ? 'border-primary!' : ''
       } ${interactiveClasses}`}
       draggable={draggable && !disabled}

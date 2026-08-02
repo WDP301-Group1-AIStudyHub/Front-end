@@ -51,10 +51,10 @@ export default function StoragePackagesPage() {
   // lookup rather than an interpolated column count.
   const gridClass = useMemo(() => {
     const columns: Record<number, string> = {
-      1: "grid gap-4 grid-cols-1 sm:max-w-sm",
-      2: "grid gap-4 grid-cols-1 sm:grid-cols-2",
-      3: "grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
-      4: "grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4",
+      1: "grid min-w-0 gap-4 grid-cols-1 sm:max-w-sm",
+      2: "grid min-w-0 gap-4 grid-cols-1 sm:grid-cols-2",
+      3: "grid min-w-0 gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
+      4: "grid min-w-0 gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4",
     };
 
     // While loading, packages is empty and three skeletons are rendered.
