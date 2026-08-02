@@ -181,6 +181,15 @@ export async function deleteChatHistory(id: string): Promise<void> {
   await request(`/api/chat/history/${id}`, { method: 'DELETE' })
 }
 
+export async function createChatThread(title?: string): Promise<ChatThreadItem> {
+  const res = await request<ChatThreadItem>('/api/chat/threads', {
+    method: 'POST',
+    body: title ? { title } : {},
+  })
+  if (!res.data) throw new ChatApiError('Failed to create chat thread', 500)
+  return res.data
+}
+
 export async function listChatThreads(
   status?: 'ACTIVE' | 'ARCHIVED',
 ): Promise<ChatThreadItem[]> {

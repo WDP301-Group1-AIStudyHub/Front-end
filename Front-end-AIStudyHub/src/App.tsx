@@ -1,37 +1,58 @@
-import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react'
-import { Navigate, Route, Routes, Link, useLocation, useNavigate } from 'react-router-dom'
-import AppSidebarLayout from '@/layouts/AppSidebarLayout'
-import { LoadingState } from '@/components/shared/CelestialLoading'
-import BackgroundUploadWidget from '@/components/upload/BackgroundUploadWidget'
-import ConflictModal from '@/components/upload/ConflictModal'
-import { getCurrentUser } from '@/services/authApi'
-import { getStoredToken, getStoredUser, hasAuthSession, storeAuthSession } from '@/services/authStorage'
-import type { AuthUser } from '@/types/auth'
+import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
+import {
+  Navigate,
+  Route,
+  Routes,
+  Link,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
+import AppSidebarLayout from "@/layouts/AppSidebarLayout";
+import { LoadingState } from "@/components/shared/CelestialLoading";
+import BackgroundUploadWidget from "@/components/upload/BackgroundUploadWidget";
+import ConflictModal from "@/components/upload/ConflictModal";
+import { getCurrentUser } from "@/services/authApi";
+import {
+  getStoredToken,
+  getStoredUser,
+  hasAuthSession,
+  storeAuthSession,
+} from "@/services/authStorage";
+import type { AuthUser } from "@/types/auth";
+import AskPage from "./pages/AskPage";
 
-const LandingPage = lazy(() => import('./landingpage'));
-const AboutPage = lazy(() => import('@/pages/AboutPage'));
-const LoginPage = lazy(() => import('@/pages/auth/LoginPage'));
-const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage'));
-const ForgotPasswordPage = lazy(() => import('@/pages/auth/ForgotPasswordPage'));
-const ResetPasswordPage = lazy(() => import('@/pages/auth/ResetPasswordPage'));
-const DashboardPage = lazy(() => import('@/pages/DashboardPage'));
-const NewLibraryPage = lazy(() => import('@/pages/new-LibraryPage'));
-const StarredDocumentsPage = lazy(() => import('@/pages/StarredDocumentsPage'));
-const TrashPage = lazy(() => import('@/pages/TrashPage'));
-const DocumentDetailPage = lazy(() => import('@/pages/DocumentDetailPage'));
-const StudyMaterialsPage = lazy(() => import('@/pages/StudyMaterialsPage'));
-const StudyMaterialsListPage = lazy(() => import('@/pages/StudyMaterialsListPage'));
-const SubjectsPage = lazy(() => import('@/pages/SubjectsPage'));
-const NewAIChatboxPage = lazy(() => import('@/pages/new-AIChatboxPage'));
-const EvaluationPage = lazy(() => import('@/pages/evaluation/EvaluationPage'));
-const NewQuestion = lazy(() => import('@/pages/evaluation/NewQuestion'));
-const RunBenchmark = lazy(() => import('@/pages/evaluation/RunBenchmark'));
-const Summary = lazy(() => import('@/pages/evaluation/Summary'));
-const UserProfilePage = lazy(() => import('@/pages/UserProfilePage'));
-const AdminDashboardPage = lazy(() => import('@/pages/admin/AdminDashboardPage'));
-const AdminUsersPage = lazy(() => import('@/pages/admin/AdminUsersPage'));
-const AdminDocumentsPage = lazy(() => import('@/pages/admin/AdminDocumentsPage'));
-const AdminActivityPage = lazy(() => import('@/pages/admin/AdminActivityPage'));
+const LandingPage = lazy(() => import("./landingpage"));
+const AboutPage = lazy(() => import("@/pages/AboutPage"));
+const LoginPage = lazy(() => import("@/pages/auth/LoginPage"));
+const RegisterPage = lazy(() => import("@/pages/auth/RegisterPage"));
+const ForgotPasswordPage = lazy(
+  () => import("@/pages/auth/ForgotPasswordPage"),
+);
+const ResetPasswordPage = lazy(() => import("@/pages/auth/ResetPasswordPage"));
+const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
+const NewLibraryPage = lazy(() => import("@/pages/new-LibraryPage"));
+const StarredDocumentsPage = lazy(() => import("@/pages/StarredDocumentsPage"));
+const TrashPage = lazy(() => import("@/pages/TrashPage"));
+const DocumentDetailPage = lazy(() => import("@/pages/DocumentDetailPage"));
+const StudyMaterialsPage = lazy(() => import("@/pages/StudyMaterialsPage"));
+const StudyMaterialsListPage = lazy(
+  () => import("@/pages/StudyMaterialsListPage"),
+);
+const SubjectsPage = lazy(() => import("@/pages/SubjectsPage"));
+const NewAIChatboxPage = lazy(() => import("@/pages/new-AIChatboxPage"));
+const EvaluationPage = lazy(() => import("@/pages/evaluation/EvaluationPage"));
+const NewQuestion = lazy(() => import("@/pages/evaluation/NewQuestion"));
+const RunBenchmark = lazy(() => import("@/pages/evaluation/RunBenchmark"));
+const Summary = lazy(() => import("@/pages/evaluation/Summary"));
+const UserProfilePage = lazy(() => import("@/pages/UserProfilePage"));
+const AdminDashboardPage = lazy(
+  () => import("@/pages/admin/AdminDashboardPage"),
+);
+const AdminUsersPage = lazy(() => import("@/pages/admin/AdminUsersPage"));
+const AdminDocumentsPage = lazy(
+  () => import("@/pages/admin/AdminDocumentsPage"),
+);
+const AdminActivityPage = lazy(() => import("@/pages/admin/AdminActivityPage"));
 
 const demoAdminUser: AuthUser = {
   id: "admin-001",
@@ -48,7 +69,11 @@ const demoAdminUser: AuthUser = {
 function AuthLoading() {
   return (
     <div className="grid min-h-svh place-items-center">
-      <LoadingState className="min-h-48 w-[min(100%,420px)]" label="Verifying session..." tone="gold" />
+      <LoadingState
+        className="min-h-48 w-[min(100%,420px)]"
+        label="Verifying session..."
+        tone="gold"
+      />
     </div>
   );
 }
@@ -85,14 +110,14 @@ function ProtectedRoute({
   userOnly = false,
   children,
 }: {
-  adminOnly?: boolean
-  userOnly?: boolean
-  children: (user: AuthUser) => ReactNode
+  adminOnly?: boolean;
+  userOnly?: boolean;
+  children: (user: AuthUser) => ReactNode;
 }) {
-  const location = useLocation()
+  const location = useLocation();
   const [user, setUser] = useState<AuthUser | null>(() => getStoredUser());
   const [verified, setVerified] = useState(() =>
-    Boolean(getStoredUser() && hasAuthSession())
+    Boolean(getStoredUser() && hasAuthSession()),
   );
   const [redirectToLogin, setRedirectToLogin] = useState(false);
 
@@ -126,8 +151,13 @@ function ProtectedRoute({
   }, []);
 
   if (redirectToLogin) {
-    const returnTo = `${location.pathname}${location.search}`
-    return <Navigate to={`/login?returnTo=${encodeURIComponent(returnTo)}`} replace />;
+    const returnTo = `${location.pathname}${location.search}`;
+    return (
+      <Navigate
+        to={`/login?returnTo=${encodeURIComponent(returnTo)}`}
+        replace
+      />
+    );
   }
 
   if (!verified || !user) {
@@ -138,17 +168,22 @@ function ProtectedRoute({
     return <AdminAccessDenied />;
   }
 
-  if (userOnly && user.role === 'admin') {
-    return <Navigate to="/admin" replace />
+  if (userOnly && user.role === "admin") {
+    return <Navigate to="/admin" replace />;
   }
 
-  return children(user)
+  return children(user);
 }
 
 function PublicAuthRoute({ children }: { children: ReactNode }) {
   if (hasAuthSession()) {
-    const storedUser = getStoredUser()
-    return <Navigate to={storedUser?.role === 'admin' ? '/admin' : '/dashboard'} replace />
+    const storedUser = getStoredUser();
+    return (
+      <Navigate
+        to={storedUser?.role === "admin" ? "/admin" : "/dashboard"}
+        replace
+      />
+    );
   }
   return children;
 }
@@ -173,30 +208,64 @@ function App() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/about" element={<AboutPage />} />
-          <Route path="/login" element={<PublicAuthRoute><LoginPage /></PublicAuthRoute>} />
-          <Route path="/register" element={<PublicAuthRoute><RegisterPage /></PublicAuthRoute>} />
+          <Route
+            path="/login"
+            element={
+              <PublicAuthRoute>
+                <LoginPage />
+              </PublicAuthRoute>
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <PublicAuthRoute>
+                <RegisterPage />
+              </PublicAuthRoute>
+            }
+          />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/demo-admin" element={<DemoAdminBootstrap />} />
           <Route
             path="/dashboard"
-            element={<ProtectedRoute userOnly>{() => routeWithShell(<DashboardPage />)}</ProtectedRoute>}
+            element={
+              <ProtectedRoute userOnly>
+                {() => routeWithShell(<DashboardPage />)}
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/library"
-            element={<ProtectedRoute userOnly>{() => routeWithShell(<NewLibraryPage />)}</ProtectedRoute>}
+            element={
+              <ProtectedRoute userOnly>
+                {() => routeWithShell(<NewLibraryPage />)}
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/starred"
-            element={<ProtectedRoute userOnly>{() => routeWithShell(<StarredDocumentsPage />)}</ProtectedRoute>}
+            element={
+              <ProtectedRoute userOnly>
+                {() => routeWithShell(<StarredDocumentsPage />)}
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/trash"
-            element={<ProtectedRoute userOnly>{() => routeWithShell(<TrashPage />)}</ProtectedRoute>}
+            element={
+              <ProtectedRoute userOnly>
+                {() => routeWithShell(<TrashPage />)}
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/documents/:id"
-            element={<ProtectedRoute userOnly>{() => routeWithShell(<DocumentDetailPage />)}</ProtectedRoute>}
+            element={
+              <ProtectedRoute userOnly>
+                {() => routeWithShell(<DocumentDetailPage />)}
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/shared-with-me"
@@ -204,57 +273,123 @@ function App() {
           />
           <Route
             path="/study-materials"
-            element={<ProtectedRoute userOnly>{() => routeWithShell(<StudyMaterialsListPage />)}</ProtectedRoute>}
+            element={
+              <ProtectedRoute userOnly>
+                {() => routeWithShell(<StudyMaterialsListPage />)}
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/library/study/:materialId"
-            element={<ProtectedRoute userOnly>{() => routeWithShell(<StudyMaterialsPage />)}</ProtectedRoute>}
+            element={
+              <ProtectedRoute userOnly>
+                {() => routeWithShell(<StudyMaterialsPage />)}
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/subjects"
-            element={<ProtectedRoute userOnly>{() => routeWithShell(<SubjectsPage />)}</ProtectedRoute>}
+            element={
+              <ProtectedRoute userOnly>
+                {() => routeWithShell(<SubjectsPage />)}
+              </ProtectedRoute>
+            }
           />
-          <Route path="/new-library" element={<Navigate to="/library" replace />} />
+          <Route
+            path="/new-library"
+            element={<Navigate to="/library" replace />}
+          />
           <Route
             path="/aichatbox"
-            element={<ProtectedRoute userOnly>{() => routeWithShell(<NewAIChatboxPage />)}</ProtectedRoute>}
+            element={
+              <ProtectedRoute userOnly>
+                {() => routeWithShell(<NewAIChatboxPage />)}
+              </ProtectedRoute>
+            }
           />
-          <Route path="/new-aichatbox" element={<Navigate to="/aichatbox" replace />} />
+          <Route
+            path="/ask"
+            element={
+              <ProtectedRoute userOnly>
+                {() => routeWithShell(<AskPage />)}
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/new-aichatbox"
+            element={<Navigate to="/aichatbox" replace />}
+          />
           <Route
             path="/evaluation"
-            element={<ProtectedRoute userOnly>{() => routeWithShell(<EvaluationPage />)}</ProtectedRoute>}
+            element={
+              <ProtectedRoute userOnly>
+                {() => routeWithShell(<EvaluationPage />)}
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/evaluation/new"
-            element={<ProtectedRoute userOnly>{() => routeWithShell(<NewQuestion />)}</ProtectedRoute>}
+            element={
+              <ProtectedRoute userOnly>
+                {() => routeWithShell(<NewQuestion />)}
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/evaluation/run/:questionId"
-            element={<ProtectedRoute userOnly>{() => routeWithShell(<RunBenchmark />)}</ProtectedRoute>}
+            element={
+              <ProtectedRoute userOnly>
+                {() => routeWithShell(<RunBenchmark />)}
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/evaluation/summary"
-            element={<ProtectedRoute userOnly>{() => routeWithShell(<Summary />)}</ProtectedRoute>}
+            element={
+              <ProtectedRoute userOnly>
+                {() => routeWithShell(<Summary />)}
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/profile"
-            element={<ProtectedRoute>{() => routeWithShell(<UserProfilePage />)}</ProtectedRoute>}
+            element={
+              <ProtectedRoute>
+                {() => routeWithShell(<UserProfilePage />)}
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/admin"
-            element={<ProtectedRoute adminOnly>{() => routeWithShell(<AdminDashboardPage />)}</ProtectedRoute>}
+            element={
+              <ProtectedRoute adminOnly>
+                {() => routeWithShell(<AdminDashboardPage />)}
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/admin/users"
-            element={<ProtectedRoute adminOnly>{() => routeWithShell(<AdminUsersPage />)}</ProtectedRoute>}
+            element={
+              <ProtectedRoute adminOnly>
+                {() => routeWithShell(<AdminUsersPage />)}
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/admin/documents"
-            element={<ProtectedRoute adminOnly>{() => routeWithShell(<AdminDocumentsPage />)}</ProtectedRoute>}
+            element={
+              <ProtectedRoute adminOnly>
+                {() => routeWithShell(<AdminDocumentsPage />)}
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/admin/activity"
-            element={<ProtectedRoute adminOnly>{() => routeWithShell(<AdminActivityPage />)}</ProtectedRoute>}
+            element={
+              <ProtectedRoute adminOnly>
+                {() => routeWithShell(<AdminActivityPage />)}
+              </ProtectedRoute>
+            }
           />
           <Route path="*" element={<LandingPage />} />
         </Routes>
@@ -262,7 +397,7 @@ function App() {
       <BackgroundUploadWidget />
       <ConflictModal />
     </>
-  )
+  );
 }
 
 export default App;

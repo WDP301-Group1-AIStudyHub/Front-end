@@ -9,13 +9,13 @@ import {
   FileCog,
   FolderOpen,
   LayoutDashboardIcon,
-  MessagesSquareIcon,
   ShieldCheck,
   Star,
   Trash2,
   Users,
   SearchIcon,
   PlusIcon,
+  SparklesIcon,
 } from "lucide-react";
 
 import { useNavigate, useLocation, Link } from "react-router-dom";
@@ -33,12 +33,7 @@ import BrandLogo from "@/components/shared/BrandLogo";
 import { groupThreadsByDate } from "@/lib/groupChatThreads";
 import { logout } from "@/services/authApi";
 import { getStoredUser } from "@/services/authStorage";
-import {
-  deleteChatThread,
-  listChatThreads,
-  updateChatThread,
-} from "@/services/chatApi";
-import type { ChatThreadNavItem } from "@/components/nav-chats";
+import { useChatThreadStore } from "@/store/useChatThreadStore";
 import { Button } from "./ui/button";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -58,109 +53,32 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     name: storedUser?.fullName || "John Doe",
   };
 
-  // Real chat threads from the backend.
-  const [chatSessions, setChatSessions] = React.useState<ChatThreadNavItem[]>(
-    [],
-  );
-  const [archivedSessions, setArchivedSessions] = React.useState<
-    ChatThreadNavItem[]
-  >([]);
-  const [archivedLoaded, setArchivedLoaded] = React.useState(false);
-
-  const toNavItem = React.useCallback(
-    (thread: {
-      id: string;
-      title: string;
-      lastMessageAt: string;
-    }): ChatThreadNavItem => ({
-      id: thread.id,
-      title: thread.title,
-      url: `/aichatbox?threadId=${thread.id}`,
-      lastMessageAt: thread.lastMessageAt,
-    }),
-    [],
-  );
+  const chatSessions = useChatThreadStore((s) => s.active);
+  const archivedSessions = useChatThreadStore((s) => s.archived);
+  const archivedLoaded = useChatThreadStore((s) => s.archivedLoaded);
+  const refresh = useChatThreadStore((s) => s.refresh);
+  const loadArchived = useChatThreadStore((s) => s.loadArchived);
+  const rename = useChatThreadStore((s) => s.rename);
+  const archive = useChatThreadStore((s) => s.archive);
+  const unarchive = useChatThreadStore((s) => s.unarchive);
+  const remove = useChatThreadStore((s) => s.remove);
 
   React.useEffect(() => {
     if (isAdmin) return;
-    const loadThreads = () => {
-      listChatThreads()
-        .then((threads) => setChatSessions(threads.map(toNavItem)))
-        .catch(() => setChatSessions([]));
-    };
-
-    loadThreads();
-    window.addEventListener("chat-threads:refresh", loadThreads);
-    return () =>
-      window.removeEventListener("chat-threads:refresh", loadThreads);
-  }, [isAdmin, toNavItem]);
-
-  const handleLoadArchived = async () => {
-    try {
-      const threads = await listChatThreads("ARCHIVED");
-      setArchivedSessions(threads.map(toNavItem));
-    } catch {
-      setArchivedSessions([]);
-    } finally {
-      setArchivedLoaded(true);
-    }
-  };
-
-  const handleRenameChat = async (sessionId: string, title: string) => {
-    const previous = chatSessions;
-    setChatSessions((prev) =>
-      prev.map((s) => (s.id === sessionId ? { ...s, title } : s)),
-    );
-    try {
-      await updateChatThread(sessionId, { title });
-    } catch {
-      setChatSessions(previous);
-    }
-  };
+    refresh();
+  }, [isAdmin, refresh]);
 
   const handleArchiveChat = async (sessionId: string) => {
-    const session = chatSessions.find((s) => s.id === sessionId);
-    if (!session) return;
-    setChatSessions((prev) => prev.filter((s) => s.id !== sessionId));
-    if (archivedLoaded) {
-      setArchivedSessions((prev) => [session, ...prev]);
-    }
-    try {
-      await deleteChatThread(sessionId);
-      // Leaving the archived thread open would 404 on the next history load.
-      if (activeSearchParams.get("threadId") === sessionId) {
-        navigate("/aichatbox");
-      }
-    } catch {
-      setChatSessions((prev) =>
-        [session, ...prev].sort(
-          (a, b) =>
-            new Date(b.lastMessageAt).getTime() -
-            new Date(a.lastMessageAt).getTime(),
-        ),
-      );
-      if (archivedLoaded) {
-        setArchivedSessions((prev) => prev.filter((s) => s.id !== sessionId));
-      }
+    await archive(sessionId);
+    if (activeSearchParams.get("threadId") === sessionId) {
+      navigate("/ask");
     }
   };
 
-  const handleRestoreChat = async (sessionId: string) => {
-    const session = archivedSessions.find((s) => s.id === sessionId);
-    if (!session) return;
-    setArchivedSessions((prev) => prev.filter((s) => s.id !== sessionId));
-    setChatSessions((prev) =>
-      [session, ...prev].sort(
-        (a, b) =>
-          new Date(b.lastMessageAt).getTime() -
-          new Date(a.lastMessageAt).getTime(),
-      ),
-    );
-    try {
-      await updateChatThread(sessionId, { status: "ACTIVE" });
-    } catch {
-      setChatSessions((prev) => prev.filter((s) => s.id !== sessionId));
-      setArchivedSessions((prev) => [session, ...prev]);
+  const handleDeleteChat = async (sessionId: string) => {
+    await remove(sessionId);
+    if (activeSearchParams.get("threadId") === sessionId) {
+      navigate("/ask");
     }
   };
 
@@ -238,10 +156,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         activePath.startsWith("/library/study/"),
     },
     {
-      title: "AI Chatbox",
-      url: "/aichatbox",
-      icon: <MessagesSquareIcon />,
-      isActive: activePath === "/aichatbox" || activePath === "/new-aichatbox",
+      title: "Ask",
+      url: "/ask",
+      icon: <SparklesIcon />,
+      isActive: activePath === "/ask" || activePath === "/new-ask",
     },
   ];
 
@@ -279,7 +197,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   return (
     <Sidebar className="border-r-0" collapsible="icon" {...props}>
-      <SidebarHeader className="p-3 group-data-[collapsible=icon]:p-2">
+      <SidebarHeader className="p-1.5 group-data-[collapsible=icon]:p-2">
         <div className="flex items-center gap-2 min-h-9 px-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2">
           <Link className="min-w-0 h-4.5" to="/dashboard">
             <BrandLogo compact={sidebarState === "collapsed"} />
@@ -298,9 +216,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             archivedLoaded={archivedLoaded}
             groups={chatGroups}
             onArchive={handleArchiveChat}
-            onLoadArchived={handleLoadArchived}
-            onRename={handleRenameChat}
-            onRestore={handleRestoreChat}
+            onDelete={handleDeleteChat}
+            onLoadArchived={loadArchived}
+            onRename={(id, title) => rename(id, title)}
+            onRestore={(id) => unarchive(id)}
           />
         )}
       </SidebarContent>
