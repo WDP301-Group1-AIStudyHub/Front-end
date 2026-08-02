@@ -22,6 +22,7 @@ const DocumentDetailPage = lazy(() => import('./pages/DocumentDetailPage'));
 const StudyMaterialsPage = lazy(() => import('./pages/StudyMaterialsPage'));
 const StudyMaterialsListPage = lazy(() => import('./pages/StudyMaterialsListPage'));
 const SubjectsPage = lazy(() => import('./pages/SubjectsPage'));
+const StoragePackagesPage = lazy(() => import('./pages/StoragePackagesPage'));
 const NewAIChatboxPage = lazy(() => import('./pages/new-AIChatboxPage'));
 const EvaluationPage = lazy(() => import('./pages/evaluation/EvaluationPage'));
 const NewQuestion = lazy(() => import('./pages/evaluation/NewQuestion'));
@@ -213,6 +214,10 @@ function App() {
           <Route
             path="/subjects"
             element={<ProtectedRoute userOnly>{() => routeWithShell(<SubjectsPage />)}</ProtectedRoute>}
+          />
+          <Route
+            path="/storage"
+            element={<ProtectedRoute userOnly>{() => routeWithShell(<StoragePackagesPage />)}</ProtectedRoute>}
           />
           <Route path="/new-library" element={<Navigate to="/library" replace />} />
           <Route

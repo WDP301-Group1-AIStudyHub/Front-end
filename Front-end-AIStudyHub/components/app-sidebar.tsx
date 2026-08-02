@@ -8,6 +8,7 @@ import {
   FileText,
   FileCog,
   FolderOpen,
+  HardDrive,
   LayoutDashboardIcon,
   MessagesSquareIcon,
   ShieldCheck,
@@ -210,6 +211,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: "/subjects",
       icon: <BookMarked />,
       isActive: activePath === "/subjects",
+    },
+    {
+      title: "Storage",
+      url: "/storage",
+      icon: <HardDrive />,
+      isActive: activePath === "/storage",
     },
     {
       title: "Study Materials",
