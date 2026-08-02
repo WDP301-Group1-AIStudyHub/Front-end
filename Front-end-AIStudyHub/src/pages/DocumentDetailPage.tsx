@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ArrowLeft, BookOpen, Download, FileText, Pencil, Star, Trash2, UploadCloud, Users } from 'lucide-react'
+import { ArrowLeft, BookOpen, Download, Pencil, Star, Trash2, Users } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import {
@@ -13,22 +13,12 @@ import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Textarea } from '@/components/ui/textarea'
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import {
   deleteDocument,
   DocumentApiError,
   downloadDocumentFile,
   getDocument,
-  listDocumentVersions,
   setDocumentStar,
   updateDocument,
-  uploadDocumentVersion,
 } from '../services/documentApi'
 import { buildQuotaErrorMessage, formatStorageBytes } from '../utils/formatStorage'
 import { useStorageStore } from '../store/useStorageStore'
@@ -39,7 +29,6 @@ import { getStoredUser } from '../services/authStorage'
 import type {
   DocumentDetail,
   DocumentSubject,
-  DocumentVersion,
 } from '../types/document'
 import type { StorageQuotaDetails } from '../types/storage'
 
@@ -66,16 +55,6 @@ function formatFileSize(bytes?: number): string {
   )
   const value = bytes / 1024 ** index
   return `${value >= 10 || index === 0 ? value.toFixed(0) : value.toFixed(1)} ${units[index]}`
-}
-
-function statusClass(status?: string): string {
-  const normalized = status?.toUpperCase()
-  if (normalized === 'ACTIVE' || normalized === 'INDEXED' || normalized === 'COMPLETED') {
-    return 'status-success'
-  }
-  if (normalized === 'FAILED' || normalized === 'DELETED') return 'status-error'
-  if (normalized === 'PROCESSING' || normalized === 'PENDING') return 'status-warning'
-  return 'status-info'
 }
 
 function InfoCard({
@@ -107,14 +86,11 @@ export default function DocumentDetailPage() {
   const navigate = useNavigate()
   const currentUser = getStoredUser()
   const [document, setDocument] = useState<DocumentDetail | null>(null)
-  const [versions, setVersions] = useState<DocumentVersion[]>([])
   const [subjects, setSubjects] = useState<SubjectItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [isSubjectProfileOpen, setIsSubjectProfileOpen] = useState(false)
   const [isShareOpen, setIsShareOpen] = useState(false)
-  const [isVersionOpen, setIsVersionOpen] = useState(false)
-  const [isUploadingVersion, setIsUploadingVersion] = useState(false)
   const [isSavingEdit, setIsSavingEdit] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [isStarring, setIsStarring] = useState(false)
@@ -122,10 +98,6 @@ export default function DocumentDetailPage() {
   const [editDescription, setEditDescription] = useState('')
   const [editSubjectId, setEditSubjectId] = useState('')
   const [editVisibility, setEditVisibility] = useState<'PUBLIC' | 'PRIVATE'>('PRIVATE')
-  const [versionFile, setVersionFile] = useState<File | null>(null)
-  const [versionMode, setVersionMode] = useState<'OVERRIDE' | 'APPEND'>('OVERRIDE')
-  const [versionReason, setVersionReason] = useState('')
-  const [makeVersionActive, setMakeVersionActive] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -141,13 +113,11 @@ export default function DocumentDetailPage() {
 
     Promise.all([
       getDocument(id),
-      listDocumentVersions(id),
       listSubjects().catch(() => []),
     ])
-      .then(([nextDocument, nextVersions, nextSubjects]) => {
+      .then(([nextDocument, nextSubjects]) => {
         if (cancelled) return
         setDocument(nextDocument)
-        setVersions(nextVersions)
         setSubjects(nextSubjects)
       })
       .catch((caughtError) => {
@@ -386,12 +356,6 @@ export default function DocumentDetailPage() {
               </Button>
             )}
             {canEdit && (
-            <Button disabled={!document} onClick={() => setIsVersionOpen(true)} type="button" variant="secondary">
-              <UploadCloud data-icon="inline-start" aria-hidden="true" />
-              Upload version
-            </Button>
-            )}
-            {canEdit && (
             <Button disabled={!document} onClick={openEdit} type="button" variant="secondary">
               <Pencil data-icon="inline-start" aria-hidden="true" />
               Edit details
@@ -457,53 +421,10 @@ export default function DocumentDetailPage() {
                   { label: 'File size', value: formatFileSize(document.fileSize) },
                   { label: 'Extraction', value: document.extractionStatus || 'Unknown' },
                   { label: 'Chunks', value: document.totalChunks ?? 0 },
-                  { label: 'Versions', value: document.totalVersions ?? versions.length },
                   { label: 'Last indexed', value: formatDate(document.lastIndexedAt) },
                 ]}
               />
             </div>
-
-            <section className="botanical-bento moonlit-table tone-surface tone-sapphire overflow-x-auto">
-              <div className="flex items-center gap-3 p-5">
-                <FileText aria-hidden="true" />
-                <h2 className="text-lg font-black">Version history</h2>
-              </div>
-              <Table className="min-w-[760px]">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Version</TableHead>
-                    <TableHead>File</TableHead>
-                    <TableHead>Upload mode</TableHead>
-                    <TableHead>Processing</TableHead>
-                    <TableHead>Chunks</TableHead>
-                    <TableHead>Uploaded</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {versions.map((version) => (
-                    <TableRow key={version.id}>
-                      <TableCell className="font-bold">
-                        v{version.versionNumber}{version.isActive ? ' (Active)' : ''}
-                      </TableCell>
-                      <TableCell>{version.fileName}</TableCell>
-                      <TableCell>{version.uploadMode}</TableCell>
-                      <TableCell>
-                        <span className={`status-badge ${statusClass(version.processingStatus)}`}>
-                          {version.processingStatus || 'UNKNOWN'}
-                        </span>
-                      </TableCell>
-                      <TableCell>{version.totalChunks}</TableCell>
-                      <TableCell>{formatDate(version.createdAt)}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              {versions.length === 0 ? (
-                <div className="border-t border-border p-8 text-center text-sm text-muted-foreground">
-                  No version history available.
-                </div>
-              ) : null}
-            </section>
 
           </>
         ) : null}
@@ -578,69 +499,6 @@ export default function DocumentDetailPage() {
               </Button>
               <Button disabled={isSavingEdit} type="submit">
                 {isSavingEdit ? 'Saving...' : 'Save changes'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-      <Dialog open={isVersionOpen} onOpenChange={setIsVersionOpen}>
-        <DialogContent>
-          <form className="flex flex-col gap-4" onSubmit={submitVersion}>
-            <DialogHeader>
-              <DialogTitle>Upload new version</DialogTitle>
-            </DialogHeader>
-            <label className="flex flex-col gap-2 text-sm font-semibold">
-              Document file
-              <Input
-                accept=".pdf,.docx,.pptx,.xlsx,.txt,.md"
-                disabled={isUploadingVersion}
-                onChange={(event) => setVersionFile(event.target.files?.[0] || null)}
-                required
-                type="file"
-              />
-            </label>
-            <label className="flex flex-col gap-2 text-sm font-semibold">
-              Upload mode
-              <select
-                className="h-9 rounded-md border border-input bg-background px-3 text-sm outline-none"
-                disabled={isUploadingVersion}
-                onChange={(event) => {
-                  const nextMode = event.target.value === 'APPEND' ? 'APPEND' : 'OVERRIDE'
-                  setVersionMode(nextMode)
-                  if (nextMode === 'OVERRIDE') setMakeVersionActive(true)
-                }}
-                value={versionMode}
-              >
-                <option value="OVERRIDE">Replace active content</option>
-                <option value="APPEND">Append to existing content</option>
-              </select>
-            </label>
-            <label className="flex flex-col gap-2 text-sm font-semibold">
-              Change note
-              <Textarea
-                disabled={isUploadingVersion || versionMode === 'OVERRIDE'}
-                maxLength={500}
-                onChange={(event) => setVersionReason(event.target.value)}
-                placeholder="What changed in this version?"
-                value={versionReason}
-              />
-            </label>
-            <label className="flex items-center gap-2 text-sm font-semibold">
-              <input
-                checked={makeVersionActive}
-                className="size-4 accent-primary"
-                disabled={isUploadingVersion}
-                onChange={(event) => setMakeVersionActive(event.target.checked)}
-                type="checkbox"
-              />
-              Make this the active version
-            </label>
-            <DialogFooter>
-              <Button disabled={isUploadingVersion} onClick={() => setIsVersionOpen(false)} type="button" variant="secondary">
-                Cancel
-              </Button>
-              <Button disabled={!versionFile || isUploadingVersion} type="submit">
-                {isUploadingVersion ? 'Uploading...' : 'Upload version'}
               </Button>
             </DialogFooter>
           </form>
