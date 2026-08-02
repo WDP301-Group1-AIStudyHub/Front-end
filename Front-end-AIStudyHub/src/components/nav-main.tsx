@@ -77,7 +77,7 @@ export function NavMain({ items }: { items: NavItem[] }) {
                 <CollapsibleTrigger asChild>
                   <SidebarMenuAction
                     aria-label={`Toggle ${item.title}`}
-                    className="right-2 data-[state=open]:rotate-90"
+                    className="right-2 data-[state=open]:rotate-90 text-muted-foreground/80 data-[state=open]:text-sidebar-accent-foreground"
                   >
                     <ChevronRight />
                   </SidebarMenuAction>
