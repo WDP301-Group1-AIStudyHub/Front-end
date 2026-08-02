@@ -5,6 +5,7 @@ import type {
   DocumentShare,
   DocumentSharePermission,
   DocumentSubject,
+  DocumentVersion,
   DocumentsResponse,
   UpdateSharedDocumentProfilePayload,
   UpdateDocumentPayload,
@@ -252,6 +253,40 @@ export async function getDocument(documentId: string): Promise<DocumentDetail> {
   return normalizeDocument(
     unwrapData(response, 'Document response was empty'),
   ) as DocumentDetail
+}
+
+export async function listDocumentVersions(
+  documentId: string,
+): Promise<DocumentVersion[]> {
+  const response = await request<DocumentVersion[]>(
+    `/api/documents/${documentId}/versions?limit=100`,
+  )
+
+  return unwrapData(response, 'Document versions response was empty')
+}
+
+export async function uploadDocumentVersion(
+  documentId: string,
+  payload: {
+    file: File
+    uploadMode: 'OVERRIDE' | 'APPEND'
+    uploadReason?: string
+    makeActive: boolean
+  },
+): Promise<DocumentVersion> {
+  const formData = new FormData()
+  formData.set('file', payload.file)
+  formData.set('uploadMode', payload.uploadMode)
+  formData.set('makeActive', String(payload.makeActive))
+  if (payload.uploadReason?.trim()) {
+    formData.set('uploadReason', payload.uploadReason.trim())
+  }
+
+  const response = await request<DocumentVersion>(
+    `/api/documents/${documentId}/versions`,
+    { body: formData, method: 'POST' },
+  )
+  return unwrapData(response, 'Uploaded version response was empty')
 }
 
 export async function uploadDocument({

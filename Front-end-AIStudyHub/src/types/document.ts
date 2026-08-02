@@ -18,6 +18,7 @@ export interface DocumentItem {
   status?: 'ACTIVE' | 'ARCHIVED' | 'DELETED' | string
   totalViews?: number
   totalDownloads?: number
+  totalVersions?: number
   totalChunks?: number
   lastIndexedAt?: string | null
   ragStatus?: 'INDEXED' | 'DELETE_PENDING' | 'DELETED' | 'INDEXING' | 'FAILED' | 'NOT_AVAILABLE'
@@ -55,7 +56,27 @@ export interface DocumentItem {
   starredAt?: string | null
 }
 
-export type DocumentDetail = DocumentItem
+export interface DocumentVersion {
+  id: string
+  versionNumber: number
+  uploadMode: string
+  fileName: string
+  fileUrl: string
+  fileType: string
+  fileSize: number
+  processingStatus?: string
+  processingStage?: string
+  processingProgress?: number
+  totalChunks: number
+  indexedAt?: string | null
+  isActive: boolean
+  createdAt: string
+  updatedAt?: string
+}
+
+export interface DocumentDetail extends DocumentItem {
+  versions?: DocumentVersion[]
+}
 
 export interface UploadDocumentPayload {
   file: File
