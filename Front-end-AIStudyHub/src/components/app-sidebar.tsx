@@ -17,6 +17,7 @@ import {
   PlusIcon,
   SparklesIcon,
   HardDrive,
+  CreditCard,
 } from "lucide-react";
 
 import { useNavigate, useLocation, Link } from "react-router-dom";
@@ -194,6 +195,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: "/admin/activity",
       icon: <Activity />,
       isActive: activePath === "/admin/activity",
+    },
+    {
+      title: "Storage Management",
+      url: "/admin/storage",
+      icon: <HardDrive />,
+      isActive: activePath === "/admin/storage",
+    },
+    {
+      title: "Payment Management",
+      url: "/admin/payments",
+      icon: <CreditCard />,
+      isActive: activePath === "/admin/payments",
     },
   ];
 
