@@ -17,6 +17,7 @@ import {
   PlusIcon,
   SparklesIcon,
   HardDrive,
+  ExternalLink,
 } from "lucide-react";
 
 import { useNavigate, useLocation, Link } from "react-router-dom";
@@ -36,6 +37,51 @@ import { logout } from "@/services/authApi";
 import { getStoredUser } from "@/services/authStorage";
 import { useChatThreadStore } from "@/store/useChatThreadStore";
 import { Button } from "./ui/button";
+
+import { Progress } from "@/components/ui/progress";
+import { useAiUsage } from "@/hooks/useAiUsage";
+
+function SidebarUsageCard() {
+  const { usage } = useAiUsage();
+
+  const isBYOK = Boolean(usage?.unlimited && usage?.unlimitedReason === "byok");
+  const isUnlimited = Boolean(usage?.unlimited);
+  const used = usage?.used ?? 0;
+  const limit = usage?.limit ?? 20;
+  const percentage = isUnlimited
+    ? 0
+    : Math.min(100, Math.round((used / limit) * 100));
+
+  const planName = isBYOK
+    ? "BYOK Plan"
+    : isUnlimited
+      ? "Unlimited Plan"
+      : "Free Plan usage";
+
+  return (
+    <div className="rounded-lg border border-sidebar-border bg-sidebar-accent/30 p-3.5 shadow-2xs group-data-[collapsible=icon]:hidden">
+      <div className=" flex items-center justify-between text-xs font-medium text-sidebar-foreground">
+        <span>{planName}</span>
+        <span className="text-muted-foreground">
+          {isUnlimited ? "Active" : `${percentage}%`}
+        </span>
+      </div>
+      {isBYOK || isUnlimited ? (
+        <Link
+          to="/profile"
+          className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+        >
+          Manage Key <ExternalLink className="size-3" />
+        </Link>
+      ) : (
+        <Progress
+          value={percentage}
+          className="h-1.5 mt-2.5 bg-sidebar-accent"
+        />
+      )}
+    </div>
+  );
+}
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { state: sidebarState } = useSidebar();
@@ -231,6 +277,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         )}
       </SidebarContent>
       <SidebarFooter className="mt-auto group-data-[collapsible=icon]:p-2">
+        {!isAdmin && <SidebarUsageCard />}
         <NavUser onLogout={handleLogout} user={user} />
       </SidebarFooter>
     </Sidebar>

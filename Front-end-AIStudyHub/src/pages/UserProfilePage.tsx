@@ -13,6 +13,7 @@ import { updateProfile } from '@/services/authApi'
 import { getStoredToken, getStoredUser, storeAuthSession } from '@/services/authStorage'
 import { PageShell } from '@/components/layout/PageShell'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { AiCredentialSettings } from '@/components/settings/AiCredentialSettings'
 
 function Field({
   disabled,
@@ -252,6 +253,9 @@ export default function UserProfilePage() {
               />
             </div>
           </div>
+
+          {/* AI Credential & Quota Settings */}
+          <AiCredentialSettings />
 
           {/* Error */}
           {error && (
