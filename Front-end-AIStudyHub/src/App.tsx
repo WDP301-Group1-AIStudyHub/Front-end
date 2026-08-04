@@ -54,6 +54,8 @@ const AdminDocumentsPage = lazy(
   () => import("@/pages/admin/AdminDocumentsPage"),
 );
 const AdminActivityPage = lazy(() => import("@/pages/admin/AdminActivityPage"));
+const AdminStoragePage = lazy(() => import("@/pages/admin/AdminStoragePage"));
+const AdminPaymentsPage = lazy(() => import("@/pages/admin/AdminPaymentsPage"));
 
 const demoAdminUser: AuthUser = {
   id: "admin-001",
@@ -397,6 +399,22 @@ function App() {
             element={
               <ProtectedRoute adminOnly>
                 {() => routeWithShell(<AdminActivityPage />)}
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/storage"
+            element={
+              <ProtectedRoute adminOnly>
+                {() => routeWithShell(<AdminStoragePage />)}
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/payments"
+            element={
+              <ProtectedRoute adminOnly>
+                {() => routeWithShell(<AdminPaymentsPage />)}
               </ProtectedRoute>
             }
           />

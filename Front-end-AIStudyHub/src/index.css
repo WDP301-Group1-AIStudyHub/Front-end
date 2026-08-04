@@ -336,3 +336,111 @@
   background: var(--primary) !important;
   color: var(--primary-foreground) !important;
 }
+
+/* Storage surfaces use these shared classes across the dashboard and plans
+   page. Keep the visual contract here so the cards do not depend on the old
+   redesign stylesheet that was removed during the develop merge. */
+@layer components {
+  .moonlit-page {
+    background: var(--background);
+  }
+
+  .botanical-bento,
+  .moonlit-card,
+  .moonlit-panel {
+    min-width: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--card);
+    box-shadow: 0 1px 2px rgb(16 24 20 / 0.06);
+  }
+
+  .admin-icon-badge {
+    display: inline-flex;
+    width: 3.25rem;
+    height: 3.25rem;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid color-mix(in oklab, var(--primary) 14%, var(--border));
+    border-radius: 1rem;
+    background: color-mix(in oklab, var(--primary) 4%, var(--muted));
+    color: var(--primary);
+  }
+
+  .tone-coral {
+    border-color: color-mix(in oklab, var(--destructive) 28%, var(--border));
+    background: color-mix(in oklab, var(--destructive) 7%, var(--card));
+    color: var(--destructive);
+  }
+
+  .status-badge {
+    display: inline-flex;
+    min-height: 1.5rem;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    border: 1px solid var(--border);
+    border-radius: 9999px;
+    background: var(--muted);
+    padding-inline: 0.75rem;
+    color: var(--muted-foreground);
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.25;
+  }
+
+  .status-badge.status-active {
+    border-color: color-mix(in oklab, var(--primary) 28%, var(--border));
+    background: color-mix(in oklab, var(--primary) 10%, var(--card));
+    color: var(--primary);
+  }
+
+  .status-badge.status-info {
+    border-color: color-mix(in oklab, var(--primary) 22%, var(--border));
+    background: color-mix(in oklab, var(--primary) 6%, var(--card));
+    color: var(--primary);
+  }
+
+  .moonlit-table {
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    border-collapse: separate;
+    border-spacing: 0;
+    background: var(--card);
+  }
+
+  .moonlit-table thead {
+    background: var(--muted);
+  }
+
+  .moonlit-table th,
+  .moonlit-table td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    vertical-align: middle;
+  }
+
+  .moonlit-table th {
+    color: var(--muted-foreground);
+    font-size: 0.75rem;
+    font-weight: 650;
+  }
+
+  .moonlit-table tbody td {
+    border-top: 1px solid var(--border);
+  }
+
+  .moonlit-table th.text-right,
+  .moonlit-table td.text-right {
+    text-align: right;
+  }
+
+  @media (hover: hover) {
+    .botanical-bento:hover,
+    .moonlit-card:hover,
+    .moonlit-panel:hover {
+      border-color: color-mix(in oklab, var(--primary) 35%, var(--border));
+    }
+  }
+}

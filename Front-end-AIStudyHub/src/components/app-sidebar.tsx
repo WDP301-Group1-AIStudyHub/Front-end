@@ -18,6 +18,7 @@ import {
   SparklesIcon,
   HardDrive,
   ExternalLink,
+  CreditCard,
 } from "lucide-react";
 
 import { useNavigate, useLocation, Link } from "react-router-dom";
@@ -66,7 +67,8 @@ function SidebarUsageCard() {
             <span className="font-semibold">Degraded</span>
           </div>
           <p className="mt-1 text-[11px] leading-tight text-warning-foreground/90">
-            Key broken — spending free quota ({planState.used}/{planState.limit}).
+            Key broken — spending free quota ({planState.used}/{planState.limit}
+            ).
           </p>
           <Progress
             value={planState.percentage}
@@ -139,10 +141,7 @@ function SidebarUsageCard() {
             <span>Free Plan</span>
             <span className="font-semibold">Limit reached</span>
           </div>
-          <Progress
-            value={100}
-            className="h-1.5 mt-2.5 bg-destructive/20"
-          />
+          <Progress value={100} className="h-1.5 mt-2.5 bg-destructive/20" />
           <div className="mt-2">
             <Link
               to="/profile"
@@ -337,6 +336,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: "/admin/activity",
       icon: <Activity />,
       isActive: activePath === "/admin/activity",
+    },
+    {
+      title: "Storage Management",
+      url: "/admin/storage",
+      icon: <HardDrive />,
+      isActive: activePath === "/admin/storage",
+    },
+    {
+      title: "Payment Management",
+      url: "/admin/payments",
+      icon: <CreditCard />,
+      isActive: activePath === "/admin/payments",
     },
   ];
 
