@@ -31,7 +31,6 @@ import {
   BranchPickerPrimitive,
   ComposerPrimitive,
   ErrorPrimitive,
-  groupPartByType,
   MessagePrimitive,
   SuggestionPrimitive,
   ThreadPrimitive,
@@ -80,10 +79,29 @@ export type ThreadComponents = {
   ReasoningGroup?:
     | ComponentType<PropsWithChildren<{ group: ThreadGroupPart }>>
     | undefined;
+  toolsByName?: Record<string, ToolCallMessagePartComponent> | undefined;
 };
 
 export type ThreadProps = {
   components?: ThreadComponents | undefined;
+};
+
+const UNGROUPED_TOOLS = new Set(["create_artifact"]);
+
+type PartState = Parameters<
+  NonNullable<Parameters<typeof MessagePrimitive.GroupedParts>[0]["groupBy"]>
+>[0];
+
+const groupAskParts = (
+  part: PartState,
+): readonly `group-${string}`[] | null => {
+  if (part.type === "reasoning")
+    return ["group-chainOfThought", "group-reasoning"];
+  if (part.type === "tool-call") {
+    if (UNGROUPED_TOOLS.has(part.toolName)) return null;
+    return ["group-chainOfThought", "group-tool"];
+  }
+  return null;
 };
 
 const EMPTY_COMPONENTS: ThreadComponents = {};
@@ -361,6 +379,7 @@ const AssistantMessage: FC = () => {
     ToolFallback: ToolFallbackComponent = ToolFallback,
     ToolGroup,
     ReasoningGroup,
+    toolsByName,
   } = useContext(ThreadComponentsContext);
 
   const ACTION_BAR_PT = "pt-1.5";
@@ -377,13 +396,7 @@ const AssistantMessage: FC = () => {
         data-slot="aui_assistant-message-content"
         className="text-foreground px-2 leading-relaxed wrap-break-word text-sm"
       >
-        <MessagePrimitive.GroupedParts
-          groupBy={groupPartByType({
-            reasoning: ["group-chainOfThought", "group-reasoning"],
-            "tool-call": ["group-chainOfThought", "group-tool"],
-            "standalone-tool-call": [],
-          })}
-        >
+        <MessagePrimitive.GroupedParts groupBy={groupAskParts}>
           {({ part, children }) => {
             switch (part.type) {
               case "group-chainOfThought":
@@ -421,8 +434,11 @@ const AssistantMessage: FC = () => {
                 return <MarkdownText />;
               case "reasoning":
                 return <Reasoning {...part} />;
-              case "tool-call":
+              case "tool-call": {
+                const ByName = toolsByName?.[part.toolName];
+                if (ByName) return <ByName {...part} />;
                 return part.toolUI ?? <ToolFallbackComponent {...part} />;
+              }
               case "data":
                 return part.dataRendererUI;
               case "indicator":

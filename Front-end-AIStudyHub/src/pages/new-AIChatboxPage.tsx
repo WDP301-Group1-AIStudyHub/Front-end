@@ -526,13 +526,24 @@ export default function NewAIChatboxPage() {
               yield { content: [...parts] };
             } else if (event.type === "artifact_created") {
               onArtifactCreatedRef.current?.(event);
-            } else if (event.type === "grounding_check") {
+            } else if (event.type === "phase") {
+              // This page predates the streaming rework and still renders the
+              // answer from `final` alone; it consumes `phase` only as the
+              // status label that `grounding_check` used to provide, and
+              // ignores `thought` / `answer_delta`. See AskPage for the full
+              // streaming consumer.
               let reasoningPart = parts.find((p) => p.type === "reasoning");
               if (!reasoningPart) {
                 reasoningPart = { type: "reasoning", text: "" };
                 parts.push(reasoningPart);
               }
-              reasoningPart.text = "Verifying answer against your notes...";
+              reasoningPart.text =
+                event.detail ??
+                (event.phase === "retrieving"
+                  ? "Searching your notes..."
+                  : event.phase === "citing"
+                  ? "Applying citations..."
+                  : "Verifying answer against your notes...");
               yield { content: [...parts] };
             } else if (event.type === "final") {
               const result = event.data;
