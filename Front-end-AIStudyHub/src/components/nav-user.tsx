@@ -24,7 +24,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { useAiUsage } from "@/hooks/useAiUsage";
+import { useAiUsage, deriveAiPlanState } from "@/hooks/useAiUsage";
 
 export function NavUser({
   onLogout,
@@ -40,6 +40,7 @@ export function NavUser({
   const { isMobile } = useSidebar();
   const navigate = useNavigate();
   const { usage } = useAiUsage();
+  const planState = deriveAiPlanState(usage);
 
   const initials = user.name
     .split(" ")
@@ -48,64 +49,58 @@ export function NavUser({
     .slice(0, 2)
     .toUpperCase();
 
-  const isDegraded = Boolean(usage?.degraded);
-  const isUnlimited = Boolean(usage?.unlimited);
-  const isExhausted = Boolean(
-    usage && !usage.unlimited && usage.used >= usage.limit,
-  );
-
-  // Usage keeps accruing while a key is in use, so a user who removes their key
-  // can legitimately sit above the cap. Showing "42/20" reads like a bug.
-  const shownUsed = usage ? Math.min(usage.used, usage.limit) : 0;
+  const isDegraded =
+    planState.kind === "degraded" || planState.kind === "degraded_exhausted";
+  const isExhausted =
+    planState.kind === "exhausted" || planState.kind === "degraded_exhausted";
 
   const renderUsageLabel = () => {
-    if (!usage) {
-      return (
-        <span className="truncate text-xs text-muted-foreground">
-          Free plan
-        </span>
-      );
-    }
-
-    if (isUnlimited) {
-      return (
-        <span className="truncate text-xs font-medium text-success flex items-center gap-1">
-          <Sparkles className="size-3" />
-          {usage.unlimitedReason === "exempt"
-            ? "Unlimited (admin)"
-            : "Unlimited (BYOK)"}
-        </span>
-      );
-    }
-
-    if (isDegraded) {
-      if (isExhausted) {
+    switch (planState.kind) {
+      case "loading":
+        return (
+          <span className="truncate text-xs text-muted-foreground">
+            Free plan
+          </span>
+        );
+      case "exempt":
+        return (
+          <span className="truncate text-xs font-medium text-success flex items-center gap-1">
+            <Sparkles className="size-3" />
+            Unlimited (admin)
+          </span>
+        );
+      case "byok":
+        return (
+          <span className="truncate text-xs font-medium text-success flex items-center gap-1">
+            <Sparkles className="size-3" />
+            Unlimited (BYOK)
+          </span>
+        );
+      case "degraded":
+        return (
+          <span className="truncate text-[11px] font-semibold text-warning-foreground bg-warning/15 px-1.5 py-0.5 rounded border border-warning/30">
+            Degraded ({planState.used}/{planState.limit} free)
+          </span>
+        );
+      case "degraded_exhausted":
         return (
           <span className="truncate text-[11px] font-semibold text-destructive bg-destructive/10 px-1.5 py-0.5 rounded border border-destructive/30">
             Quota exhausted (Key broken)
           </span>
         );
-      }
-      return (
-        <span className="truncate text-[11px] font-semibold text-warning-foreground bg-warning/15 px-1.5 py-0.5 rounded border border-warning/30">
-          Degraded ({shownUsed}/{usage.limit} free)
-        </span>
-      );
+      case "exhausted":
+        return (
+          <span className="truncate text-[11px] font-semibold text-destructive bg-destructive/10 px-1.5 py-0.5 rounded border border-destructive/20">
+            Quota exhausted ({planState.used}/{planState.limit})
+          </span>
+        );
+      case "counting":
+        return (
+          <span className="truncate text-xs text-muted-foreground">
+            {planState.used} / {planState.limit} free
+          </span>
+        );
     }
-
-    if (isExhausted) {
-      return (
-        <span className="truncate text-[11px] font-semibold text-destructive bg-destructive/10 px-1.5 py-0.5 rounded border border-destructive/20">
-          Quota exhausted ({shownUsed}/{usage.limit})
-        </span>
-      );
-    }
-
-    return (
-      <span className="truncate text-xs text-muted-foreground">
-        {shownUsed} / {usage.limit} free
-      </span>
-    );
   };
 
   return (
