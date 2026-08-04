@@ -1,5 +1,5 @@
 import { apiClient, unwrapApiData } from "./apiClient";
-import type { ChatScope, ChatSource } from "../types/chat";
+import type { ChatScope, ChatSource } from "@/types/chat";
 import type { IFlashcardItem, IMcqItem } from "./studyMaterialApi";
 
 export type ArtifactType =

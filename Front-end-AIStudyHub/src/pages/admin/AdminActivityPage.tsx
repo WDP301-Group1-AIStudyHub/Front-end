@@ -1,4 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { IconTile } from '@/components/shared/IconTile'
 import { Activity, Filter, Search, Eye, Clock, User, Globe, MonitorSmartphone, Database, Tag } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -8,10 +16,12 @@ import {
   DialogDescription,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { LoadingState } from '../../components/shared/CelestialLoading'
-import { listSystemActivities } from '../../services/adminApi'
-import type { SystemActivity } from '../../types/admin'
-import { AdminPageHeader, formatDateTime, StatusBadge } from './adminPageUtils'
+import { LoadingState } from '@/components/shared/CelestialLoading'
+import { listSystemActivities } from '@/services/adminApi'
+import type { SystemActivity } from '@/types/admin'
+import { formatDateTime, StatusBadge } from './adminPageUtils'
+import { PageShell } from '@/components/layout/PageShell'
+import { PageHeader } from '@/components/layout/PageHeader'
 
 export default function AdminActivityPage() {
   const [activities, setActivities] = useState<SystemActivity[]>([])
@@ -56,14 +66,14 @@ export default function AdminActivityPage() {
   const totalPages = Math.ceil(filteredActivities.length / ITEMS_PER_PAGE)
 
   return (
-    <main className="botanical-page min-h-svh overflow-y-auto p-5 md:p-8">
-      <AdminPageHeader
+    <PageShell>
+      <PageHeader
         description="Monitor account events, document processing signals, and system activity from the backend."
         eyebrow="Admin activity"
         title="Activity Log"
       />
 
-      <section className="botanical-bento moonlit-table tone-surface tone-coral mt-8 overflow-hidden">
+      <section className="overflow-hidden">
         {/* ── Toolbar ── */}
         <div className="flex flex-col gap-3 border-b border-border/70 p-5 xl:flex-row xl:items-center xl:justify-between">
           <label className="relative max-w-lg flex-1">
@@ -78,31 +88,39 @@ export default function AdminActivityPage() {
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-1.5">
               <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Severity:</span>
-              <select
-                className="h-8 rounded-md border border-input bg-background px-2.5 text-sm"
+              <Select
                 value={severityFilter}
-                onChange={(e) => setSeverityFilter(e.target.value as typeof severityFilter)}
+                onValueChange={(val) => setSeverityFilter(val as typeof severityFilter)}
               >
-                <option value="all">All severities</option>
-                <option value="info">Info</option>
-                <option value="success">Success</option>
-                <option value="warning">Warning</option>
-                <option value="critical">Critical</option>
-              </select>
+                <SelectTrigger className="h-8 w-[140px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All severities</SelectItem>
+                  <SelectItem value="info">Info</SelectItem>
+                  <SelectItem value="success">Success</SelectItem>
+                  <SelectItem value="warning">Warning</SelectItem>
+                  <SelectItem value="critical">Critical</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Category:</span>
-              <select
-                className="h-8 rounded-md border border-input bg-background px-2.5 text-sm"
+              <Select
                 value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value as typeof typeFilter)}
+                onValueChange={(val) => setTypeFilter(val as typeof typeFilter)}
               >
-                <option value="all">All categories</option>
-                <option value="auth">Authentication</option>
-                <option value="user">User</option>
-                <option value="document">Document</option>
-                <option value="system">System</option>
-              </select>
+                <SelectTrigger className="h-8 w-[140px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All categories</SelectItem>
+                  <SelectItem value="auth">Authentication</SelectItem>
+                  <SelectItem value="user">User</SelectItem>
+                  <SelectItem value="document">Document</SelectItem>
+                  <SelectItem value="system">System</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <StatusBadge severity="info">{filteredActivities.length} logs</StatusBadge>
           </div>
@@ -134,9 +152,9 @@ export default function AdminActivityPage() {
                 <div className="text-sm text-muted-foreground">{formatDateTime(activity.createdAt)}</div>
                 <div className="min-w-0">
                   <div className="flex items-start gap-3">
-                    <span className="admin-icon-badge admin-tone-blue mt-0.5 size-9">
+                    <IconTile size="sm" tone="info" className="mt-0.5">
                       <Activity className="size-4" />
-                    </span>
+                    </IconTile>
                     <div className="min-w-0">
                       <h2 className="font-semibold">{activity.description}</h2>
                       <p className="mt-1 text-sm text-muted-foreground">
@@ -182,7 +200,7 @@ export default function AdminActivityPage() {
       </section>
 
       <Dialog open={Boolean(viewingActivity)} onOpenChange={(open) => !open && setViewingActivity(null)}>
-        <DialogContent className="sm:max-w-2xl max-h-[85vh] p-0 overflow-hidden bg-background border-border/60 shadow-2xl">
+        <DialogContent className="sm:max-w-2xl max-h-[85vh] p-0 overflow-hidden bg-background border-border/60 shadow-sm">
           {viewingActivity && (
             <div className="flex flex-col max-h-[85vh]">
               {/* Header Section */}
@@ -273,6 +291,6 @@ export default function AdminActivityPage() {
           )}
         </DialogContent>
       </Dialog>
-    </main>
+    </PageShell>
   )
 }

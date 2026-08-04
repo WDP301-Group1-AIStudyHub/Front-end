@@ -1,5 +1,5 @@
 export default function AuthIcon({ name, className: extraCls }: { name: string; className?: string }) {
-  const className = `auth-icon auth-icon-${name.replace('_', '-')}${extraCls ? ` ${extraCls}` : ''}`
+  const className = `text-primary${extraCls ? ` ${extraCls}` : ''}`
 
   if (name === 'school') {
     return (

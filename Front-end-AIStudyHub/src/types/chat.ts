@@ -21,6 +21,19 @@ export interface ChatSource {
   relevanceScore?: number
   sourceStatus?: 'ACTIVE' | 'DELETED'
   sourceDeletedAt?: string
+  citationId?: number
+}
+
+export interface AnswerSourcesMetadata {
+  sources: ChatSource[]
+  citedSources?: ChatSource[]
+}
+
+export interface GroupedSource {
+  documentId: string
+  title: string
+  chunks: ChatSource[]
+  isDeleted: boolean
 }
 
 export interface ChatEvaluation {
@@ -67,6 +80,7 @@ export interface AskChatResponse {
   originalQuestion?: string
   rewrittenQuery?: string
   sources: ChatSource[]
+  citedSources?: ChatSource[]
   evaluation?: ChatEvaluation
   // Present only on /api/agent/ask responses: the agent loop's decisions
   agent?: {

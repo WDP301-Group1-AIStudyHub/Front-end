@@ -2,7 +2,7 @@ import { Transformer } from "markmap-lib";
 import { Markmap } from "markmap-view";
 import { useEffect, useRef } from "react";
 
-import type { MindmapNode } from "../../services/artifactApi";
+import type { MindmapNode } from "@/services/artifactApi";
 
 const transformer = new Transformer();
 

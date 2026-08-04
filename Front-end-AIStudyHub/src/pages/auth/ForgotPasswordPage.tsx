@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import type { ChangeEvent, FormEvent } from 'react'
-import AuthIcon from '../../components/auth/AuthIcon'
-import AuthScaffold from '../../components/auth/AuthScaffold'
-import SplitInfoCard from '../../components/auth/SplitInfoCard'
-import { CelestialInlineLoader } from '../../components/shared/CelestialLoading'
-import { forgotPassword } from '../../services/authApi'
+import { Button } from '@/components/ui/button'
+import AuthIcon from '@/components/auth/AuthIcon'
+import AuthScaffold from '@/components/auth/AuthScaffold'
+import SplitInfoCard from '@/components/auth/SplitInfoCard'
+import { CelestialInlineLoader } from '@/components/shared/CelestialLoading'
+import { forgotPassword } from '@/services/authApi'
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
@@ -40,8 +41,8 @@ export default function ForgotPasswordPage() {
         title={<>Need access<br />again?</>}
         variant="lost"
       />
-      <section className="moonlit-card relative min-h-[430px] overflow-hidden p-12">
-        <h2 className="moonlit-title m-0 mb-4 text-[32px] leading-[1.2]">Recovery</h2>
+      <section className="relative min-h-[430px] overflow-hidden p-12">
+        <h2 className="m-0 mb-4 text-2xl font-bold leading-[1.2]">Recovery</h2>
         <p className="mb-9 max-w-[330px] text-sm leading-[1.6] text-muted-foreground">Enter your email to receive a secure reset link.</p>
         <form className="grid gap-5" onSubmit={handleSubmit}>
           <label className="grid gap-2" htmlFor="recovery-email">
@@ -65,13 +66,14 @@ export default function ForgotPasswordPage() {
           {success ? (
             <p className="m-0 rounded-lg border border-primary/20 bg-primary/10 px-3 py-2 text-xs leading-relaxed text-primary">{success}</p>
           ) : null}
-          <button
+          <Button
+            className="min-h-[52px] w-full"
             disabled={loading}
+            size="lg"
             type="submit"
-            className="min-h-[52px] w-full rounded-lg bg-primary text-sm font-semibold text-primary-foreground transition-colors hover:bg-[color-mix(in_oklab,var(--primary),black_12%)] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? <CelestialInlineLoader className="justify-center" label="Sending..." /> : 'Send recovery link'}
-          </button>
+          </Button>
         </form>
         <a
           href="/login"

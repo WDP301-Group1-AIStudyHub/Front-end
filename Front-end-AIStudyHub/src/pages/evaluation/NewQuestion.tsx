@@ -1,4 +1,4 @@
-﻿import {
+import {
   useEffect,
   useMemo,
   useState,
@@ -6,6 +6,8 @@
   type ReactNode,
 } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { PageShell } from "@/components/layout/PageShell";
 import {
   AlertCircle,
   BookOpen,
@@ -19,14 +21,23 @@ import {
 import {
   createBenchmarkQuestion,
   getBenchmarkQuestions,
-} from "../../services/chatApi";
-import { listDocuments } from "../../services/documentApi";
+} from "@/services/chatApi";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { listDocuments } from "@/services/documentApi";
 import type {
   BenchmarkDifficulty,
   BenchmarkQuestion,
   CreateBenchmarkQuestionPayload,
-} from "../../types/chat";
-import type { DocumentItem } from "../../types/document";
+} from "@/types/chat";
+import type { DocumentItem } from "@/types/document";
 
 type ScopeMode = "document" | "subject";
 
@@ -239,9 +250,9 @@ export default function NewQuestion() {
   }
 
   return (
-    <main className="botanical-page min-h-svh overflow-y-auto px-4 py-5 sm:px-6 lg:px-8">
+    <PageShell variant="narrow">
       <form
-        className="mx-auto flex w-full max-w-[1180px] flex-col gap-5"
+        className="flex w-full flex-col gap-5"
         onSubmit={handleSubmit}
       >
         <header className="flex flex-col gap-4 border-b border-border/60 pb-5 lg:flex-row lg:items-end lg:justify-between">
@@ -260,7 +271,7 @@ export default function NewQuestion() {
                 DR-RAG
               </span>
             </div>
-            <h1 className="moonlit-title page-title">
+            <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
               New Benchmark Question
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">
@@ -276,10 +287,12 @@ export default function NewQuestion() {
               <ChevronLeft className="size-4" />
               Cancel
             </Link>
-            <button
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-border bg-background/60 px-4 text-sm font-semibold transition hover:border-primary"
+            <Button
+              className="px-4"
               onClick={saveDraft}
+              size="lg"
               type="button"
+              variant="outline"
             >
               {draftSaved ? (
                 <Check className="size-4" />
@@ -287,10 +300,11 @@ export default function NewQuestion() {
                 <Save className="size-4" />
               )}
               {draftSaved ? "Draft saved" : "Save draft"}
-            </button>
-            <button
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-60"
+            </Button>
+            <Button
+              className="px-4"
               disabled={saving}
+              size="lg"
               type="submit"
             >
               {saving ? (
@@ -299,7 +313,7 @@ export default function NewQuestion() {
                 <Play className="size-4" />
               )}
               Save & run
-            </button>
+            </Button>
           </div>
         </header>
 
@@ -310,7 +324,7 @@ export default function NewQuestion() {
           </div>
         )}
 
-        <section className="moonlit-panel grid gap-5 p-4 md:p-5">
+        <section className="grid gap-5 p-4 md:p-5">
           <FieldShell
             description="The question you'd ask the chatbot. Phrase it like a real student would."
             label="Question"
@@ -350,7 +364,7 @@ export default function NewQuestion() {
         </section>
 
         <section className="grid gap-5 lg:grid-cols-[1fr_340px]">
-          <div className="moonlit-panel grid gap-5 p-4 md:p-5">
+          <div className="grid gap-5 p-4 md:p-5">
             <div>
               <h2 className="text-lg font-semibold">Scope</h2>
               <p className="mt-1 text-sm text-muted-foreground">
@@ -361,12 +375,10 @@ export default function NewQuestion() {
 
             <div className="grid grid-cols-2 gap-2 rounded-lg border border-border/70 bg-muted/20 p-1">
               {(["document", "subject"] as ScopeMode[]).map((scope) => (
-                <button
-                  className={`inline-flex h-10 items-center justify-center gap-2 rounded-md text-sm font-semibold transition ${
-                    form.scope === scope
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
+                <Button
+                  aria-pressed={form.scope === scope}
+                  size="lg"
+                  variant={form.scope === scope ? "default" : "ghost"}
                   key={scope}
                   onClick={() =>
                     setForm((current) => ({
@@ -382,7 +394,7 @@ export default function NewQuestion() {
                     <BookOpen className="size-4" />
                   )}
                   {scope === "document" ? "Document" : "Subject"}
-                </button>
+                </Button>
               ))}
             </div>
 
@@ -391,28 +403,28 @@ export default function NewQuestion() {
                 description="Picks the doc the question should be answered from."
                 label="Source document"
               >
-                <select
-                  className="h-11 rounded-lg border border-input bg-background/70 px-3 text-sm outline-none transition focus:border-primary"
+                <Select
                   disabled={documentsLoading}
-                  onChange={(event) =>
+                  onValueChange={(val) =>
                     setForm((current) => ({
                       ...current,
-                      documentId: event.target.value,
+                      documentId: val === "none" ? "" : val,
                     }))
                   }
-                  value={form.documentId}
+                  value={form.documentId || "none"}
                 >
-                  <option value="">
-                    {documentsLoading
-                      ? "Loading documents..."
-                      : "Select source document"}
-                  </option>
-                  {documents.map((document) => (
-                    <option key={document.id} value={document.id}>
-                      {document.title}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger className="h-11 w-full">
+                    <SelectValue placeholder={documentsLoading ? "Loading documents..." : "Select source document"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Select source document</SelectItem>
+                    {documents.map((document) => (
+                      <SelectItem key={document.id} value={document.id}>
+                        {document.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 {documentsError && (
                   <p className="text-xs text-destructive">{documentsError}</p>
                 )}
@@ -442,7 +454,7 @@ export default function NewQuestion() {
             )}
           </div>
 
-          <aside className="moonlit-panel grid content-start gap-5 p-4 md:p-5">
+          <aside className="grid content-start gap-5 p-4 md:p-5">
             <div>
               <h2 className="text-lg font-semibold">Difficulty</h2>
               <p className="mt-1 text-sm text-muted-foreground">
@@ -452,12 +464,14 @@ export default function NewQuestion() {
 
             <div className="grid gap-2">
               {difficultyOptions.map((option) => (
-                <button
-                  className={`flex h-11 items-center justify-between rounded-lg border px-3 text-sm font-semibold transition ${
+                <Button
+                  aria-pressed={form.difficulty === option.value}
+                  className={`h-11 justify-between px-3 ${
                     form.difficulty === option.value
                       ? "border-primary bg-primary/10 text-primary"
-                      : "border-border text-muted-foreground hover:text-foreground"
+                      : "text-muted-foreground"
                   }`}
+                  variant="outline"
                   key={option.value}
                   onClick={() =>
                     setForm((current) => ({
@@ -471,35 +485,34 @@ export default function NewQuestion() {
                   {form.difficulty === option.value && (
                     <Check className="size-4" />
                   )}
-                </button>
+                </Button>
               ))}
             </div>
 
-            <label className="flex items-start gap-3 rounded-lg border border-border/70 bg-muted/20 p-3 text-sm">
-              <input
+            <div className="flex items-start gap-3 rounded-lg border border-border/70 bg-muted/20 p-3 text-sm">
+              <Checkbox
                 checked={form.runImmediately}
-                className="mt-1 size-4 accent-primary"
-                onChange={(event) =>
+                id="runImmediately"
+                onCheckedChange={(checked) =>
                   setForm((current) => ({
                     ...current,
-                    runImmediately: event.target.checked,
+                    runImmediately: Boolean(checked),
                   }))
                 }
-                type="checkbox"
+                className="mt-0.5"
               />
-              <span>
-                <span className="block font-semibold">
+              <Label htmlFor="runImmediately" className="grid gap-1 cursor-pointer font-normal">
+                <span className="block font-semibold text-foreground">
                   Run benchmark immediately after saving
                 </span>
-                <span className="mt-1 block text-xs leading-5 text-muted-foreground">
+                <span className="block text-xs leading-5 text-muted-foreground">
                   Runs DR-RAG once the question is created.
                 </span>
-              </span>
-            </label>
+              </Label>
+            </div>
           </aside>
         </section>
       </form>
-    </main>
+    </PageShell>
   );
 }
-

@@ -11,7 +11,8 @@ import {
   UploadCloud,
 } from 'lucide-react'
 
-import PublicNav from './components/shared/PublicNav'
+import { Button } from '@/components/ui/button'
+import PublicNav from '@/components/shared/PublicNav'
 
 const productRows = [
   { access: 'Owner', name: 'Machine Learning Notes', subject: 'CSE301', type: 'PDF' },
@@ -24,7 +25,7 @@ const workflow = [
   {
     icon: UploadCloud,
     title: 'Keep every source organized',
-    description: 'Upload common document formats, assign subjects, track versions, and recover deleted files from one workspace.',
+    description: 'Upload common document formats, assign subjects, and recover deleted files from one workspace.',
   },
   {
     icon: Share2,
@@ -49,24 +50,24 @@ function ProductPreview() {
           <p className="text-sm font-semibold">My Document</p>
           <p className="text-xs text-muted-foreground">18 documents</p>
         </div>
-        <button className="ml-auto inline-flex h-9 items-center gap-2 rounded-md bg-primary px-3 text-sm font-semibold text-white" type="button">
-          <UploadCloud className="size-4" aria-hidden="true" />
+        <Button className="ml-auto" type="button">
+          <UploadCloud data-icon="inline-start" aria-hidden="true" />
           Upload
-        </button>
+        </Button>
       </div>
 
-      <div className="flex items-center gap-3 border-b border-border bg-[#f7f8f7] px-5 py-3">
+      <div className="flex items-center gap-3 border-b border-border bg-sidebar px-5 py-3">
         <div className="relative w-80">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
-          <div className="h-9 rounded-md border border-input bg-white pl-9 pt-2 text-xs text-muted-foreground">
+          <div className="h-9 rounded-md border border-input bg-card pl-9 pt-2 text-xs text-muted-foreground">
             Search documents
           </div>
         </div>
-        <span className="rounded-md border border-border bg-white px-3 py-2 text-xs">All subjects</span>
-        <span className="rounded-md border border-border bg-white px-3 py-2 text-xs">Recently updated</span>
+        <span className="rounded-md border border-border bg-card px-3 py-2 text-xs">All subjects</span>
+        <span className="rounded-md border border-border bg-card px-3 py-2 text-xs">Recently updated</span>
       </div>
 
-      <div className="grid grid-cols-[minmax(280px,1fr)_130px_100px_44px] border-b border-border bg-[#f7f8f7] px-5 py-3 text-xs font-semibold text-muted-foreground">
+      <div className="grid grid-cols-[minmax(280px,1fr)_130px_100px_44px] border-b border-border bg-sidebar px-5 py-3 text-xs font-semibold text-muted-foreground">
         <span>Name</span>
         <span>Subject</span>
         <span>Access</span>
@@ -78,7 +79,7 @@ function ProductPreview() {
           key={row.name}
         >
           <div className="flex min-w-0 items-center gap-3">
-            <span className="grid size-9 shrink-0 place-items-center rounded-md border border-[#d6e4dc] bg-[#eef6f1] text-primary">
+            <span className="grid size-9 shrink-0 place-items-center rounded-md border border-accent bg-accent/50 text-primary">
               <FileText className="size-4" aria-hidden="true" />
             </span>
             <div className="min-w-0">
@@ -97,7 +98,7 @@ function ProductPreview() {
 
 export default function LandingPage() {
   return (
-    <div className="min-h-svh overflow-x-hidden bg-white text-foreground">
+    <div className="min-h-svh overflow-x-hidden bg-background text-foreground">
       <PublicNav ctaLabel="Start studying" />
 
       <main>
@@ -115,11 +116,11 @@ export default function LandingPage() {
                 Organize course documents, collaborate with your team, and ask grounded questions without switching between disconnected tools.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <a className="inline-flex h-11 items-center gap-2 rounded-md bg-primary px-5 text-sm font-semibold text-white" href="/register">
+                <a className="inline-flex h-11 items-center gap-2 rounded-md bg-primary px-5 text-sm font-semibold text-primary-foreground" href="/register">
                   Create account
                   <ArrowRight className="size-4" aria-hidden="true" />
                 </a>
-                <a className="inline-flex h-11 items-center rounded-md border border-border bg-white px-5 text-sm font-semibold" href="/login">
+                <a className="inline-flex h-11 items-center rounded-md border border-border bg-card px-5 text-sm font-semibold" href="/login">
                   Sign in
                 </a>
               </div>
@@ -129,7 +130,7 @@ export default function LandingPage() {
                 </div>
               </div>
               <div className="mt-8 hidden flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground sm:flex">
-                {['Protected sharing', 'Version history', 'Grounded AI chat'].map((item) => (
+                {['Protected sharing', 'Grounded AI chat'].map((item) => (
                   <span className="inline-flex items-center gap-2" key={item}>
                     <CheckCircle2 className="size-4 text-primary" aria-hidden="true" />
                     {item}
@@ -144,7 +145,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="border-b border-border bg-[#f7f8f7] px-5 pb-20 pt-10 sm:px-8 lg:px-12" id="workflow">
+        <section className="border-b border-border bg-sidebar px-5 pb-20 pt-10 sm:px-8 lg:px-12" id="workflow">
           <div className="mx-auto max-w-7xl">
             <div className="max-w-2xl">
               <h2 className="text-3xl font-semibold tracking-[-0.02em] sm:text-4xl">A direct path from source to study</h2>
@@ -177,7 +178,7 @@ export default function LandingPage() {
                 AI answers stay tied to your study context
               </h2>
               <p className="mt-5 max-w-[65ch] text-base leading-7 text-muted-foreground">
-                Select a subject, document, or version before asking. AI Study Hub keeps retrieval scope visible so you always know what informed an answer.
+                Select a subject or document before asking. AI Study Hub keeps retrieval scope visible so you always know what informed an answer.
               </p>
             </div>
             <div className="border-y border-border py-4">

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
-import { getDocument } from '../services/documentApi'
-import type { DocumentDetail } from '../types/document'
+import { getDocument } from '@/services/documentApi'
+import type { DocumentDetail } from '@/types/document'
 
 export function useDocumentDetail(documentId: string | undefined) {
   const [document, setDocument] = useState<DocumentDetail | null>(null)

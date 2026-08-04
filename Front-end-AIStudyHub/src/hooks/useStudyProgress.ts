@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { MaterialType } from '../services/studyMaterialApi';
+import type { MaterialType } from '@/services/studyMaterialApi';
 
 export interface BaseProgressData {
   type: MaterialType;

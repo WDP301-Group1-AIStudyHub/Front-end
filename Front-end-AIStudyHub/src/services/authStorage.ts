@@ -1,4 +1,4 @@
-import type { AuthUser } from '../types/auth'
+import type { AuthUser } from '@/types/auth'
 
 const TOKEN_KEY = 'ai-study-hub:access-token'
 const USER_KEY = 'ai-study-hub:user'

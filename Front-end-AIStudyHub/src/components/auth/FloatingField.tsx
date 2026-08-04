@@ -1,4 +1,6 @@
 import type { ChangeEventHandler } from 'react'
+import { Field, FieldLabel } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
 
 export default function FloatingField({
   autoComplete,
@@ -24,21 +26,19 @@ export default function FloatingField({
   value?: string
 }) {
   return (
-    <label className="relative grid" htmlFor={id}>
-      <input
+    <Field>
+      <FieldLabel htmlFor={id}>{label}</FieldLabel>
+      <Input
         autoComplete={autoComplete}
-        className="fl-input disabled:cursor-not-allowed disabled:opacity-50"
         disabled={disabled}
         id={id}
         name={name}
         onChange={onChange}
-        placeholder=" "
         readOnly={readOnly}
         required={required}
         type={type}
         value={value}
       />
-      <span className="fl-label">{label}</span>
-    </label>
+    </Field>
   )
 }

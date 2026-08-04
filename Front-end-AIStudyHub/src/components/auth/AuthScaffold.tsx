@@ -17,7 +17,7 @@ export default function AuthScaffold({
   showFooter?: boolean
 }) {
   return (
-    <div className="flex min-h-svh flex-col overflow-x-hidden bg-[#f7f8f7]">
+    <div className="flex min-h-svh flex-col overflow-x-hidden bg-sidebar">
       <AuthHeader action={action} />
       <main className={`w-full flex-1 px-5 pb-12 pt-24 sm:px-8 lg:px-12 ${mode === 'centered' ? mainCentered : mainSplit}`}>
         {children}

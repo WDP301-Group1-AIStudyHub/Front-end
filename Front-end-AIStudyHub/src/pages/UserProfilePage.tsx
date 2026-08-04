@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   AtSign,
   CalendarDays,
@@ -7,10 +7,12 @@ import {
   ShieldCheck,
   UserRound,
 } from 'lucide-react'
-import { CelestialInlineLoader } from '../components/shared/CelestialLoading'
+import { CelestialInlineLoader } from '@/components/shared/CelestialLoading'
 import { Button } from '@/components/ui/button'
-import { updateProfile } from '../services/authApi'
-import { getStoredToken, getStoredUser, storeAuthSession } from '../services/authStorage'
+import { updateProfile } from '@/services/authApi'
+import { getStoredToken, getStoredUser, storeAuthSession } from '@/services/authStorage'
+import { PageShell } from '@/components/layout/PageShell'
+import { PageHeader } from '@/components/layout/PageHeader'
 
 function Field({
   disabled,
@@ -61,7 +63,7 @@ function InfoChip({
   value: string
 }) {
   return (
-    <div className="botanical-card flex items-center gap-3 px-4 py-3">
+    <div className="flex items-center gap-3 px-4 py-3">
       <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted text-primary [&>svg]:size-4">
         {icon}
       </span>
@@ -116,22 +118,16 @@ export default function UserProfilePage() {
     : 'Not available'
 
   return (
-    <main className="botanical-page min-h-svh overflow-y-auto p-5 md:p-8">
-      <header className="flex flex-col gap-2">
-        <p className="botanical-kicker">
-          Account settings
-        </p>
-        <h1 className="moonlit-title page-title">
-          My Profile
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Manage your display name and avatar across AI Study Hub.
-        </p>
-      </header>
+    <PageShell>
+      <PageHeader
+        eyebrow="Account settings"
+        title="My Profile"
+        description="Manage your display name and avatar across AI Study Hub."
+      />
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-[280px_1fr]">
+      <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
         <div className="flex flex-col gap-4">
-          <div className="botanical-bento flex flex-col items-center gap-4 p-6 text-center">
+          <div className="flex flex-col items-center gap-4 p-6 text-center">
             <div className="relative">
               <div className="flex size-24 items-center justify-center overflow-hidden rounded-full border border-border bg-muted">
                 {avatar ? (
@@ -191,7 +187,7 @@ export default function UserProfilePage() {
         </div>
 
         <div className="flex flex-col gap-5">
-          <div className="botanical-bento p-6">
+          <div className="p-6">
             <div className="mb-5 border-b border-border/60 pb-4">
               <h2 className="text-base font-semibold">Personal information</h2>
               <p className="mt-0.5 text-sm text-muted-foreground">
@@ -232,7 +228,7 @@ export default function UserProfilePage() {
           </div>
 
           {/* Read-only account info */}
-          <div className="botanical-bento p-6">
+          <div className="p-6">
             <div className="mb-5 border-b border-border/60 pb-4">
               <h2 className="text-base font-semibold">Account details</h2>
               <p className="mt-0.5 text-sm text-muted-foreground">
@@ -288,6 +284,6 @@ export default function UserProfilePage() {
           </div>
         </div>
       </div>
-    </main>
+    </PageShell>
   )
 }

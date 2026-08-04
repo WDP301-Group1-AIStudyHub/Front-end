@@ -26,16 +26,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import FlashcardStudy from "../shared/FlashcardStudy";
-import McqQuiz from "../shared/McqQuiz";
+import FlashcardStudy from "@/components/shared/FlashcardStudy";
+import McqQuiz from "@/components/shared/McqQuiz";
 import { MindmapView } from "./MindmapView";
-import type { IMcqItem, StudyMaterial } from "../../services/studyMaterialApi";
+import type { IMcqItem, StudyMaterial } from "@/services/studyMaterialApi";
 import type {
   ArtifactRecord,
   ArtifactType,
   MindmapNode,
-} from "../../services/artifactApi";
-import type { ArtifactKind, ChatArtifact } from "../../utils/extractArtifacts";
+} from "@/services/artifactApi";
+import type { ArtifactKind, ChatArtifact } from "@/utils/extractArtifacts";
 
 const KIND_ICONS: Record<ArtifactKind, typeof Code2> = {
   code: Code2,
@@ -418,7 +418,7 @@ export function ArtifactsPanel({
           return (
             <button
               key={type}
-              className="flex items-center gap-2 rounded-lg border border-border/70 bg-background/35 px-2.5 py-2 text-left text-[11px] font-medium text-card-foreground transition-all hover:border-primary/40 hover:shadow-sm"
+              className="flex items-center gap-2 rounded-lg border border-border/70 bg-background/35 px-2.5 py-2 text-left text-[11px] font-medium text-card-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50 transition-all hover:border-primary/40 hover:shadow-sm"
               onClick={() => setCreateType(type)}
               type="button"
             >
@@ -450,7 +450,7 @@ export function ArtifactsPanel({
               }`}
             >
               <button
-                className="flex min-w-0 flex-1 items-center gap-2 text-left"
+                className="flex min-w-0 flex-1 items-center gap-2 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                 disabled={generating}
                 onClick={() => {
                   if (record.status === "COMPLETED") setPreviewRecord(record);
@@ -492,24 +492,14 @@ export function ArtifactsPanel({
                 </span>
               </button>
               {failed && (
-                <button
-                  aria-label={`Retry ${record.title}`}
-                  className="grid size-5 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-background/70 hover:text-foreground"
-                  onClick={() => onRetry(record)}
-                  type="button"
-                >
+                <Button aria-label={`Retry ${record.title}`} onClick={() => onRetry(record)} type="button" className="size-5 shrink-0 rounded-full text-muted-foreground" size="icon-xs" variant="ghost">
                   <RotateCw className="size-3" aria-hidden="true" />
-                </button>
+                </Button>
               )}
               {!generating && (
-                <button
-                  aria-label={`Delete ${record.title}`}
-                  className="grid size-5 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-background/70 hover:text-red-500"
-                  onClick={() => onDelete(record._id)}
-                  type="button"
-                >
+                <Button aria-label={`Delete ${record.title}`} onClick={() => onDelete(record._id)} type="button" className="size-5 shrink-0 rounded-full text-muted-foreground hover:text-destructive" size="icon-xs" variant="ghost">
                   <Trash2 className="size-3" aria-hidden="true" />
-                </button>
+                </Button>
               )}
             </div>
           );
@@ -521,7 +511,7 @@ export function ArtifactsPanel({
           return (
             <button
               key={artifact.id}
-              className="group/artifact flex w-full items-center gap-2 rounded-lg border border-border/70 bg-background/35 p-3 text-left text-xs transition-all hover:border-primary/40 hover:shadow-sm"
+              className="group/artifact flex w-full items-center gap-2 rounded-lg border border-border/70 bg-background/35 p-3 text-left text-xs outline-none transition-all hover:border-primary/40 hover:shadow-sm focus-visible:ring-3 focus-visible:ring-ring/50"
               onClick={() => setPreviewArtifact(artifact)}
               type="button"
             >
