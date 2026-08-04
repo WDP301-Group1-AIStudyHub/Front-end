@@ -1,6 +1,6 @@
 export type StorageAdminStatus = 'OK' | 'WARNING' | 'CRITICAL' | 'FULL'
 export type AdminPaymentStatus = 'PENDING' | 'COMPLETED' | 'FAILED' | 'CANCELLED' | 'EXPIRED'
-export type AdminPaymentProvider = 'VNPAY' | 'MOCK'
+export type AdminPaymentProvider = 'PAYOS' | 'VNPAY' | 'MOCK'
 export type AdminPaymentPlatform = 'WEB' | 'MOBILE'
 
 export interface AdminStoragePackage {
@@ -70,6 +70,7 @@ export interface AdminTransactionPackageSnapshot {
 export interface AdminPaymentTransaction {
   id: string
   orderRef: string
+  providerOrderCode?: number | null
   status: AdminPaymentStatus
   provider: AdminPaymentProvider
   clientPlatform: AdminPaymentPlatform
@@ -78,6 +79,7 @@ export interface AdminPaymentTransaction {
   packageId: string
   package: AdminTransactionPackageSnapshot
   providerTxnRef: string
+  paymentLinkId?: string
   providerResponseCode: string
   bankCode: string
   settledBy: string | null
