@@ -46,13 +46,13 @@ export function useStoragePurchase(options: { onSettled?: () => void } = {}) {
         return `${pkg.name} is already your current plan.`;
       }
 
+      // A purchase REPLACES quota rather than adding to it, so buying anything
+      // with less capacity than the current plan is always a paid
+      // self-downgrade. This also covers returning to Free, since Free is
+      // always the smallest plan.
       const currentPackage = storage?.package;
-      const isReturningToFree =
-        pkg.priceVnd === 0 &&
-        Boolean(currentPackage && currentPackage.priceVnd > 0);
-
-      if (isReturningToFree) {
-        return "The Free plan cannot be selected after upgrading.";
+      if (currentPackage && pkg.capacityBytes < currentPackage.capacityBytes) {
+        return `Downgrading from ${currentPackage.name} to ${pkg.name} isn't supported.`;
       }
 
       const committed =
