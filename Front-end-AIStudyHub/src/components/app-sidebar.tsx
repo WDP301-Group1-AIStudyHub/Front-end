@@ -13,10 +13,9 @@ import {
   Star,
   Trash2,
   Users,
-  SearchIcon,
-  PlusIcon,
   SparklesIcon,
   HardDrive,
+  ExternalLink,
   CreditCard,
 } from "lucide-react";
 
@@ -36,7 +35,146 @@ import { groupThreadsByDate } from "@/lib/groupChatThreads";
 import { logout } from "@/services/authApi";
 import { getStoredUser } from "@/services/authStorage";
 import { useChatThreadStore } from "@/store/useChatThreadStore";
-import { Button } from "./ui/button";
+
+import { Progress } from "@/components/ui/progress";
+import { useAiUsage, deriveAiPlanState } from "@/hooks/useAiUsage";
+
+function SidebarUsageCard() {
+  const { usage } = useAiUsage();
+  const planState = deriveAiPlanState(usage);
+
+  if (planState.kind === "loading") {
+    return (
+      <div className="rounded-lg border border-sidebar-border bg-sidebar-accent/30 p-3.5 shadow-2xs group-data-[collapsible=icon]:hidden animate-pulse">
+        <div className="flex items-center justify-between text-xs font-medium text-sidebar-foreground">
+          <div className="h-3.5 w-20 rounded bg-sidebar-accent" />
+          <div className="h-3.5 w-8 rounded bg-sidebar-accent" />
+        </div>
+        <div className="h-1.5 w-full mt-2.5 rounded bg-sidebar-accent" />
+      </div>
+    );
+  }
+
+  switch (planState.kind) {
+    case "degraded":
+      return (
+        <div className="rounded-lg border border-warning/30 bg-warning/15 p-3.5 shadow-2xs group-data-[collapsible=icon]:hidden">
+          <div className="flex items-center justify-between text-xs font-medium text-warning-foreground">
+            <span>Free Plan usage</span>
+            <span className="font-semibold">Degraded</span>
+          </div>
+          <p className="mt-1 text-[11px] leading-tight text-warning-foreground/90">
+            Key broken — spending free quota ({planState.used}/{planState.limit}
+            ).
+          </p>
+          <Progress
+            value={planState.percentage}
+            className="h-1.5 mt-2 bg-warning/20"
+          />
+          <div className="mt-2.5">
+            <Link
+              to="/profile"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-warning-foreground hover:underline"
+            >
+              Fix your key <ExternalLink className="size-3" />
+            </Link>
+          </div>
+        </div>
+      );
+
+    case "degraded_exhausted":
+      return (
+        <div className="rounded-lg border border-destructive/30 bg-destructive/15 p-3.5 shadow-2xs group-data-[collapsible=icon]:hidden">
+          <div className="flex items-center justify-between text-xs font-medium text-destructive-foreground">
+            <span>Quota exhausted</span>
+            <span className="font-semibold">Key broken</span>
+          </div>
+          <p className="mt-1 text-[11px] leading-tight text-destructive-foreground/90">
+            Your key is broken and monthly free quota is exhausted.
+          </p>
+          <div className="mt-2.5">
+            <Link
+              to="/profile"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-destructive-foreground hover:underline"
+            >
+              Fix your key <ExternalLink className="size-3" />
+            </Link>
+          </div>
+        </div>
+      );
+
+    case "byok":
+      return (
+        <div className="rounded-lg border border-sidebar-border bg-sidebar-accent/30 p-3.5 shadow-2xs group-data-[collapsible=icon]:hidden">
+          <div className="flex items-center justify-between text-xs font-medium text-sidebar-foreground">
+            <span>BYOK Plan</span>
+            <span className="text-muted-foreground font-medium">Active</span>
+          </div>
+          <div className="mt-2">
+            <Link
+              to="/profile"
+              className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+            >
+              Manage key <ExternalLink className="size-3" />
+            </Link>
+          </div>
+        </div>
+      );
+
+    case "exempt":
+      return (
+        <div className="rounded-lg border border-sidebar-border bg-sidebar-accent/30 p-3.5 shadow-2xs group-data-[collapsible=icon]:hidden">
+          <div className="flex items-center justify-between text-xs font-medium text-sidebar-foreground">
+            <span>Unlimited Plan</span>
+            <span className="text-muted-foreground font-medium">Active</span>
+          </div>
+        </div>
+      );
+
+    case "exhausted":
+      return (
+        <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3.5 shadow-2xs group-data-[collapsible=icon]:hidden">
+          <div className="flex items-center justify-between text-xs font-medium text-destructive">
+            <span>Free Plan</span>
+            <span className="font-semibold">Limit reached</span>
+          </div>
+          <Progress value={100} className="h-1.5 mt-2.5 bg-destructive/20" />
+          <div className="mt-2">
+            <Link
+              to="/profile"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+            >
+              Add a key <ExternalLink className="size-3" />
+            </Link>
+          </div>
+        </div>
+      );
+
+    case "counting":
+      return (
+        <div className="rounded-lg border border-sidebar-border bg-sidebar-accent/30 p-3.5 shadow-2xs group-data-[collapsible=icon]:hidden">
+          <div className="flex items-center justify-between text-xs font-medium text-sidebar-foreground">
+            <span>Free Plan usage</span>
+            <span className="text-muted-foreground">
+              {planState.percentage}%
+            </span>
+          </div>
+          <Progress
+            value={planState.percentage}
+            className="h-1.5 mt-2.5 bg-sidebar-accent"
+          />
+          <div className="mt-2">
+            <Link
+              to="/profile"
+              className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+            >
+              Add a key <ExternalLink className="size-3" />
+            </Link>
+          </div>
+        </div>
+      );
+  }
+}
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { state: sidebarState } = useSidebar();
@@ -84,9 +222,25 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     }
   };
 
-  const chatGroups = React.useMemo(
-    () => groupThreadsByDate(chatSessions),
+  const filteredChatSessions = React.useMemo(
+    () =>
+      chatSessions.filter(
+        (s) => s.messageCount === undefined || s.messageCount > 0,
+      ),
     [chatSessions],
+  );
+
+  const chatGroups = React.useMemo(
+    () => groupThreadsByDate(filteredChatSessions),
+    [filteredChatSessions],
+  );
+
+  const filteredArchivedSessions = React.useMemo(
+    () =>
+      archivedSessions.filter(
+        (s) => s.messageCount === undefined || s.messageCount > 0,
+      ),
+    [archivedSessions],
   );
 
   const isDocumentNavActive =
@@ -97,12 +251,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     activePath.startsWith("/documents/");
 
   const baseNav = [
-    {
-      title: "Search",
-      url: "/#",
-      icon: <SearchIcon />,
-      isActive: activePath === "/#",
-    },
     {
       title: "Dashboard",
       url: "/dashboard",
@@ -218,21 +366,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar className="border-r-0" collapsible="icon" {...props}>
       <SidebarHeader className="p-1.5 group-data-[collapsible=icon]:p-2">
-        <div className="flex items-center gap-2 min-h-9 px-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2">
+        <div className="flex items-center gap-2 min-h-10 px-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2">
           <Link className="min-w-0 h-4.5" to="/dashboard">
             <BrandLogo compact={sidebarState === "collapsed"} />
           </Link>
         </div>
-        <Button variant={"outline"} className="shadow-2xs">
-          <PlusIcon data-icon="inline-start" />
-          Add
-        </Button>
         <NavMain items={isAdmin ? adminNav : baseNav} />
       </SidebarHeader>
       <SidebarContent>
         {!isAdmin && (
           <NavChats
-            archived={archivedSessions}
+            archived={filteredArchivedSessions}
             archivedLoaded={archivedLoaded}
             groups={chatGroups}
             onArchive={handleArchiveChat}
@@ -244,6 +388,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         )}
       </SidebarContent>
       <SidebarFooter className="mt-auto group-data-[collapsible=icon]:p-2">
+        {!isAdmin && <SidebarUsageCard />}
         <NavUser onLogout={handleLogout} user={user} />
       </SidebarFooter>
     </Sidebar>

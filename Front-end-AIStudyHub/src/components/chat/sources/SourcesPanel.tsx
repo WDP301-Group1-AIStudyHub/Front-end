@@ -55,7 +55,7 @@ export const SourcesPanel: React.FC<SourcesPanelProps> = ({
 
   const headerIsTrigger = collapsible && !isOpen;
   const headerClassName =
-    "flex items-center justify-between px-3.5 py-2.5 select-none w-full text-left transition-colors";
+    "flex items-center justify-between px-3.5 py-2.5 select-none w-full text-left transition-colors rounded-xl";
 
   const headerContent = (
     <>
@@ -92,7 +92,7 @@ export const SourcesPanel: React.FC<SourcesPanelProps> = ({
       open={isOpen}
       onOpenChange={(open) => setCollapsed(!open)}
       className={cn(
-        "flex flex-col rounded-lg border border-border bg-card text-card-foreground shadow-xs overflow-hidden text-sm transition-all",
+        "flex flex-col rounded-xl bg-card border border-border shadow-sm overflow-hidden text-card-foreground text-sm transition-all",
         className,
       )}
     >
@@ -103,7 +103,7 @@ export const SourcesPanel: React.FC<SourcesPanelProps> = ({
         <CollapsibleTrigger asChild>
           <button
             type="button"
-            className={cn(headerClassName, "cursor-pointer hover:bg-muted/40")}
+            className={cn(headerClassName, "cursor-pointer hover:bg-muted/40 ")}
             aria-label="Expand panel"
           >
             {headerContent}
@@ -117,7 +117,7 @@ export const SourcesPanel: React.FC<SourcesPanelProps> = ({
       <CollapsibleContent>
         <div
           ref={listRef}
-          className="flex flex-col max-h-[calc(100vh-14rem)] divide-y divide-accent overflow-y-auto"
+          className="flex flex-col max-h-[calc(100vh-14rem)] divide-y divide-border overflow-y-auto scrollbar-none"
         >
           {groups.map((group) => {
             const locator = sourceLocator(group.chunks[0]);
@@ -149,9 +149,7 @@ export const SourcesPanel: React.FC<SourcesPanelProps> = ({
                 data-source-entry={group.documentId}
                 className={cn(
                   "flex flex-col gap-1.5 transition-all duration-200 px-3.5 py-3",
-                  isFocused
-                    ? "border-primary/60 bg-primary/10 shadow-sm ring-1 ring-primary/40"
-                    : "border-border/50 bg-card/50 hover:bg-muted/30 hover:border-border",
+                  isFocused ? "bg-primary/10" : "",
                 )}
               >
                 {/* Title & Document Status */}

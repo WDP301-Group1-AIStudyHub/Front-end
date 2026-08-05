@@ -142,8 +142,11 @@ export default function BackgroundUploadWidget() {
                     {item.status === "processing" && (
                       <Loader2 className="h-4 w-4 animate-spin text-primary" />
                     )}
-                    {item.status === "success" && (
+                    {item.status === "success" && !item.warning && (
                       <CheckCircle2 className="h-4 w-4 text-primary" />
+                    )}
+                    {item.status === "success" && item.warning && (
+                      <AlertCircle className="h-4 w-4 text-amber-500" />
                     )}
                     {item.status === "failed" && (
                       <AlertCircle className="h-4 w-4 text-destructive" />
@@ -172,10 +175,23 @@ export default function BackgroundUploadWidget() {
                           (item.progress >= 95
                             ? "Indexing"
                             : "Extracting text")}
-                        {item.status === "success" && "Completed"}
+                        {item.status === "success" && !item.warning && "Completed"}
                         {item.status === "failed" && (item.error || "Failed")}
                       </span>
+                      {item.status === "success" && item.warning && (
+                        <span
+                          className="truncate text-[11px] font-medium text-amber-600 dark:text-amber-400"
+                          title={item.warning}
+                        >
+                          Uploaded — not searchable
+                        </span>
+                      )}
                     </div>
+                    {item.status === "success" && item.warning && (
+                      <span className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
+                        {item.warning}
+                      </span>
+                    )}
                   </div>
                 </div>
 

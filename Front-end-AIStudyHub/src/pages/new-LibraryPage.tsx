@@ -96,6 +96,7 @@ import SharedDocumentSubjectDialog from "@/components/documents/SharedDocumentSu
 import { Badge } from "@/components/ui/badge";
 import { IconTile } from "@/components/shared/IconTile";
 import DocumentPreviewPage from "@/pages/DocumentPreviewPage";
+import { getDocumentIndexState, getDocumentIndexIssue } from "@/lib/chatScope";
 import { formatStorageBytes } from "../utils/formatStorage";
 import { useStorageStore } from "../store/useStorageStore";
 
@@ -246,27 +247,8 @@ function getDocumentFileType(document: DocumentItem): string {
 
 function getDocumentProcessingStatus(
   document: DocumentItem,
-): "ready" | "processing" | "failed" {
-  const status = [document.extractionStatus, document.status]
-    .filter(Boolean)
-    .join(" ")
-    .toLowerCase();
-
-  if (status.includes("fail") || status.includes("error")) {
-    return "failed";
-  }
-
-  if (
-    status.includes("pending") ||
-    status.includes("processing") ||
-    status.includes("uploading") ||
-    status.includes("extracting") ||
-    status.includes("indexing")
-  ) {
-    return "processing";
-  }
-
-  return "ready";
+): "ready" | "processing" | "unsearchable" {
+  return getDocumentIndexState(document);
 }
 
 function isSupportedUploadFile(file: File): boolean {
@@ -1325,7 +1307,7 @@ export default function NewLibraryPage() {
                     <SelectItem value="all">All statuses</SelectItem>
                     <SelectItem value="ready">Ready</SelectItem>
                     <SelectItem value="processing">Processing</SelectItem>
-                    <SelectItem value="failed">Failed</SelectItem>
+                    <SelectItem value="unsearchable">Not searchable</SelectItem>
                   </SelectGroup>
                 </SelectContent>
               </Select>
@@ -1505,6 +1487,24 @@ export default function NewLibraryPage() {
                                     Shared
                                   </Badge>
                                 )}
+                                {(() => {
+                                  const indexState = getDocumentIndexState(document);
+                                  if (indexState !== "unsearchable") return null;
+                                  const issue = getDocumentIndexIssue(document);
+                                  return (
+                                    <Badge
+                                      className="h-5 rounded-full px-1.5 text-[0.65rem] border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                                      variant="outline"
+                                      title={
+                                        issue
+                                          ? `${issue.summary} ${issue.action}`
+                                          : "Not searchable"
+                                      }
+                                    >
+                                      Not searchable
+                                    </Badge>
+                                  );
+                                })()}
                               </div>
                             </div>
                           </button>

@@ -97,12 +97,23 @@ export interface AgentToolCallSummary {
 
 export type AgentEvent =
   | { type: 'agent_step'; step: number }
-  | { type: 'tool_start'; tool: string; input: unknown }
-  | { type: 'tool_end'; tool: string; resultSummary: string }
-  | { type: 'grounding_check' }
+  | { type: 'thought'; step: number; text: string }
+  | { type: 'answer_delta'; step: number; text: string }
+  | {
+      type: 'phase'
+      phase: 'retrieving' | 'verifying' | 'citing'
+      detail?: string
+    }
+  | { type: 'answer_revised'; reason: 'grounding_failed' | 'empty_answer' }
+  | { type: 'tool_start'; tool: string; toolCallId: string; input: unknown }
+  | { type: 'tool_end'; tool: string; toolCallId: string; resultSummary: string }
   | { type: 'artifact_created'; artifactId: string; artifactType: string; title: string }
   | { type: 'final'; data: AskChatResponse }
-  | { type: 'error'; message: string }
+  // Out-of-band condition the answer is still produced under — currently only
+  // DEGRADED_MODE, sent when the user's own key failed and the request fell
+  // back to the platform allowance.
+  | { type: 'notice'; code: string; message: string }
+  | { type: 'error'; code?: string; message: string }
 
 export interface ChatHistoryItem {
   id: string
@@ -116,6 +127,7 @@ export interface ChatHistoryItem {
   subjectId?: string
   scope?: ChatScope
   sources: ChatSource[]
+  citedSources?: ChatSource[]
   evaluation?: ChatEvaluation
   createdAt: string
   updatedAt: string
