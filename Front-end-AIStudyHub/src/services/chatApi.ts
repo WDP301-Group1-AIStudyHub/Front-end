@@ -16,6 +16,7 @@ import type {
   EvaluationSummary,
 } from '@/types/chat'
 import { clearAuthSession, getStoredToken } from './authStorage'
+import { notifyAiUsageChanged } from '@/lib/aiUsageEvents'
 
 const API_ORIGIN =
   import.meta.env.VITE_API_BASE_URL?.replace(/\/+$/, '') ?? ''
@@ -23,11 +24,15 @@ const API_BASE_URL = API_ORIGIN.replace(/\/api$/, '')
 
 export class ChatApiError extends Error {
   status: number
+  // The server's machine-readable code, when it sent one. Callers branch on
+  // this rather than the prose, which is written for API consumers.
+  code?: string
 
-  constructor(message: string, status: number) {
+  constructor(message: string, status: number, code?: string) {
     super(message)
     this.name = 'ChatApiError'
     this.status = status
+    this.code = code
   }
 }
 
@@ -95,7 +100,11 @@ async function request<T>(
         window.location.href = '/login'
       }
     }
-    throw new ChatApiError(payload.message || 'Request failed', response.status)
+    throw new ChatApiError(
+      payload.message || 'Request failed',
+      response.status,
+      (payload as { code?: string }).code,
+    )
   }
 
   return payload
@@ -123,8 +132,14 @@ export async function* askAgentStream(
   })
 
   if (!response.ok) {
+    // Quota rejection lands here rather than as an `error` event: the check
+    // runs before the handler writes the SSE headers, so it is a plain 429.
     const errorPayload = await response.json().catch(() => ({}))
-    throw new ChatApiError(errorPayload.message || 'Streaming request failed', response.status)
+    throw new ChatApiError(
+      errorPayload.message || 'Streaming request failed',
+      response.status,
+      errorPayload.code,
+    )
   }
 
   const reader = response.body?.getReader()
@@ -156,6 +171,17 @@ export async function* askAgentStream(
     }
   } finally {
     reader.releaseLock()
+
+    // Deliberately after the loop rather than on the `final` event: the server
+    // increments the counter once the handler returns, which is after `final`
+    // has already been written to the stream. Refetching on `final` races that
+    // write and reads back the previous count.
+    //
+    // Unconditional, including on failed and aborted runs, because a request
+    // that dies mid-stream is exactly when the key may have just been marked
+    // invalid — that is the moment the plan badge most needs to be re-read.
+    // The refetch is a cheap idempotent GET.
+    notifyAiUsageChanged()
   }
 }
 

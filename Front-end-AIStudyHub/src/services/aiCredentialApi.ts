@@ -6,13 +6,12 @@ import type {
   SaveCredentialPayload,
 } from '@/types/ai'
 
-// Mocking is on by default in dev, but `VITE_USE_MOCK_AI=false` must be able to
-// turn it off — otherwise the real endpoints can never be exercised locally once
-// the backend exists.
-const mockFlag = import.meta.env.VITE_USE_MOCK_AI
-
-const USE_MOCK =
-  mockFlag === 'true' || (import.meta.env.DEV && mockFlag !== 'false')
+// Mocking is opt-in. It used to default on in dev, which meant every developer
+// without `VITE_USE_MOCK_AI=false` in their untracked `.env` was exercising the
+// mock rather than the real BYOK endpoints — and could not tell from the UI.
+// Set `VITE_USE_MOCK_AI=true` to work on states the backend is awkward to force,
+// such as a rejected key.
+const USE_MOCK = import.meta.env.VITE_USE_MOCK_AI === 'true'
 
 // Loaded on demand so the mock is code-split out of the main bundle and never
 // evaluated in a build that does not use it.

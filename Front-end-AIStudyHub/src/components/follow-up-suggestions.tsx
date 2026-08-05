@@ -55,7 +55,6 @@ const FollowupSuggestionsRow: FC = () => {
             className="aui-thread-followup-suggestion bg-background hover:bg-muted/80 rounded-full border px-3 py-1 text-sm whitespace-nowrap transition-colors ease-in"
             prompt={suggestion.prompt}
             method="replace"
-            autoSend
           >
             {suggestion.prompt}
           </ThreadPrimitive.Suggestion>

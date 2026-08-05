@@ -9,6 +9,7 @@ import {
 } from "@assistant-ui/react";
 import { Thread, type ThreadComponents } from "@/components/thread";
 import { askAgentStream, ChatApiError } from "@/services/chatApi";
+import { NOTICE_TEXT, askErrorText, quotaErrorText } from "@/lib/agentNotices";
 import type { AskChatPayload, AskChatResponse } from "@/types/chat";
 import { PageShell } from "@/components/layout/PageShell";
 import { SourcesPanelProvider } from "@/components/chat/sources/sourcesPanelStore";
@@ -20,11 +21,37 @@ import {
   useArtifacts,
 } from "@/components/chat/artifacts/artifactsStore";
 import { ArtifactToolCard } from "@/components/chat/artifacts/ArtifactToolCard";
+import { ComposerPrimitive } from "@assistant-ui/react";
+import { ComposerTriggerPopover } from "@/components/composer/ComposerTriggerPopover";
+import { SelectedDocumentChips } from "@/components/composer/SelectedDocumentChips";
+import { useDocumentMentions } from "@/components/composer/useDocumentMentions";
+import { useAskSlashCommands } from "@/components/composer/useAskSlashCommands";
+import { useDocumentScope } from "@/hooks/useDocumentScope";
+import { usePromptCommand } from "@/hooks/usePromptCommand";
+import { ComposerCommandOverlay } from "@/components/composer/ComposerCommandOverlay";
+import { CommandAwareText } from "@/components/composer/CommandAwareText";
 
 function AskPageContent() {
   const [searchParams, setSearchParams] = useSearchParams();
   const threadId = searchParams.get("threadId") ?? undefined;
   const { addOptimistic, setThreadId } = useArtifacts();
+
+  const scope = useDocumentScope();
+  const {
+    documents,
+    loadingDocs,
+    selectedDocs,
+    selectedSubjectKey,
+    selectDocument,
+    selectSubject,
+    removeDocument,
+    notifyUnavailable,
+    getScopeFields,
+  } = scope;
+
+  // `getScopeFields` is referentially stable and reads the selection off refs
+  // internally, so the memoized model adapter below can close over it once and
+  // still see documents mentioned later.
 
   const handleThreadIdChange = useCallback(
     (nextThreadId: string | undefined) => {
@@ -66,7 +93,13 @@ function AskPageContent() {
           // cached id, so this never creates a duplicate.
           const { remoteId } = await threadListItemRuntime.initialize();
 
-          const payload: AskChatPayload = { question: text };
+          // Scope comes from the `@` mentions in the composer. With nothing
+          // mentioned this resolves to library_all, which is what /ask sent
+          // unconditionally before mentions existed.
+          const payload: AskChatPayload = {
+            question: text,
+            ...getScopeFields(),
+          };
           if (remoteId) {
             payload.threadId = remoteId;
             setThreadId(remoteId);
@@ -225,25 +258,34 @@ function AskPageContent() {
                   if (currentTextPart) {
                     currentTextPart.text = "";
                   }
+                } else if (event.type === "notice") {
+                  // Pushed as its own part ahead of everything else rather than
+                  // prefixed onto the answer, because `final` overwrites the
+                  // answer part wholesale and would erase it.
+                  parts.unshift({
+                    type: "text",
+                    text: `*${NOTICE_TEXT[event.code] ?? event.message}*`,
+                  });
                 } else if (event.type === "final") {
                   finalResult = event.data;
                 } else if (event.type === "error") {
                   parts.push({
                     type: "text",
-                    text: `Error: ${event.message}`,
+                    text: askErrorText(event),
                   });
                 }
               }
             } catch (error) {
               if ((error as Error).name !== "AbortError") {
                 let errorAnswer: string;
-                if (error instanceof ChatApiError && error.status >= 500) {
+                const quotaText = quotaErrorText(error);
+                if (quotaText) {
+                  errorAnswer = quotaText;
+                } else if (error instanceof ChatApiError && error.status >= 500) {
                   errorAnswer =
                     "The server is busy or still waking up. Please send the message again in 10-15 seconds.";
                 } else {
-                  const msg =
-                    error instanceof Error ? error.message : "Failed to get answer";
-                  errorAnswer = `Warning: ${msg}`;
+                  errorAnswer = askErrorText(error);
                 }
                 parts.push({ type: "text", text: errorAnswer });
               }
@@ -330,7 +372,7 @@ function AskPageContent() {
     );
 
     return useLocalRuntime(modelAdapter);
-  }, [addOptimistic, setThreadId]);
+  }, [addOptimistic, setThreadId, getScopeFields]);
 
   const runtime = useRemoteThreadListRuntime({
     threadId,
@@ -339,13 +381,95 @@ function AskPageContent() {
     runtimeHook,
   });
 
+  const mention = useDocumentMentions({
+    documents,
+    loading: loadingDocs,
+    onSelectDocument: selectDocument,
+    onSelectSubject: selectSubject,
+    onUnavailable: notifyUnavailable,
+    selectedSubjectKey,
+  });
+
+  const promptCmd = usePromptCommand();
+  const {
+    activeCommand,
+    select: selectCommand,
+    clear: clearCommand,
+    transformText,
+  } = promptCmd;
+
+  const slash = useAskSlashCommands({ onCommandSelected: selectCommand });
+
+  const ComposerInputOverlay = useMemo(() => {
+    if (!activeCommand) return undefined;
+    return function Overlay() {
+      return (
+        <ComposerCommandOverlay
+          command={activeCommand}
+          onRemove={clearCommand}
+        />
+      );
+    };
+  }, [activeCommand, clearCommand]);
+
+  const ComposerTriggers = useMemo(() => {
+    return function Triggers() {
+      return (
+        <>
+          <ComposerTriggerPopover
+            char="@"
+            adapter={mention.adapter}
+            isLoading={mention.isLoading}
+            behavior={
+              <ComposerPrimitive.Unstable_TriggerPopover.Directive
+                {...mention.directive}
+              />
+            }
+          />
+          <ComposerTriggerPopover
+            char="/"
+            adapter={slash.adapter}
+            behavior={
+              <ComposerPrimitive.Unstable_TriggerPopover.Directive
+                {...slash.directive}
+              />
+            }
+          />
+        </>
+      );
+    };
+  }, [
+    mention.adapter,
+    mention.isLoading,
+    mention.directive,
+    slash.adapter,
+    slash.directive,
+  ]);
+
+  const ComposerTop = useMemo(() => {
+    if (selectedDocs.length === 0) return undefined;
+    return function SelectedDocs() {
+      return (
+        <SelectedDocumentChips
+          documents={selectedDocs}
+          onRemove={removeDocument}
+        />
+      );
+    };
+  }, [selectedDocs, removeDocument]);
+
   const threadComponents: ThreadComponents = useMemo(
     () => ({
       toolsByName: {
         create_artifact: ArtifactToolCard,
       },
+      ComposerTriggers,
+      ComposerTop,
+      ComposerInputOverlay,
+      composerSendTransform: transformText,
+      UserMessageText: CommandAwareText,
     }),
-    [],
+    [ComposerTriggers, ComposerTop, ComposerInputOverlay, transformText],
   );
 
   return (

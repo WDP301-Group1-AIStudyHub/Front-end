@@ -13,8 +13,6 @@ import {
   Star,
   Trash2,
   Users,
-  SearchIcon,
-  PlusIcon,
   SparklesIcon,
   HardDrive,
   ExternalLink,
@@ -37,7 +35,6 @@ import { groupThreadsByDate } from "@/lib/groupChatThreads";
 import { logout } from "@/services/authApi";
 import { getStoredUser } from "@/services/authStorage";
 import { useChatThreadStore } from "@/store/useChatThreadStore";
-import { Button } from "./ui/button";
 
 import { Progress } from "@/components/ui/progress";
 import { useAiUsage, deriveAiPlanState } from "@/hooks/useAiUsage";
@@ -225,9 +222,25 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     }
   };
 
-  const chatGroups = React.useMemo(
-    () => groupThreadsByDate(chatSessions),
+  const filteredChatSessions = React.useMemo(
+    () =>
+      chatSessions.filter(
+        (s) => s.messageCount === undefined || s.messageCount > 0,
+      ),
     [chatSessions],
+  );
+
+  const chatGroups = React.useMemo(
+    () => groupThreadsByDate(filteredChatSessions),
+    [filteredChatSessions],
+  );
+
+  const filteredArchivedSessions = React.useMemo(
+    () =>
+      archivedSessions.filter(
+        (s) => s.messageCount === undefined || s.messageCount > 0,
+      ),
+    [archivedSessions],
   );
 
   const isDocumentNavActive =
@@ -238,12 +251,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     activePath.startsWith("/documents/");
 
   const baseNav = [
-    {
-      title: "Search",
-      url: "/#",
-      icon: <SearchIcon />,
-      isActive: activePath === "/#",
-    },
     {
       title: "Dashboard",
       url: "/dashboard",
@@ -359,21 +366,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar className="border-r-0" collapsible="icon" {...props}>
       <SidebarHeader className="p-1.5 group-data-[collapsible=icon]:p-2">
-        <div className="flex items-center gap-2 min-h-9 px-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2">
+        <div className="flex items-center gap-2 min-h-10 px-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2">
           <Link className="min-w-0 h-4.5" to="/dashboard">
             <BrandLogo compact={sidebarState === "collapsed"} />
           </Link>
         </div>
-        <Button variant={"outline"} className="shadow-2xs">
-          <PlusIcon data-icon="inline-start" />
-          Add
-        </Button>
         <NavMain items={isAdmin ? adminNav : baseNav} />
       </SidebarHeader>
       <SidebarContent>
         {!isAdmin && (
           <NavChats
-            archived={archivedSessions}
+            archived={filteredArchivedSessions}
             archivedLoaded={archivedLoaded}
             groups={chatGroups}
             onArchive={handleArchiveChat}

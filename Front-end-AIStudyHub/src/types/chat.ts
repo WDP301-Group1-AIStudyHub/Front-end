@@ -109,7 +109,11 @@ export type AgentEvent =
   | { type: 'tool_end'; tool: string; toolCallId: string; resultSummary: string }
   | { type: 'artifact_created'; artifactId: string; artifactType: string; title: string }
   | { type: 'final'; data: AskChatResponse }
-  | { type: 'error'; message: string }
+  // Out-of-band condition the answer is still produced under — currently only
+  // DEGRADED_MODE, sent when the user's own key failed and the request fell
+  // back to the platform allowance.
+  | { type: 'notice'; code: string; message: string }
+  | { type: 'error'; code?: string; message: string }
 
 export interface ChatHistoryItem {
   id: string

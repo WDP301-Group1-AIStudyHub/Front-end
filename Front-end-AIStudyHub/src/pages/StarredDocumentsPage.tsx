@@ -22,6 +22,7 @@ import type { DocumentItem, DocumentSubject } from '@/types/document'
 import { IconTile } from '@/components/shared/IconTile'
 import { PageShell } from '@/components/layout/PageShell'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { getDocumentIndexState, getDocumentIndexIssue } from '@/lib/chatScope'
 
 function formatDate(value?: string | null): string {
   if (!value) return 'Unknown'
@@ -178,6 +179,20 @@ export default function StarredDocumentsPage() {
                               Shared
                             </Badge>
                           ) : null}
+                          {(() => {
+                            const indexState = getDocumentIndexState(document)
+                            if (indexState !== 'unsearchable') return null
+                            const issue = getDocumentIndexIssue(document)
+                            return (
+                              <Badge
+                                className="h-5 rounded-full px-1.5 text-[0.65rem] border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                                variant="outline"
+                                title={issue ? `${issue.summary} ${issue.action}` : 'Not searchable'}
+                              >
+                                Not searchable
+                              </Badge>
+                            )
+                          })()}
                         </div>
                       </div>
                     </button>

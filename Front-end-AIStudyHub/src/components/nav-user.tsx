@@ -5,7 +5,6 @@ import {
   KeyRound,
   LogOut,
   MoreHorizontalIcon,
-  Sparkles,
   UserRound,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -54,55 +53,6 @@ export function NavUser({
   const isExhausted =
     planState.kind === "exhausted" || planState.kind === "degraded_exhausted";
 
-  const renderUsageLabel = () => {
-    switch (planState.kind) {
-      case "loading":
-        return (
-          <span className="truncate text-xs text-muted-foreground">
-            Free plan
-          </span>
-        );
-      case "exempt":
-        return (
-          <span className="truncate text-xs font-medium text-success flex items-center gap-1">
-            <Sparkles className="size-3" />
-            Unlimited (admin)
-          </span>
-        );
-      case "byok":
-        return (
-          <span className="truncate text-xs font-medium text-success flex items-center gap-1">
-            <Sparkles className="size-3" />
-            Unlimited (BYOK)
-          </span>
-        );
-      case "degraded":
-        return (
-          <span className="truncate text-[11px] font-semibold text-warning-foreground bg-warning/15 px-1.5 py-0.5 rounded border border-warning/30">
-            Degraded ({planState.used}/{planState.limit} free)
-          </span>
-        );
-      case "degraded_exhausted":
-        return (
-          <span className="truncate text-[11px] font-semibold text-destructive bg-destructive/10 px-1.5 py-0.5 rounded border border-destructive/30">
-            Quota exhausted (Key broken)
-          </span>
-        );
-      case "exhausted":
-        return (
-          <span className="truncate text-[11px] font-semibold text-destructive bg-destructive/10 px-1.5 py-0.5 rounded border border-destructive/20">
-            Quota exhausted ({planState.used}/{planState.limit})
-          </span>
-        );
-      case "counting":
-        return (
-          <span className="truncate text-xs text-muted-foreground">
-            {planState.used} / {planState.limit} free
-          </span>
-        );
-    }
-  };
-
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -135,11 +85,14 @@ export function NavUser({
                 )}
               </div>
 
+              {/* Name only: the plan and quota live in SidebarUsageCard
+                  directly above this row, and repeating them here read as two
+                  competing indicators. The avatar dot below is kept because it
+                  survives the collapsed sidebar, where the card is hidden. */}
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate text-sidebar-foreground">
                   {user.name}
                 </span>
-                {renderUsageLabel()}
               </div>
               <MoreHorizontalIcon className="ml-auto size-4" />
             </SidebarMenuButton>

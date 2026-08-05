@@ -50,6 +50,7 @@ export interface ChatThreadNavItem {
   title: string;
   url: string;
   lastMessageAt: string;
+  messageCount?: number;
 }
 
 function RenameInput({
@@ -121,6 +122,19 @@ export function NavChats({
   const [archivedOpen, setArchivedOpen] = useState(false);
   const [sessionsOpen, setSessionsOpen] = useState(true);
 
+  const filteredGroups = groups
+    .map((group) => ({
+      ...group,
+      threads: group.threads.filter(
+        (item) => item.messageCount === undefined || item.messageCount > 0,
+      ),
+    }))
+    .filter((group) => group.threads.length > 0);
+
+  const filteredArchived = archived.filter(
+    (item) => item.messageCount === undefined || item.messageCount > 0,
+  );
+
   const copyLink = (item: ChatThreadNavItem) => {
     const href = new URL(item.url, window.location.origin).href;
     navigator.clipboard.writeText(href).catch(() => {});
@@ -149,7 +163,7 @@ export function NavChats({
           </CollapsibleTrigger>
           <CollapsibleContent className="mt-1">
             <SidebarMenu>
-              {groups.map((group) => (
+              {filteredGroups.map((group) => (
                 <Fragment key={group.label}>
                   <li className="px-2 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wide text-sidebar-foreground/50">
                     {group.label}
@@ -251,7 +265,7 @@ export function NavChats({
                   ))}
                 </Fragment>
               ))}
-              {groups.length === 0 && (
+              {filteredGroups.length === 0 && (
                 <li className="px-2 py-1.5 text-xs text-sidebar-foreground/60">
                   No conversations yet.
                 </li>
@@ -272,9 +286,9 @@ export function NavChats({
             <SidebarMenuItem className="group text-muted-foreground/80 data-[state=open]:text-sidebar-accent-foreground">
               <SidebarMenuButton className="group-data-[state=open]:bg-sidebar-accent group-data-[state=open]:text-sidebar-accent-foreground">
                 <span>Archived</span>
-                {archivedLoaded && archived.length > 0 && (
+                {archivedLoaded && filteredArchived.length > 0 && (
                   <span className="ml-auto text-xs text-sidebar-foreground/50">
-                    {archived.length}
+                    {filteredArchived.length}
                   </span>
                 )}
               </SidebarMenuButton>
@@ -288,12 +302,12 @@ export function NavChats({
           </CollapsibleTrigger>
           <CollapsibleContent className="mt-1">
             <SidebarMenu>
-              {archivedLoaded && archived.length === 0 ? (
+              {archivedLoaded && filteredArchived.length === 0 ? (
                 <li className="px-2 py-1.5 text-xs text-sidebar-foreground/60">
                   No archived conversations.
                 </li>
               ) : (
-                archived.map((item) => (
+                filteredArchived.map((item) => (
                   <SidebarMenuItem key={item.id}>
                     <SidebarMenuButton
                       className="text-sidebar-foreground/60"

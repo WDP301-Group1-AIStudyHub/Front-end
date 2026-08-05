@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import {
+  AlertTriangle,
   ArrowLeft,
   BookOpen,
   Download,
@@ -33,7 +34,8 @@ import SharedDocumentSubjectDialog from "../components/documents/SharedDocumentS
 import { getStoredUser } from "../services/authStorage";
 import type { DocumentDetail, DocumentSubject } from "../types/document";
 import { PageShell } from "@/components/layout/PageShell";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { getDocumentIndexIssue } from "@/lib/chatScope";
 import {
   Select,
   SelectContent,
@@ -385,6 +387,19 @@ export default function DocumentDetailPage() {
 
       {!isLoading && document ? (
         <>
+          {(() => {
+            const indexIssue = getDocumentIndexIssue(document);
+            if (!indexIssue) return null;
+            return (
+              <Alert className="mb-4 border-amber-500/50 bg-amber-500/10 text-amber-900 dark:text-amber-200">
+                <AlertTriangle className="size-4 text-amber-600 dark:text-amber-400" />
+                <AlertTitle className="font-semibold">{indexIssue.summary}</AlertTitle>
+                <AlertDescription className="text-amber-800 dark:text-amber-300">
+                  {indexIssue.action}
+                </AlertDescription>
+              </Alert>
+            );
+          })()}
           <div className="grid gap-4 lg:grid-cols-2">
             <InfoCard
               title="Document information"

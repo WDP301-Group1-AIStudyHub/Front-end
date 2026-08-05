@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
 import { getUsage } from '@/services/aiCredentialApi'
+import {
+  AI_USAGE_UPDATED_EVENT,
+  notifyAiUsageChanged,
+} from '@/lib/aiUsageEvents'
 import type { AiUsage } from '@/types/ai'
 
-export const AI_USAGE_UPDATED_EVENT = 'ai-usage-updated'
-
-export function notifyAiUsageChanged() {
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent(AI_USAGE_UPDATED_EVENT))
-  }
-}
+// Re-exported so existing importers keep working now that the emitter lives in
+// `lib/` for the service layer's benefit.
+export { AI_USAGE_UPDATED_EVENT, notifyAiUsageChanged }
 
 export type DerivedAiPlanState =
   | {

@@ -52,12 +52,14 @@ export function ArtifactsPanel({ className }: { className?: string }) {
               type="button"
               className="flex items-center w-full justify-between gap-2 text-sm font-medium text-foreground hover:opacity-80 transition-opacity cursor-pointer outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
             >
-              <span>Artifacts</span>
-              {artifacts.length > 0 && (
-                <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-normal text-muted-foreground">
-                  {artifacts.length}
-                </span>
-              )}
+              <div className="flex items-center gap-2">
+                <span>Artifacts</span>
+                {artifacts.length > 0 && (
+                  <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-normal text-muted-foreground">
+                    {artifacts.length}
+                  </span>
+                )}
+              </div>
               {isOpen ? (
                 <ChevronDownIcon className="size-4 text-muted-foreground" />
               ) : (

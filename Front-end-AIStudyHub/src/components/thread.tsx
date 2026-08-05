@@ -35,16 +35,21 @@ import {
   SuggestionPrimitive,
   ThreadPrimitive,
   type ToolCallMessagePartComponent,
+  type TextMessagePartComponent,
+  useAui,
   useAuiState,
+  unstable_useTriggerPopoverAriaProps,
 } from "@assistant-ui/react";
 import {
   ArrowDownIcon,
   ArrowUpIcon,
+  BookOpenIcon,
   CheckIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   CopyIcon,
   DownloadIcon,
+  HelpCircleIcon,
   MicIcon,
   MoreHorizontalIcon,
   PencilIcon,
@@ -53,12 +58,37 @@ import {
 } from "lucide-react";
 import {
   createContext,
+  useCallback,
   useContext,
+  useRef,
   type ComponentType,
   type FC,
   type PropsWithChildren,
 } from "react";
 import { AskTopbar } from "./layout/AskTopbar";
+
+export const SummaryIcon = () => {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      className="lucide lucide-summary-icon lucide-summary"
+    >
+      <path d="M15 4H7" />
+      <path d="m18 16 3 3-3 3" />
+      <path d="M3 4v13a2 2 0 0 0 2 2h16" />
+      <path d="M7 14h7" />
+      <path d="M7 9h12" />
+    </svg>
+  );
+};
 
 export type ThreadGroupPart = MessagePrimitive.GroupedParts.GroupPart;
 
@@ -80,6 +110,11 @@ export type ThreadComponents = {
     | ComponentType<PropsWithChildren<{ group: ThreadGroupPart }>>
     | undefined;
   toolsByName?: Record<string, ToolCallMessagePartComponent> | undefined;
+  ComposerTriggers?: ComponentType | undefined;
+  ComposerTop?: ComponentType | undefined;
+  ComposerInputOverlay?: ComponentType | undefined;
+  composerSendTransform?: ((text: string) => string) | undefined;
+  UserMessageText?: TextMessagePartComponent | undefined;
 };
 
 export type ThreadProps = {
@@ -167,7 +202,7 @@ const ThreadRoot: FC<{ isEmpty: boolean }> = ({ isEmpty }) => {
 
           <ThreadPrimitive.ViewportFooter
             className={cn(
-              "aui-thread-viewport-footer bg-background flex flex-col gap-4 overflow-visible pb-4 md:pb-6",
+              "aui-thread-viewport-footer bg-background flex flex-col gap-4 overflow-visible pb-6 md:pb-8",
               !isEmpty &&
                 "sticky bottom-0 mt-auto rounded-t-(--composer-radius)",
             )}
@@ -221,9 +256,18 @@ const ThreadWelcome: FC = () => {
 };
 
 const DEFAULT_SUGGESTIONS = [
-  "Summarize key concepts",
-  "Create a 5-question quiz",
-  "Explain main definitions",
+  {
+    prompt: "Summarize key concepts",
+    icon: SummaryIcon,
+  },
+  {
+    prompt: "Create a 5-question quiz",
+    icon: HelpCircleIcon,
+  },
+  {
+    prompt: "Explain main definitions",
+    icon: BookOpenIcon,
+  },
 ];
 
 const ThreadSuggestions: FC = () => {
@@ -233,18 +277,22 @@ const ThreadSuggestions: FC = () => {
         {() => <ThreadSuggestionItem />}
       </ThreadPrimitive.Suggestions>
       <AuiIf condition={(s) => s.thread.suggestions.length === 0}>
-        {DEFAULT_SUGGESTIONS.map((prompt) => (
+        {DEFAULT_SUGGESTIONS.map(({ prompt, icon: Icon }) => (
+          // No `autoSend`: these are starters, not questions. Sending
+          // "Summarize key concepts" as-is asks the agent to summarize the
+          // whole library. Dropping it into the composer lets the user attach
+          // an @document first.
           <ThreadPrimitive.Suggestion
             key={prompt}
             prompt={prompt}
             method="replace"
-            autoSend
             asChild
           >
             <Button
               variant="ghost"
-              className="text-muted-foreground hover:bg-muted border-border h-auto gap-1.5 rounded-full border px-3.5 py-1.5 font-normal whitespace-nowrap transition-colors"
+              className="text-muted-foreground hover:bg-muted border-border h-auto gap-1.5 rounded-full border px-3.5 py-2 font-normal whitespace-nowrap transition-colors"
             >
+              <Icon className="size-4 text-muted-foreground" />
               {prompt}
             </Button>
           </ThreadPrimitive.Suggestion>
@@ -257,7 +305,7 @@ const ThreadSuggestions: FC = () => {
 const ThreadSuggestionItem: FC = () => {
   return (
     <div className="aui-thread-welcome-suggestion-display fade-in slide-in-from-bottom-2 animate-in fill-mode-both duration-200">
-      <SuggestionPrimitive.Trigger send asChild>
+      <SuggestionPrimitive.Trigger asChild>
         <Button
           variant="ghost"
           className="aui-thread-welcome-suggestion text-foreground hover:bg-muted border-border/60 h-auto gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-normal whitespace-nowrap transition-colors"
@@ -270,27 +318,139 @@ const ThreadSuggestionItem: FC = () => {
   );
 };
 
-const Composer: FC = () => {
+/**
+ * Send, with the active command's prompt template written in first.
+ *
+ * Goes through the composer store rather than `unstable_useComposerInput`:
+ * that hook's `setText`/`send` are documented no-ops "unless the composer is
+ * editing", and in the Enter path they silently did nothing while the same
+ * calls worked from the send button. `aui.composer()` is what the library
+ * itself drives internally, and its state is the authoritative text.
+ */
+const useSendWithTransform = () => {
+  const { composerSendTransform } = useContext(ThreadComponentsContext);
+  const aui = useAui();
+  const canSend = useAuiState((s) => s.composer.canSend);
+
+  const handleSend = useCallback(() => {
+    const composer = aui.composer();
+    if (!composer.getState().canSend) return;
+    if (composerSendTransform) {
+      composer.setText(composerSendTransform(composer.getState().text));
+    }
+    composer.send();
+  }, [aui, composerSendTransform]);
+
+  return { handleSend, canSend };
+};
+
+/**
+ * The input, plus the Enter handling that replaces the library's own when a
+ * send transform is active.
+ *
+ * This has to be its own component: `unstable_useComposerInput` and
+ * `unstable_useTriggerPopoverAriaProps` both read context that `Composer`
+ * *renders* rather than sits inside, so calling them up there yields
+ * `canSend: false` and an always-empty aria object.
+ */
+const ComposerInputArea: FC = () => {
+  const { ComposerInputOverlay, composerSendTransform } = useContext(
+    ThreadComponentsContext,
+  );
+  const { handleSend, canSend } = useSendWithTransform();
+
+  // Non-empty only while a trigger popover is open. The guard is load-bearing,
+  // not defensive: the library composes our `onKeyDown` *before* its own, and
+  // its handler is where the trigger plugins get their crack at Enter — so
+  // without this we would steal Enter from the @ and / menus.
+  const ariaProps = unstable_useTriggerPopoverAriaProps();
+  const isPopoverOpen = Object.keys(ariaProps).length > 0;
+
+  // Mirrors the library's own IME handling. `submitMode: "none"` switches off
+  // its guarded Enter path, so the composition checks have to move here too —
+  // otherwise the Enter that commits an IME composition (Vietnamese Telex, any
+  // CJK input) sends the message mid-word.
+  const compositionRef = useRef(false);
+
+  const handleInputKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (e.nativeEvent.isComposing || compositionRef.current) return;
+      if (e.key !== "Enter" || e.shiftKey) return;
+      if (isPopoverOpen) return;
+      if (!canSend) return;
+      e.preventDefault();
+      handleSend();
+    },
+    [isPopoverOpen, canSend, handleSend],
+  );
+
   return (
-    <ComposerPrimitive.Root className="aui-composer-root relative flex w-full flex-col">
-      <ComposerPrimitive.AttachmentDropzone asChild>
-        <div
-          data-slot="aui_composer-shell"
-          className="border-border data-[dragging=true]:border-ring focus-within:border-border dark:border-muted-foreground/15 dark:focus-within:border-muted-foreground/30 flex w-full flex-col gap-2 rounded-(--composer-radius) border bg-(--composer-bg) p-(--composer-padding) shadow-xs transition-[border-color,box-shadow] focus-within:shadow-md data-[dragging=true]:border-dashed data-[dragging=true]:bg-[color-mix(in_oklab,var(--color-accent)_50%,var(--color-background))] dark:shadow-none"
-        >
-          <ComposerAttachments />
-          <ComposerPrimitive.Input
-            placeholder="Send a message..."
-            className="aui-composer-input text-sm caret-primary placeholder:text-muted-foreground/80 max-h-32 min-h-10 w-full resize-none bg-transparent px-2 py-1 outline-none"
-            rows={1}
-            autoFocus
-            enterKeyHint="send"
-            aria-label="Message input"
-          />
-          <ComposerAction />
-        </div>
-      </ComposerPrimitive.AttachmentDropzone>
-    </ComposerPrimitive.Root>
+    <div className="relative w-full">
+      {ComposerInputOverlay && <ComposerInputOverlay />}
+      <ComposerPrimitive.Input
+        placeholder="Ask anything — @ for documents, / for actions"
+        className="aui-composer-input text-sm caret-primary placeholder:text-muted-foreground/80 max-h-32 min-h-10 w-full resize-none bg-transparent px-2 py-1 outline-none"
+        rows={1}
+        autoFocus
+        enterKeyHint="send"
+        aria-label="Message input"
+        style={{ textIndent: "var(--composer-first-line-indent, 0px)" }}
+        {...(composerSendTransform
+          ? {
+              submitMode: "none" as const,
+              onKeyDown: handleInputKeyDown,
+              onCompositionStart: () => {
+                compositionRef.current = true;
+              },
+              onCompositionEnd: () => {
+                compositionRef.current = false;
+              },
+            }
+          : {})}
+      />
+    </div>
+  );
+};
+
+const Composer: FC = () => {
+  const { ComposerTriggers, ComposerTop } = useContext(ThreadComponentsContext);
+
+  return (
+    <ComposerPrimitive.Unstable_TriggerPopoverRoot>
+      <ComposerPrimitive.Root className="aui-composer-root relative flex w-full flex-col">
+        <ComposerPrimitive.AttachmentDropzone asChild>
+          <div
+            data-slot="aui_composer-shell"
+            className="border-border data-[dragging=true]:border-ring focus-within:border-border dark:border-muted-foreground/15 dark:focus-within:border-muted-foreground/30 flex w-full flex-col gap-2 rounded-(--composer-radius) border bg-(--composer-bg) p-(--composer-padding) shadow-xs transition-[border-color,box-shadow] focus-within:shadow-md data-[dragging=true]:border-dashed data-[dragging=true]:bg-[color-mix(in_oklab,var(--color-accent)_50%,var(--color-background))] dark:shadow-none relative"
+          >
+            {ComposerTop && <ComposerTop />}
+            <ComposerAttachments />
+            <ComposerInputArea />
+            {ComposerTriggers && <ComposerTriggers />}
+            <ComposerAction />
+          </div>
+        </ComposerPrimitive.AttachmentDropzone>
+      </ComposerPrimitive.Root>
+    </ComposerPrimitive.Unstable_TriggerPopoverRoot>
+  );
+};
+
+const ComposerSendButton: FC = () => {
+  const { handleSend, canSend } = useSendWithTransform();
+  return (
+    <TooltipIconButton
+      tooltip="Send message"
+      side="bottom"
+      type="button"
+      variant="default"
+      size="icon"
+      disabled={!canSend}
+      onClick={handleSend}
+      className="aui-composer-send size-8 rounded-full"
+      aria-label="Send message"
+    >
+      <ArrowUpIcon className="aui-composer-send-icon size-4.5" />
+    </TooltipIconButton>
   );
 };
 
@@ -332,19 +492,7 @@ const ComposerAction: FC = () => {
           </AuiIf>
         </AuiIf>
         <AuiIf condition={(s) => !s.thread.isRunning}>
-          <ComposerPrimitive.Send asChild>
-            <TooltipIconButton
-              tooltip="Send message"
-              side="bottom"
-              type="button"
-              variant="default"
-              size="icon"
-              className="aui-composer-send size-8 rounded-full"
-              aria-label="Send message"
-            >
-              <ArrowUpIcon className="aui-composer-send-icon size-4.5" />
-            </TooltipIconButton>
-          </ComposerPrimitive.Send>
+          <ComposerSendButton />
         </AuiIf>
         <AuiIf condition={(s) => s.thread.isRunning}>
           <ComposerPrimitive.Cancel asChild>
@@ -520,6 +668,8 @@ const AssistantActionBar: FC = () => {
 };
 
 const UserMessage: FC = () => {
+  const { UserMessageText } = useContext(ThreadComponentsContext);
+
   return (
     <MessagePrimitive.Root
       data-slot="aui_user-message-root"
@@ -530,7 +680,11 @@ const UserMessage: FC = () => {
 
       <div className="aui-user-message-content-wrapper relative col-start-2 min-w-0">
         <div className="aui-user-message-content peer bg-muted text-foreground text-sm rounded-xl px-4 py-2 wrap-break-word empty:hidden">
-          <MessagePrimitive.Parts />
+          <MessagePrimitive.Parts
+            components={
+              UserMessageText ? { Text: UserMessageText } : undefined
+            }
+          />
         </div>
         <div className="aui-user-action-bar-wrapper absolute inset-s-0 top-1/2 -translate-x-full -translate-y-1/2 pe-2 peer-empty:hidden rtl:translate-x-full">
           <UserActionBar />
