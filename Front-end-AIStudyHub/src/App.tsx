@@ -21,6 +21,7 @@ import {
 import type { AuthUser } from "@/types/auth";
 import AskPage from "./pages/AskPage";
 import StoragePackagesPage from "./pages/StoragePackagesPage";
+const SharedSummariesPage = lazy(() => import("@/pages/SharedSummariesPage"));
 
 const LandingPage = lazy(() => import("./landingpage"));
 const AboutPage = lazy(() => import("@/pages/AboutPage"));
@@ -303,6 +304,14 @@ function App() {
             element={
               <ProtectedRoute userOnly>
                 {() => routeWithShell(<StoragePackagesPage />)}
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/shared-summaries"
+            element={
+              <ProtectedRoute userOnly>
+                {() => routeWithShell(<SharedSummariesPage />)}
               </ProtectedRoute>
             }
           />
