@@ -10,12 +10,14 @@ function toNavItem(thread: {
   id: string;
   title: string;
   lastMessageAt: string;
+  messageCount?: number;
 }): ChatThreadNavItem {
   return {
     id: thread.id,
     title: thread.title,
     url: `/ask?threadId=${thread.id}`,
     lastMessageAt: thread.lastMessageAt,
+    messageCount: thread.messageCount,
   };
 }
 

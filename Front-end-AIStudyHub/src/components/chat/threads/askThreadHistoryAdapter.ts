@@ -31,7 +31,7 @@ export function createAskThreadHistoryAdapter(
           metadata: {
             custom: {
               sources: item.sources ?? [],
-              citedSources: [],
+              citedSources: item.citedSources ?? [],
             },
           },
           createdAt: new Date(item.createdAt),

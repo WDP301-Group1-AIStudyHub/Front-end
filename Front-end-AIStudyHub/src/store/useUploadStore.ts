@@ -4,6 +4,7 @@ import { getStoredToken } from "../services/authStorage";
 import { findOrCreateSubjectByName } from "../services/subjectApi";
 import { buildQuotaErrorMessage } from "../utils/formatStorage";
 import { useStorageStore } from "./useStorageStore";
+import { INDEX_ISSUE_ACTIONS } from "../lib/chatScope";
 import type { DocumentItem } from "../types/document";
 import type { StorageQuotaDetails } from "../types/storage";
 
@@ -16,6 +17,13 @@ export interface UploadItem {
   progress: number;
   status: "pending" | "uploading" | "processing" | "success" | "failed";
   error?: string;
+  /**
+   * Set when the upload itself succeeded but the file produced nothing
+   * searchable — a scanned PDF with no text layer, for example. Kept separate
+   * from `status` so the tab filters and counts stay as they are: the transfer
+   * really did succeed, the document just cannot answer questions.
+   */
+  warning?: string;
   abortController?: AbortController;
 }
 
@@ -228,10 +236,22 @@ export const useUploadStore = create<UploadState>((set, get) => ({
       );
 
       if (response.data?.success) {
+        // A 2xx only means the file was stored. Indexing runs inside the same
+        // request, so the response already knows whether anything reached the
+        // vector store — surface that instead of reporting a clean success for
+        // a document that cannot answer anything.
+        const uploaded = response.data?.data as
+          | { ragStatus?: string; ragError?: string }
+          | undefined;
+        const warning =
+          uploaded?.ragStatus === "FAILED"
+            ? `${uploaded.ragError || "No readable text found."} ${INDEX_ISSUE_ACTIONS.no_content}`
+            : undefined;
+
         set((state) => ({
           uploads: state.uploads.map((item) =>
             item.id === id
-              ? { ...item, status: "success", progress: 100 }
+              ? { ...item, status: "success", progress: 100, warning }
               : item,
           ),
         }));

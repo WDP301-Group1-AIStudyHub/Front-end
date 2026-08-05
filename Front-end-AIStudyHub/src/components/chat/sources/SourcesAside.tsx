@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { SourcesPanel } from "./SourcesPanel";
 import { useThreadSources } from "./useThreadSources";
 import { useSourcesPanel } from "./sourcesPanelStore";
+import { ArtifactsPanel } from "../artifacts/ArtifactsPanel";
+import { useArtifacts } from "../artifacts/artifactsStore";
 import {
   Popover,
   PopoverContent,
@@ -11,15 +13,36 @@ import { cn } from "@/lib/utils";
 import { ChevronsLeftIcon, ChevronsRightIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export const SourcesAside: React.FC<{ className?: string }> = ({
+export const ChatRightRail: React.FC<{ className?: string }> = ({
   className,
 }) => {
   const { sources } = useThreadSources();
-  // Must stay above the early return — hooks cannot be called conditionally,
-  // and `sources` goes from empty to populated as the first answer lands.
-  const [isHidden, setIsHidden] = useState(false);
+  const { artifacts, railToggleCount } = useArtifacts();
+  const [isHidden, setIsHidden] = useState<boolean>(false);
+  const [isPinned, setIsPinned] = useState<boolean>(false);
 
-  if (!sources || sources.length === 0) {
+  const hasSources = sources && sources.length > 0;
+  const hasArtifacts = artifacts && artifacts.length > 0;
+  const isGeneratingAny = artifacts?.some(
+    (a) => a.status === "PENDING" || a.status === "GENERATING",
+  );
+  const hasContent = hasSources || hasArtifacts || isGeneratingAny;
+  const isVisible = (hasContent || isPinned) && !isHidden;
+
+  const lastToggleCountRef = useRef(railToggleCount);
+  useEffect(() => {
+    if (lastToggleCountRef.current !== railToggleCount) {
+      lastToggleCountRef.current = railToggleCount;
+      if (isVisible) {
+        setIsHidden(true);
+      } else {
+        setIsPinned(true);
+        setIsHidden(false);
+      }
+    }
+  }, [railToggleCount, isVisible]);
+
+  if (!hasContent && !isPinned) {
     return null;
   }
 
@@ -44,9 +67,9 @@ export const SourcesAside: React.FC<{ className?: string }> = ({
             variant={"ghost"}
             size="icon"
             className="text-muted-foreground transition-colors cursor-pointer bg-background! hover:bg-muted!"
-            onClick={() => setIsHidden(!isHidden)}
+            onClick={() => setIsHidden((prev) => !prev)}
             aria-expanded={!isHidden}
-            aria-label={isHidden ? "Show sources panel" : "Hide sources panel"}
+            aria-label={isHidden ? "Show side panel" : "Hide side panel"}
           >
             {isHidden ? <ChevronsLeftIcon /> : <ChevronsRightIcon />}
           </Button>
@@ -54,9 +77,10 @@ export const SourcesAside: React.FC<{ className?: string }> = ({
 
         <div
           aria-hidden={isHidden}
-          className="flex flex-col gap-2 overflow-y-auto scrollbar-none max-h-[calc(100vh-4rem)] transition-transform duration-300"
+          className="flex flex-col p-1 gap-3 max-h-[calc(100vh-5rem)] overflow-y-auto pr-1 transition-transform duration-300"
         >
           <SourcesPanel />
+          <ArtifactsPanel />
         </div>
       </div>
     </div>

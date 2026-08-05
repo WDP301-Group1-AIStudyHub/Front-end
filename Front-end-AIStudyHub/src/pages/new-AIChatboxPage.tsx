@@ -17,10 +17,26 @@ import {
   Timer,
   Zap,
 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
-import { Thread } from "@/components/assistant-ui/thread copy";
+import { Thread, type ThreadComponents } from "@/components/thread";
+import { toast } from "sonner";
+import { ComposerPrimitive } from "@assistant-ui/react";
+import { ComposerTriggerPopover } from "@/components/composer/ComposerTriggerPopover";
+import { useDocumentMentions } from "@/components/composer/useDocumentMentions";
+import { useAskSlashCommands } from "@/components/composer/useAskSlashCommands";
+import { usePromptCommand } from "@/hooks/usePromptCommand";
+import { ComposerCommandOverlay } from "@/components/composer/ComposerCommandOverlay";
+import { CommandAwareText } from "@/components/composer/CommandAwareText";
+import {
+  getDocumentSubject,
+  getDocumentSubjectName,
+  getDocumentSubjectId,
+  getDocumentSemester,
+  getDocumentSubjectKey,
+} from "@/lib/documentDisplay";
+import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageShell } from "@/components/layout/PageShell";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -47,6 +63,8 @@ import {
   askAgentStream,
   getChatThreadById,
 } from "@/services/chatApi";
+import { NOTICE_TEXT, askErrorText, quotaErrorText } from "@/lib/agentNotices";
+import { buildScopeFields } from "@/lib/chatScope";
 import { listDocuments } from "@/services/documentApi";
 import { extractArtifacts } from "@/utils/extractArtifacts";
 import { IconTile } from "@/components/shared/IconTile";
@@ -71,23 +89,18 @@ type ChatThreadProps = {
     semester?: string;
   };
   sourcesCount: number;
+  components?: ThreadComponents;
 };
 
 function ChatThread({
   adapter,
   initialMessages,
-  onClearSelectedDoc,
-  selectedDoc,
-  sourcesCount,
+  components,
 }: ChatThreadProps) {
   const runtime = useLocalRuntime(adapter, { initialMessages });
   return (
     <AssistantRuntimeProvider runtime={runtime}>
-      <Thread
-        onClearSelectedDoc={onClearSelectedDoc}
-        selectedDoc={selectedDoc}
-        sourcesCount={sourcesCount}
-      />
+      <Thread components={components} />
     </AssistantRuntimeProvider>
   );
 }
@@ -100,31 +113,6 @@ function getMessageText(message: ThreadMessage) {
     .map((part) => part.text)
     .join("\n")
     .trim();
-}
-
-function getDocumentSubject(doc?: DocumentItem) {
-  return doc && typeof doc.subject === "object" ? doc.subject : null;
-}
-
-function getDocumentSubjectName(doc?: DocumentItem) {
-  return (
-    getDocumentSubject(doc)?.name ||
-    (typeof doc?.subject === "string" ? doc.subject : undefined)
-  );
-}
-
-function getDocumentSubjectId(doc?: DocumentItem) {
-  return getDocumentSubject(doc)?._id || doc?.subjectId;
-}
-
-function getDocumentSemester(doc?: DocumentItem) {
-  return getDocumentSubject(doc)?.semester?.trim() || "No semester";
-}
-
-function getDocumentSubjectKey(doc: DocumentItem) {
-  return (
-    getDocumentSubjectId(doc) || getDocumentSubjectName(doc) || "No subject"
-  );
 }
 
 export default function NewAIChatboxPage() {
@@ -426,30 +414,225 @@ export default function NewAIChatboxPage() {
     [documents, selectedDocIds],
   );
 
-  const toggleDocumentSelection = (doc: DocumentItem) => {
-    const docSubjectKey = getDocumentSubjectKey(doc);
-    setSelectedDocIds((current) => {
-      const selectedFromSameSubject =
-        current.length === 0 ||
-        documents
-          .filter((item) => current.includes(item.id))
-          .every((item) => getDocumentSubjectKey(item) === docSubjectKey);
+  const toggleDocumentSelection = useCallback(
+    (doc: DocumentItem) => {
+      const docSubjectKey = getDocumentSubjectKey(doc);
+      setSelectedDocIds((current) => {
+        const selectedFromSameSubject =
+          current.length === 0 ||
+          documents
+            .filter((item) => current.includes(item.id))
+            .every((item) => getDocumentSubjectKey(item) === docSubjectKey);
 
-      if (!selectedFromSameSubject) {
-        return [doc.id];
-      }
+        if (!selectedFromSameSubject) {
+          return [doc.id];
+        }
 
-      return current.includes(doc.id)
-        ? current.filter((id) => id !== doc.id)
-        : [...current, doc.id];
-    });
-  };
+        return current.includes(doc.id)
+          ? current.filter((id) => id !== doc.id)
+          : [...current, doc.id];
+      });
+    },
+    [documents],
+  );
 
   const toggleSubjectSelection = (docs: DocumentItem[]) => {
     const ids = docs.map((doc) => doc.id);
     const allSelected = ids.every((id) => selectedDocIds.includes(id));
     setSelectedDocIds(allSelected ? [] : ids);
   };
+
+  // Reads the live selection off the ref rather than `selectedDocIds` so these
+  // stay referentially stable across selection changes. That matters: they feed
+  // the mention adapter's `onInserted`, and an unstable identity there remounts
+  // the whole trigger popover on every render of this page.
+  //
+  // The ref is also written straight through, because its useEffect sync runs
+  // after render and two mentions inserted back to back would otherwise read a
+  // stale selection.
+  const currentSubjectKeyOf = useCallback(
+    (ids: string[]) => {
+      const first = documents.find((item) => item.id === ids[0]);
+      return first ? getDocumentSubjectKey(first) : null;
+    },
+    [documents],
+  );
+
+  const applySelection = useCallback((next: string[]) => {
+    selectedDocIdsRef.current = next;
+    setSelectedDocIds(next);
+  }, []);
+
+  const handleSelectDocumentFromMention = useCallback(
+    (id: string) => {
+      const doc = documents.find((item) => item.id === id);
+      if (!doc) return;
+
+      const current = selectedDocIdsRef.current;
+      if (current.includes(id)) return;
+
+      const docSubjectKey = getDocumentSubjectKey(doc);
+      const currentSubjectKey = currentSubjectKeyOf(current);
+
+      if (currentSubjectKey && currentSubjectKey !== docSubjectKey) {
+        const docSubjectName = getDocumentSubjectName(doc) || "Subject";
+        toast.info(
+          `Study context switched to ${docSubjectName} — ${current.length} document(s) deselected.`,
+        );
+        applySelection([id]);
+        return;
+      }
+
+      applySelection([...current, id]);
+    },
+    [documents, currentSubjectKeyOf, applySelection],
+  );
+
+  const handleSelectSubjectFromMention = useCallback(
+    (subjectId: string) => {
+      const subjectDocs = documents.filter(
+        (doc) =>
+          (getDocumentSubjectId(doc) || getDocumentSubjectKey(doc)) === subjectId,
+      );
+      if (subjectDocs.length === 0) return;
+
+      const current = selectedDocIdsRef.current;
+      const newSubjectKey = getDocumentSubjectKey(subjectDocs[0]);
+      const currentSubjectKey = currentSubjectKeyOf(current);
+
+      if (currentSubjectKey && currentSubjectKey !== newSubjectKey) {
+        const subjectName = getDocumentSubjectName(subjectDocs[0]) || "Subject";
+        toast.info(
+          `Study context switched to ${subjectName} — ${current.length} document(s) deselected.`,
+        );
+      }
+
+      applySelection(subjectDocs.map((doc) => doc.id));
+    },
+    [documents, currentSubjectKeyOf, applySelection],
+  );
+
+  // A document that is still indexing (or failed to) can't ground an answer.
+  // The row stays visible so the file is findable, but selecting it inserts
+  // nothing and explains why — see the `disabled` handling in
+  // useDocumentMentions.
+  const handleUnavailableMention = useCallback(
+    (label: string, ragStatus?: string) => {
+      toast.warning(
+        ragStatus === "INDEXING"
+          ? `"${label}" is still being indexed — try again once it finishes.`
+          : `"${label}" isn't available for questions yet.`,
+      );
+    },
+    [],
+  );
+
+  const currentSubjectKey = selectedDocs[0]
+    ? getDocumentSubjectKey(selectedDocs[0])
+    : null;
+
+  const mention = useDocumentMentions({
+    documents,
+    loading: loadingDocs,
+    onSelectDocument: handleSelectDocumentFromMention,
+    onSelectSubject: handleSelectSubjectFromMention,
+    onUnavailable: handleUnavailableMention,
+    selectedSubjectKey: currentSubjectKey,
+  });
+
+  const promptCmd = usePromptCommand();
+  const {
+    activeCommand,
+    select: selectCommand,
+    clear: clearCommand,
+    transformText,
+  } = promptCmd;
+
+  const slash = useAskSlashCommands({ onCommandSelected: selectCommand });
+
+  const ComposerInputOverlay = useMemo(() => {
+    if (!activeCommand) return undefined;
+    return function Overlay() {
+      return (
+        <ComposerCommandOverlay
+          command={activeCommand}
+          onRemove={clearCommand}
+        />
+      );
+    };
+  }, [activeCommand, clearCommand]);
+
+  const ComposerTriggers = useMemo(() => {
+    return function Triggers() {
+      return (
+        <>
+          <ComposerTriggerPopover
+            char="@"
+            adapter={mention.adapter}
+            isLoading={mention.isLoading}
+            behavior={
+              <ComposerPrimitive.Unstable_TriggerPopover.Directive
+                {...mention.directive}
+              />
+            }
+          />
+          <ComposerTriggerPopover
+            char="/"
+            adapter={slash.adapter}
+            behavior={
+              <ComposerPrimitive.Unstable_TriggerPopover.Directive
+                {...slash.directive}
+              />
+            }
+          />
+        </>
+      );
+    };
+  }, [
+    mention.adapter,
+    mention.isLoading,
+    mention.directive,
+    slash.adapter,
+    slash.directive,
+  ]);
+
+  const ComposerTop = useMemo(() => {
+    if (selectedDocs.length === 0) return undefined;
+    return function SelectedDocChips() {
+      return (
+        <div className="flex flex-wrap items-center gap-1.5 px-2 pt-2 pb-1">
+          {selectedDocs.map((doc) => (
+            <div
+              key={doc.id}
+              className="inline-flex items-center gap-1.5 rounded-md border border-border/80 bg-muted/80 px-2 py-1 text-xs text-foreground max-w-64 truncate transition-colors hover:bg-muted"
+            >
+              <FileText className="size-3.5 shrink-0 text-muted-foreground" />
+              <span className="truncate font-medium">{doc.fileName}</span>
+              <button
+                type="button"
+                onClick={() => toggleDocumentSelection(doc)}
+                className="hover:bg-background/80 text-muted-foreground hover:text-foreground rounded-full p-0.5 transition-colors cursor-pointer"
+                aria-label={`Remove ${doc.fileName}`}
+              >
+                <X className="size-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+      );
+    };
+  }, [selectedDocs, toggleDocumentSelection]);
+
+  const threadComponents = useMemo<ThreadComponents>(
+    () => ({
+      ComposerTriggers,
+      ComposerTop,
+      ComposerInputOverlay,
+      composerSendTransform: transformText,
+      UserMessageText: CommandAwareText,
+    }),
+    [ComposerTriggers, ComposerTop, ComposerInputOverlay, transformText],
+  );
 
   // Real adapter: POST /api/chat/ask (DR-RAG pipeline) or /api/agent/ask
   // (agentic engine), depending on the header toggle.
@@ -466,21 +649,12 @@ export default function NewAIChatboxPage() {
         const payload: AskChatPayload = {
           question,
           threadId: currentThreadIdRef.current,
-          subject: docSubject || undefined,
-          subjectId: subjectId || undefined,
-          scope:
-            docIds.length === 0
-              ? "library_all"
-              : docIds.length === 1
-                ? "single_document"
-                : "document_set",
+          ...buildScopeFields({
+            docIds,
+            subjectId,
+            subject: docSubject,
+          }),
         };
-
-        if (docIds.length === 1) {
-          payload.documentId = docIds[0];
-        } else if (docIds.length > 1) {
-          payload.documentIds = docIds;
-        }
 
         try {
           const stream = askAgentStream(payload, abortSignal);
@@ -526,13 +700,24 @@ export default function NewAIChatboxPage() {
               yield { content: [...parts] };
             } else if (event.type === "artifact_created") {
               onArtifactCreatedRef.current?.(event);
-            } else if (event.type === "grounding_check") {
+            } else if (event.type === "phase") {
+              // This page predates the streaming rework and still renders the
+              // answer from `final` alone; it consumes `phase` only as the
+              // status label that `grounding_check` used to provide, and
+              // ignores `thought` / `answer_delta`. See AskPage for the full
+              // streaming consumer.
               let reasoningPart = parts.find((p) => p.type === "reasoning");
               if (!reasoningPart) {
                 reasoningPart = { type: "reasoning", text: "" };
                 parts.push(reasoningPart);
               }
-              reasoningPart.text = "Verifying answer against your notes...";
+              reasoningPart.text =
+                event.detail ??
+                (event.phase === "retrieving"
+                  ? "Searching your notes..."
+                  : event.phase === "citing"
+                  ? "Applying citations..."
+                  : "Verifying answer against your notes...");
               yield { content: [...parts] };
             } else if (event.type === "final") {
               const result = event.data;
@@ -554,7 +739,11 @@ export default function NewAIChatboxPage() {
                 if (abortSignal?.aborted) break;
                 currentText += finalAnswer.slice(i, i + chunkSize);
 
-                let textPart = parts.find((p) => p.type === "text");
+                // `isNotice` guards the answer slot: a notice is also a text
+                // part, and without this the answer would overwrite it.
+                let textPart = parts.find(
+                  (p) => p.type === "text" && !p.isNotice,
+                );
                 if (!textPart) {
                   textPart = { type: "text", text: "" };
                   parts.push(textPart);
@@ -566,10 +755,17 @@ export default function NewAIChatboxPage() {
                 };
                 await new Promise((resolve) => setTimeout(resolve, delayMs));
               }
+            } else if (event.type === "notice") {
+              parts.unshift({
+                type: "text",
+                isNotice: true,
+                text: `*${NOTICE_TEXT[event.code] ?? event.message}*`,
+              });
+              yield { content: [...parts] };
             } else if (event.type === "error") {
               parts.push({
                 type: "text",
-                text: `Error: ${event.message}`,
+                text: askErrorText(event),
               });
               yield { content: [...parts] };
             }
@@ -585,13 +781,14 @@ export default function NewAIChatboxPage() {
           if (err instanceof DOMException && err.name === "AbortError")
             throw err;
           let errorAnswer: string;
-          if (err instanceof ChatApiError && err.status >= 500) {
+          const quotaText = quotaErrorText(err);
+          if (quotaText) {
+            errorAnswer = quotaText;
+          } else if (err instanceof ChatApiError && err.status >= 500) {
             errorAnswer =
               "The server is busy or still waking up. Please send the message again in 10-15 seconds.";
           } else {
-            const msg =
-              err instanceof Error ? err.message : "Failed to get answer";
-            errorAnswer = `Warning: ${msg}`;
+            errorAnswer = askErrorText(err);
           }
           yield {
             content: [{ type: "text" as const, text: errorAnswer }],
@@ -687,6 +884,7 @@ export default function NewAIChatboxPage() {
               onClearSelectedDoc={() => setSelectedDocIds([])}
               selectedDoc={selectedContext}
               sourcesCount={lastSources.length}
+              components={threadComponents}
             />
           )}
         </section>

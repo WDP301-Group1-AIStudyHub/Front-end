@@ -22,10 +22,8 @@ import {
 import {
   SparklesIcon,
   GlobeIcon,
-  ImageIcon,
   MoreHorizontalIcon,
   PanelRightIcon,
-  Share2Icon,
   PinIcon,
   PlusIcon,
   PencilIcon,
@@ -34,6 +32,7 @@ import {
   Trash2Icon,
 } from "lucide-react";
 import { SourcesOverlay } from "@/components/chat/sources/SourcesAside";
+import { useArtifacts } from "@/components/chat/artifacts/artifactsStore";
 import { useAuiState, useThreadListItemRuntime } from "@assistant-ui/react";
 import { getStoredUser } from "@/services/authStorage";
 import { useChatThreadStore } from "@/store/useChatThreadStore";
@@ -45,7 +44,6 @@ export interface AskTopbarProps {
   sessionTitle?: string;
   createdBy?: string;
   lastUpdated?: string;
-  onShare?: () => void;
   onPin?: () => void;
   onAddToProject?: () => void;
   onRenameSession?: () => void;
@@ -61,7 +59,6 @@ export function AskTopbar({
   sessionTitle,
   createdBy,
   lastUpdated,
-  onShare,
   onPin,
   onAddToProject,
   onRenameSession,
@@ -74,6 +71,7 @@ export function AskTopbar({
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameValue, setRenameValue] = useState("");
   const navigate = useNavigate();
+  const { toggleRail } = useArtifacts();
 
   const threadListItem = useAuiState(
     (s) =>
@@ -91,8 +89,7 @@ export function AskTopbar({
 
   const storedUser = getStoredUser();
 
-  const displayTitle =
-    sessionTitle ?? threadListItem?.title ?? "New Session";
+  const displayTitle = sessionTitle ?? threadListItem?.title ?? "New Session";
   const displayCreatedBy =
     createdBy ?? (storedUser?.fullName || storedUser?.email || "You");
   const displayLastUpdated =
@@ -102,6 +99,10 @@ export function AskTopbar({
       : "Just now");
 
   const handleTabChange = (value: string) => {
+    if (value === "artifacts") {
+      toggleRail();
+      return;
+    }
     setSelectedTab(value);
     onTabChange?.(value);
   };
@@ -142,10 +143,10 @@ export function AskTopbar({
   };
 
   return (
-    <header className="flex w-full items-center justify-between border-b bg-background px-4 py-2.5">
+    <header className="flex w-full items-center justify-between border-b bg-background px-4 py-2">
       {/* Left Navigation Tabs */}
       <Tabs value={selectedTab} onValueChange={handleTabChange}>
-        <TabsList variant="line">
+        <TabsList variant="default">
           <TabsTrigger value="answer" className="gap-1.5 px-3">
             <SparklesIcon className="size-4" data-icon="inline-start" />
             Answer
@@ -154,9 +155,9 @@ export function AskTopbar({
             <GlobeIcon className="size-4" data-icon="inline-start" />
             Links
           </TabsTrigger>
-          <TabsTrigger value="images" className="gap-1.5 px-3">
-            <ImageIcon className="size-4" data-icon="inline-start" />
-            Images
+          <TabsTrigger value="artifacts" className="gap-1.5 px-3">
+            <SparklesIcon className="size-4" data-icon="inline-start" />
+            Artifacts
           </TabsTrigger>
         </TabsList>
       </Tabs>
@@ -314,17 +315,6 @@ export function AskTopbar({
             </Button>
           </SourcesOverlay>
         </div>
-
-        {/* Share Button (Disabled pending backend) */}
-        <Button
-          disabled
-          onClick={onShare}
-          variant={"outline"}
-          className="cursor-not-allowed opacity-50"
-        >
-          <Share2Icon className="size-4" data-icon="inline-start" />
-          Share
-        </Button>
       </div>
     </header>
   );

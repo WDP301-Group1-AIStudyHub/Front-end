@@ -36,6 +36,7 @@ export interface DocumentItem {
   storedFileName?: string
   mimeType?: string
   extractionStatus?: string
+  extractionError?: string
   extractedText?: string
   uploadedBy: string
   ownerId?: string
