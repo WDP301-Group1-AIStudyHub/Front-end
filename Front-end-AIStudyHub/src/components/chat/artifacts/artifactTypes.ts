@@ -3,6 +3,7 @@ import {
   Layers,
   ListChecks,
   Network,
+  Sparkles,
   Table,
   type LucideIcon,
 } from "lucide-react";
@@ -19,6 +20,10 @@ export const TYPE_META: Record<
   MINDMAP: { label: "Mind map", icon: Network },
   REPORT: { label: "Report", icon: FileText },
   DATA_TABLE: { label: "Data table", icon: Table },
+  // SUMMARY is never created through the generic chat artifact panel (the
+  // backend rejects it there — see POST /api/documents/:id/summaries), but it
+  // shares the same read/list/preview surface, so this map must stay exhaustive.
+  SUMMARY: { label: "Document summary", icon: Sparkles },
 };
 
 export const MARKDOWN_PREVIEW_CLASS =

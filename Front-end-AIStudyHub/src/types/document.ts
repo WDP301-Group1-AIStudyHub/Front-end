@@ -43,6 +43,11 @@ export interface DocumentItem {
   createdAt: string
   updatedAt: string
   accessRole?: 'OWNER' | 'EDITOR' | 'VIEWER'
+  // Strict `document.ownerId === current user`. Distinct from `accessRole`,
+  // which also reads "OWNER" for admins and subject-workspace owners — using
+  // accessRole for owner-gated AI features would let them spend the real
+  // uploader's quota. Only present on the single-document GET, not on lists.
+  isOwner?: boolean
   isShared?: boolean
   sharedBy?: {
     id: string

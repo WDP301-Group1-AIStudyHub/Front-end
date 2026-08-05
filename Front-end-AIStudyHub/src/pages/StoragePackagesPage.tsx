@@ -160,10 +160,10 @@ export default function StoragePackagesPage() {
               {packages.map((pkg) => (
                 <StoragePackageCard
                   draggable={supportsDrag}
-                  hideAction={
-                    pkg.priceVnd === 0 &&
-                    Boolean(storage?.package && storage.package.priceVnd > 0)
-                  }
+                  hideAction={Boolean(
+                    storage?.package &&
+                      pkg.capacityBytes < storage.package.capacityBytes,
+                  )}
                   isCurrent={pkg.id === currentPackageId}
                   key={pkg.id}
                   onSelect={setTarget}

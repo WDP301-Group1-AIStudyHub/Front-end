@@ -57,6 +57,9 @@ const TYPE_META: Record<
   QUIZ: { label: "Quiz", icon: ListChecks },
   MINDMAP: { label: "Mind map", icon: Network },
   REPORT: { label: "Report", icon: FileText },
+  // Never created from this panel (backend rejects SUMMARY on the generic
+  // create route), but the type is shared so this map must stay exhaustive.
+  SUMMARY: { label: "Document summary", icon: Sparkles },
   DATA_TABLE: { label: "Data table", icon: Table },
 };
 

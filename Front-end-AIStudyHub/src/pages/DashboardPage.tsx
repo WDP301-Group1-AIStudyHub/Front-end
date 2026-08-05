@@ -497,10 +497,10 @@ export default function DashboardPage() {
           >
             {upgradeOptions.map((pkg) => (
               <StoragePackageCard
-                hideAction={
-                  pkg.priceVnd === 0 &&
-                  Boolean(storage?.package && storage.package.priceVnd > 0)
-                }
+                hideAction={Boolean(
+                  storage?.package &&
+                    pkg.capacityBytes < storage.package.capacityBytes,
+                )}
                 isCurrent={false}
                 key={pkg.id}
                 onSelect={setTarget}

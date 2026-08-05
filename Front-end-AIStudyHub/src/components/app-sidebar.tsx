@@ -304,6 +304,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       isActive: activePath === "/storage",
     },
     {
+      title: "Shared Summaries",
+      url: "/shared-summaries",
+      icon: <Users />,
+      isActive: activePath === "/shared-summaries",
+    },
+    {
       title: "Study Materials",
       url: "/study-materials",
       icon: <Brain />,
