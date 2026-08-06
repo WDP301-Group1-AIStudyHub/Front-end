@@ -21,6 +21,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import { PageShell } from "@/components/layout/PageShell";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
@@ -1119,101 +1120,45 @@ export default function NewLibraryPage() {
 
   return (
     <PageShell variant={"default"}>
+      <PageHeader
+        title="Library"
+        description="Browse, filter, and organize all documents in your study workspace."
+      />
       <section className="flex flex-1 flex-col gap-4">
-        <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-wrap items-center gap-3">
-              <h1 className="text-2xl font-medium">My Documents</h1>
-              {/* <Badge className="rounded-full px-2.5 py-1" variant="secondary">
-                {documents.length} total
-              </Badge>
-              <Badge className="rounded-full px-2.5 py-1" variant="outline">
-                {visibleDocuments.length} visible
-              </Badge> */}
-            </div>
-
-            {/* <Tabs
-              aria-label="My Document view"
-              onValueChange={(value) =>
-                setLibraryView(value as "mine" | "shared")
-              }
-              value={libraryView}
-            >
-              <TabsList>
-                <TabsTrigger value="mine">
-                  <FileText data-icon="inline-start" aria-hidden="true" />
-                  My documents
-                </TabsTrigger>
-                <TabsTrigger value="shared">
-                  <Users data-icon="inline-start" aria-hidden="true" />
-                  Shared with me
-                </TabsTrigger>
-              </TabsList>
-            </Tabs> */}
-          </div>
-
-          {libraryView === "mine" ? (
-            <div className="flex items-center gap-2 self-end xl:self-auto">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="secondary" disabled={isUploading}>
-                    <ArrowUpFromLineIcon
-                      data-icon="inline-start"
-                      aria-hidden="true"
-                    />
-                    Upload
-                    <ChevronDownIcon
-                      data-icon="inline-end"
-                      aria-hidden="true"
-                    />
-                  </Button>
-                </DropdownMenuTrigger>
-
-                <DropdownMenuContent className="w-fit" align="end">
-                  <DropdownMenuItem onSelect={() => setIsUploadOpen(true)}>
-                    <FileIcon />
-                    Document file
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          ) : null}
-        </div>
-
         <div className="flex flex-col gap-3 border-y border-border/70 py-4">
-          <div className="flex items-center gap-3 overflow-x-auto pb-1 -mb-1 w-full">
-            <InputGroup className="min-w-65 max-w-sm flex-1 bg-background">
-              <InputGroupAddon align="inline-start">
-                <SearchIcon aria-hidden="true" />
-              </InputGroupAddon>
-              <InputGroupInput
-                aria-label="Search documents"
-                className="h-full min-w-0 px-1 text-sm"
-                onChange={(event) => {
-                  setSearchQuery(event.target.value);
-                  setSelectedIds([]);
-                }}
-                placeholder="Search by title, file name, or description"
-                type="search"
-                value={searchQuery}
-              />
-              {searchQuery && (
-                <InputGroupAddon align="inline-end">
-                  <InputGroupButton
-                    aria-label="Clear search"
-                    onClick={() => {
-                      setSearchQuery("");
-                      setSelectedIds([]);
-                    }}
-                    size="icon-xs"
-                  >
-                    <X aria-hidden="true" />
-                  </InputGroupButton>
-                </InputGroupAddon>
-              )}
-            </InputGroup>
-
+          <div className="flex items-center justify-between gap-3 overflow-x-auto pb-1 -mb-1 w-full">
             <div className="flex items-center gap-2 flex-nowrap shrink-0">
+              <InputGroup className="min-w-65 max-w-sm flex-1 bg-background">
+                <InputGroupAddon align="inline-start">
+                  <SearchIcon aria-hidden="true" />
+                </InputGroupAddon>
+                <InputGroupInput
+                  aria-label="Search documents"
+                  className="h-full min-w-0 px-1 text-sm"
+                  onChange={(event) => {
+                    setSearchQuery(event.target.value);
+                    setSelectedIds([]);
+                  }}
+                  placeholder="Search by title, file name, or description"
+                  type="search"
+                  value={searchQuery}
+                />
+                {searchQuery && (
+                  <InputGroupAddon align="inline-end">
+                    <InputGroupButton
+                      aria-label="Clear search"
+                      onClick={() => {
+                        setSearchQuery("");
+                        setSelectedIds([]);
+                      }}
+                      size="icon-xs"
+                    >
+                      <X aria-hidden="true" />
+                    </InputGroupButton>
+                  </InputGroupAddon>
+                )}
+              </InputGroup>
+
               <Select
                 onValueChange={(val) => {
                   setSubjectFilter(val === "all" ? "" : val);
@@ -1322,6 +1267,33 @@ export default function NewLibraryPage() {
                 Clear filters
               </Button>
             </div>
+
+            {libraryView === "mine" ? (
+              <div className="flex items-center gap-2 self-end xl:self-auto">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="secondary" disabled={isUploading}>
+                      <ArrowUpFromLineIcon
+                        data-icon="inline-start"
+                        aria-hidden="true"
+                      />
+                      Upload
+                      <ChevronDownIcon
+                        data-icon="inline-end"
+                        aria-hidden="true"
+                      />
+                    </Button>
+                  </DropdownMenuTrigger>
+
+                  <DropdownMenuContent className="w-fit" align="end">
+                    <DropdownMenuItem onSelect={() => setIsUploadOpen(true)}>
+                      <FileIcon />
+                      Document file
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            ) : null}
           </div>
 
           <div className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
@@ -1488,8 +1460,10 @@ export default function NewLibraryPage() {
                                   </Badge>
                                 )}
                                 {(() => {
-                                  const indexState = getDocumentIndexState(document);
-                                  if (indexState !== "unsearchable") return null;
+                                  const indexState =
+                                    getDocumentIndexState(document);
+                                  if (indexState !== "unsearchable")
+                                    return null;
                                   const issue = getDocumentIndexIssue(document);
                                   return (
                                     <Badge

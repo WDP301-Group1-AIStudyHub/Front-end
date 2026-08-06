@@ -4,6 +4,7 @@ import remarkGfm from "remark-gfm";
 import { RefreshCw, Sparkles, Users } from "lucide-react";
 
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { CopyButton } from "@/components/chat/artifacts/ArtifactPreviewDialog";
 import { MARKDOWN_PREVIEW_CLASS } from "@/components/chat/artifacts/artifactTypes";
 import { recordToCopyText } from "@/components/chat/artifacts/artifactTypes";
@@ -106,14 +107,10 @@ export default function SharedSummariesPage() {
   return (
     <main className="moonlit-page flex min-h-svh w-full min-w-0 flex-col overflow-y-auto text-foreground">
       <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-5 py-6 sm:px-8 lg:px-10">
-        <header>
-          <p className="botanical-kicker">Summaries</p>
-          <h1 className="moonlit-title page-title">Shared with me</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            AI summaries other people have shared with you. You can read
-            these without access to the original document.
-          </p>
-        </header>
+        <PageHeader
+          title="Shared Summaries"
+          description="AI summaries other people have shared with you. You can read these without access to the original document."
+        />
 
         {isLoading ? (
           <div className="grid gap-4 sm:grid-cols-2">

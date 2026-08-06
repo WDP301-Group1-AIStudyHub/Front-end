@@ -1,16 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import {
-  Archive,
-  Database,
-  FileText,
-  Plus,
-  UploadCloud,
-  Sparkles,
-} from "lucide-react";
+import { Archive, FileText, UploadCloud, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+  CardAction,
+} from "@/components/ui/card";
 import { CelestialInlineLoader } from "../components/shared/CelestialLoading";
 import { listDocuments } from "../services/documentApi";
 import { formatStorageBytes } from "../utils/formatStorage";
@@ -125,16 +128,6 @@ export default function DashboardPage() {
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5)
       .map(([name, count]) => ({ name, count }));
-  }, [docs]);
-
-  const docsPerDay = useMemo(() => {
-    if (docs.length < 2) return null;
-    const dates = docs
-      .map((d) => new Date(d.createdAt).getTime())
-      .filter((t) => !Number.isNaN(t));
-    const span = (Math.max(...dates) - Math.min(...dates)) / 86_400_000;
-    if (span < 1) return null;
-    return (docs.length / span).toFixed(1);
   }, [docs]);
 
   useEffect(() => {
@@ -265,8 +258,10 @@ export default function DashboardPage() {
               <div className="flex size-16 items-center justify-center rounded-full bg-primary/10 text-primary">
                 <UploadCloud className="size-8" />
               </div>
-              <h3 className="text-xl font-bold">Drop your study source here</h3>
-              <p className="text-sm text-muted-foreground">
+              <h3 className="text-sm font-medium">
+                Drop your study source here
+              </h3>
+              <p className="text-[11px] text-muted-foreground">
                 Upload and link directly to your general workspace
               </p>
             </div>
@@ -275,117 +270,67 @@ export default function DashboardPage() {
       </AnimatePresence>
 
       <PageHeader
-        eyebrow="Workspace overview"
         title="Dashboard"
         description="Manage documents, continue recent study work, and review AI activity from one workspace."
-        actions={
-          <div className="flex items-center gap-3">
-            {uploadFeedback && (
-              <span className="text-xs text-primary bg-primary/5 border border-primary/20 px-3 py-1.5 rounded-xl animate-pulse">
-                {uploadFeedback}
-              </span>
-            )}
-            <Button
-              disabled={isUploading}
-              onClick={() => {
-                const input = document.createElement("input");
-                input.type = "file";
-                input.onchange = (e) => {
-                  const file = (e.target as HTMLInputElement).files?.[0];
-                  if (file) handleUploadFile(file);
-                };
-                input.click();
-              }}
-            >
-              <UploadCloud data-icon="inline-start" aria-hidden="true" />
-              {isUploading ? (
-                <CelestialInlineLoader label="Uploading..." />
-              ) : (
-                "Quick upload"
-              )}
-            </Button>
-          </div>
-        }
       />
 
       {/* Bento Grid Layout */}
       <section className="mt-8 grid gap-5 xl:grid-cols-12">
-        {/* Storage plan + usage. The plan name is the headline here: without it
-            a user cannot tell what they are paying for or why the cap is what
-            it is. */}
-        <article className="botanical-bento flex flex-col justify-between p-6 xl:col-span-4">
-          <div className="flex items-start justify-between gap-4">
-            <IconTile tone="primary">
-              <Database className="size-4" />
-            </IconTile>
-            <span className="text-xs font-semibold text-muted-foreground">
-              Space Usage
-            </span>
-            <span className="text-xs font-semibold text-muted-foreground">
-              Storage plan
-            </span>
-          </div>
+        {/* Storage plan + usage */}
+        <Card className="justify-between xl:col-span-4">
+          <CardHeader className="font-medium">Current Plan</CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            <div>
+              {storageLoading && !storage ? (
+                <Skeleton className="h-7 w-40" />
+              ) : (
+                <div className="flex flex-wrap items-center gap-2">
+                  <CardTitle className="font-medium text-foreground">
+                    {storage?.package?.name ?? "Free"}
+                  </CardTitle>
+                  <Badge
+                    variant={
+                      storage?.status === "FULL" ||
+                      storage?.status === "CRITICAL"
+                        ? "destructive"
+                        : storage?.status === "WARNING"
+                          ? "outline"
+                          : "secondary"
+                    }
+                  >
+                    {storage?.status === "FULL"
+                      ? "Full"
+                      : storage?.status === "CRITICAL"
+                        ? "Almost full"
+                        : storage?.status === "WARNING"
+                          ? "Filling up"
+                          : "Active"}
+                  </Badge>
+                </div>
+              )}
+              <CardDescription className="mt-1 text-sm">
+                {storage
+                  ? `${formatStorageBytes(storage.availableBytes)} free · 10 MB max per file`
+                  : "loading storage..."}
+              </CardDescription>
+            </div>
 
-          <div className="mt-6">
-            {storageLoading && !storage ? (
-              <Skeleton className="h-7 w-40" />
-            ) : (
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="text-xl font-bold tracking-tight text-foreground">
-                  {storage?.package?.name ?? "Free"}
-                </p>
-                <span
-                  className={`status-badge ${
-                    storage?.status === "FULL" || storage?.status === "CRITICAL"
-                      ? "status-error"
-                      : storage?.status === "WARNING"
-                        ? "status-warning"
-                        : "status-active"
-                  }`}
-                >
-                  {storage?.status === "FULL"
-                    ? "Full"
-                    : storage?.status === "CRITICAL"
-                      ? "Almost full"
-                      : storage?.status === "WARNING"
-                        ? "Filling up"
-                        : "Active"}
-                </span>
-              </div>
-            )}
-            <p className="mt-1 text-xs text-muted-foreground">
-              {storage
-                ? `${formatStorageBytes(storage.availableBytes)} free · 10 MB max per file`
-                : "loading storage..."}
-            </p>
-          </div>
+            <div>
+              {storageLoading && !storage ? (
+                <Skeleton className="h-2 w-full rounded-full" />
+              ) : (
+                <StorageUsageBar
+                  quotaBytes={storage?.quotaBytes ?? 0}
+                  status={storage?.status ?? "OK"}
+                  usedBytes={storage?.usedBytes ?? 0}
+                />
+              )}
+            </div>
+          </CardContent>
 
-          <div className="mt-6">
-            {storageLoading && !storage ? (
-              <Skeleton className="h-9 w-28" />
-            ) : (
-              <p className="text-3xl font-bold tracking-tight text-foreground">
-                {formatStorageBytes(storage?.usedBytes ?? 0)}
-                <span className="ml-1 text-base font-medium text-muted-foreground">
-                  / {formatStorageBytes(storage?.quotaBytes ?? 0)}
-                </span>
-              </p>
-            )}
-          </div>
-
-          <div className="mt-4">
-            {storageLoading && !storage ? (
-              <div className="h-2 w-full rounded-full bg-muted animate-pulse" />
-            ) : (
-              <StorageUsageBar
-                quotaBytes={storage?.quotaBytes ?? 0}
-                showLabel={false}
-                status={storage?.status ?? "OK"}
-                usedBytes={storage?.usedBytes ?? 0}
-              />
-            )}
+          <CardFooter>
             <Link
-              className="mt-4 inline-flex text-xs font-semibold text-primary underline-offset-4 hover:underline"
+              className="inline-flex text-sm font-medium text-primary underline-offset-4 hover:underline"
               to="/storage"
             >
               {storage?.status === "FULL"
@@ -395,76 +340,84 @@ export default function DashboardPage() {
                   ? "Running low — compare plans"
                   : "Manage plan"}
             </Link>
-          </div>
-        </article>
+          </CardFooter>
+        </Card>
 
         {/* AI Assistant box */}
-        <article className="flex flex-col justify-between p-6 xl:col-span-5 border border-border rounded-xl">
-          <div className="flex items-center gap-2 text-xs font-bold text-primary">
-            <Sparkles className="size-4" aria-hidden="true" />
-            AI Assistant
-          </div>
-          <h2 className="mt-6 text-xl font-bold leading-relaxed text-foreground">
-            Chat with your documents for immediate summaries and practice
-            questions.
-          </h2>
-          <div className="mt-8 flex flex-wrap items-center gap-4">
-            <Button asChild className="rounded-xl">
+        <Card className="justify-between xl:col-span-5">
+          <CardHeader>
+            <div className="flex items-center gap-2 text-sm font-medium text-primary">
+              <Sparkles className="size-4" aria-hidden="true" />
+              AI Assistant
+            </div>
+            <CardTitle className="mt-4 text-sm font-medium leading-relaxed text-foreground">
+              Chat with your documents for immediate summaries and practice
+              questions.
+            </CardTitle>
+          </CardHeader>
+          <CardFooter className="flex-wrap items-center gap-4">
+            <Button asChild>
               <Link to="/aichatbox">Start AI session</Link>
             </Button>
-            <span className="text-xs text-muted-foreground">
+            <span className="text-sm text-muted-foreground">
               {loading ? (
                 <CelestialInlineLoader label="Loading library..." />
               ) : (
                 `Ready to analyze ${docs.length} documents.`
               )}
             </span>
-          </div>
-        </article>
+          </CardFooter>
+        </Card>
 
         {/* Study Progress SVG Chart */}
-        <article className="flex flex-col justify-between p-6 xl:col-span-3 border border-border rounded-xl">
-          <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground">
-            <span>Study Activity</span>
-            <span className="text-primary font-bold">7-day library</span>
-          </div>
+        <Card className="justify-between xl:col-span-3">
+          <CardHeader className="flex-row items-center justify-between">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Study Activity
+            </CardTitle>
+            <CardDescription className="text-primary font-medium text-sm">
+              7-day library
+            </CardDescription>
+          </CardHeader>
 
-          {/* Spring-animated SVG Chart */}
-          <div className="h-28 mt-4 flex items-end justify-between gap-2">
-            {chartData.map((bar, i) => (
-              <div
-                key={i}
-                className="flex flex-col items-center gap-1.5 flex-1 group relative"
-              >
-                <div className="w-full bg-muted rounded-t-lg overflow-hidden h-20 relative">
-                  <motion.div
-                    initial={{ height: 0 }}
-                    animate={{ height: `${bar.value}%` }}
-                    transition={{
-                      type: "spring",
-                      stiffness: 100,
-                      damping: 15,
-                      delay: i * 0.05,
-                    }}
-                    className={`absolute bottom-0 left-0 right-0 rounded-t-md transition-colors ${
-                      bar.active
-                        ? "bg-primary"
-                        : "bg-primary/30 group-hover:bg-primary/50"
-                    }`}
-                  />
+          <CardContent>
+            {/* Spring-animated SVG Chart */}
+            <div className="h-28 flex items-end justify-between gap-2">
+              {chartData.map((bar, i) => (
+                <div
+                  key={i}
+                  className="flex flex-col items-center gap-1.5 flex-1 group relative"
+                >
+                  <div className="w-full bg-muted rounded-t-lg overflow-hidden h-20 relative">
+                    <motion.div
+                      initial={{ height: 0 }}
+                      animate={{ height: `${bar.value}%` }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 100,
+                        damping: 15,
+                        delay: i * 0.05,
+                      }}
+                      className={`absolute bottom-0 left-0 right-0 rounded-t-md transition-colors ${
+                        bar.active
+                          ? "bg-primary"
+                          : "bg-primary/30 group-hover:bg-primary/50"
+                      }`}
+                    />
+                  </div>
+                  <span className="text-sm font-medium text-muted-foreground">
+                    {bar.day}
+                  </span>
+
+                  {/* Micro tooltip */}
+                  <span className="absolute -top-6 scale-0 group-hover:scale-100 bg-foreground text-background text-[9px] font-medium px-1.5 py-0.5 rounded-md transition-transform pointer-events-none">
+                    {bar.count} docs
+                  </span>
                 </div>
-                <span className="text-[10px] font-semibold text-muted-foreground">
-                  {bar.day}
-                </span>
-
-                {/* Micro tooltip */}
-                <span className="absolute -top-6 scale-0 group-hover:scale-100 bg-foreground text-background text-[9px] font-bold px-1.5 py-0.5 rounded-md transition-transform pointer-events-none">
-                  {bar.count} docs
-                </span>
-              </div>
-            ))}
-          </div>
-        </article>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </section>
 
       {/* Upgrade options, so buying never requires leaving the dashboard. Only
@@ -472,18 +425,16 @@ export default function DashboardPage() {
           your plan" is noise here, unlike on the dedicated plans page. */}
       {upgradeOptions.length > 0 ? (
         <section className="mt-6">
-          <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="text-lg font-bold tracking-tight">
-                Need more storage?
-              </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <h2 className="font-medium">Need more storage?</h2>
+              <p className="text-muted-foreground">
                 Upgrade in a couple of clicks. Your documents stay exactly where
                 they are.
               </p>
             </div>
             <Link
-              className="text-xs font-semibold text-primary underline-offset-4 hover:underline"
+              className="text-sm font-medium text-primary underline-offset-4 hover:underline"
               to="/storage"
             >
               Compare all plans
@@ -499,7 +450,7 @@ export default function DashboardPage() {
               <StoragePackageCard
                 hideAction={Boolean(
                   storage?.package &&
-                    pkg.capacityBytes < storage.package.capacityBytes,
+                  pkg.capacityBytes < storage.package.capacityBytes,
                 )}
                 isCurrent={false}
                 key={pkg.id}
@@ -525,19 +476,19 @@ export default function DashboardPage() {
       {/* Main Section */}
       <section className="mt-6 grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
         {/* Recent Documents */}
-        <article className="overflow-hidden p-0 rounded-xl border border-border">
-          <div className="flex items-center justify-between border-b border-border/80 p-5">
-            <div className="flex items-center gap-3">
+        <Card className="overflow-hidden gap-0">
+          <CardHeader className="flex-row items-center justify-between">
+            <CardTitle className="font-medium flex gap-2 items-center">
               <Archive className="size-4 text-primary" aria-hidden="true" />
-              <h2 className="text-lg font-bold tracking-tight">
-                Recent documents
-              </h2>
-            </div>
-            <Button asChild size="sm" variant="outline" className="rounded-xl">
-              <Link to="/library">View all</Link>
-            </Button>
-          </div>
-          <div className="divide-y divide-border/60">
+              Recent documents
+            </CardTitle>
+            <CardAction>
+              <Button asChild size="sm" variant="outline">
+                <Link to="/library">View all</Link>
+              </Button>
+            </CardAction>
+          </CardHeader>
+          <CardContent className="p-0 divide-y divide-border/60">
             {loading ? (
               Array.from({ length: 3 }).map((_, i) => (
                 <div
@@ -546,7 +497,7 @@ export default function DashboardPage() {
                 >
                   <div className="flex items-center gap-3">
                     <Skeleton className="size-10 shrink-0 rounded-xl" />
-                    <div className="space-y-1.5">
+                    <div className="flex flex-col gap-1.5">
                       <Skeleton className="h-4 w-48" />
                       <Skeleton className="h-3 w-16" />
                     </div>
@@ -569,36 +520,36 @@ export default function DashboardPage() {
             ) : (
               recentDocs.map((doc) => (
                 <Link
-                  className="grid gap-3 p-5 transition-all hover:bg-muted/30 md:grid-cols-[1fr_180px_auto]"
+                  className="grid gap-3 p-5 transition-all hover:bg-muted/30 active:bg-muted/50 md:grid-cols-[1fr_180px_auto]"
                   key={doc.id}
                   to="/library"
                 >
                   <div className="flex min-w-0 items-center gap-3">
-                    <IconTile fileName={doc.fileName}>
+                    <IconTile fileName={doc.fileName} size={"sm"}>
                       <FileText className="size-4" />
                     </IconTile>
                     <div className="min-w-0">
-                      <p className="truncate font-bold text-foreground text-sm">
+                      <p className="truncate font-medium text-foreground text-sm">
                         {doc.title}
                       </p>
-                      <p className="text-[10px] text-muted-foreground">
+                      <p className="text-sm text-muted-foreground">
                         {formatRelativeTime(doc.createdAt)}
                       </p>
                     </div>
                   </div>
-                  <span className="self-center text-xs text-muted-foreground font-medium">
+                  <span className="self-center text-sm text-muted-foreground font-normal">
                     {(typeof doc.subject === "object"
                       ? doc.subject?.name
                       : doc.subject) || "Uncategorized"}
                   </span>
-                  <span className="self-center text-xs font-bold text-primary group-hover:underline">
+                  <span className="self-center text-sm font-medium text-primary group-hover:underline">
                     Open
                   </span>
                 </Link>
               ))
             )}
-          </div>
-        </article>
+          </CardContent>
+        </Card>
 
         {/* Sidebar panels */}
         <aside className="flex flex-col gap-5 ">
@@ -606,13 +557,13 @@ export default function DashboardPage() {
           <div
             onDragOver={handleDrag}
             onDrop={handleDrop}
-            className="group flex cursor-pointer items-center justify-between gap-5 rounded-xl border border-dashed border-border bg-card p-5 transition-colors hover:border-primary"
+            className="group flex cursor-pointer items-center justify-between gap-5 rounded-xl border border-dashed border-border bg-card p-5 transition-all hover:border-primary active:scale-[0.98]"
           >
             <div>
-              <h2 className="font-bold tracking-tight text-foreground text-sm">
+              <h2 className="font-medium  text-foreground text-sm">
                 Quick Drop Upload
               </h2>
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="mt-1 text-sm text-muted-foreground">
                 Drag and drop source files here
               </p>
             </div>
@@ -625,93 +576,54 @@ export default function DashboardPage() {
           </div>
 
           {/* Subject clusters list */}
-          <article className="p-5">
-            <span className="text-xs font-semibold text-muted-foreground">
-              Documents by subject
-            </span>
-            <div className="mt-5 space-y-2">
-              {loading ? (
-                Array.from({ length: 3 }).map((_, i) => (
-                  <div
-                    className="flex items-center justify-between gap-4 p-1"
-                    key={i}
-                  >
-                    <Skeleton className="h-4 w-32" />
-                    <Skeleton className="h-3 w-6" />
-                  </div>
-                ))
-              ) : subjectClusters.length === 0 ? (
-                <p className="text-xs text-muted-foreground p-1">
-                  No subjects yet.
-                </p>
-              ) : (
-                subjectClusters.map((subject) => (
-                  <Link
-                    className="flex items-center justify-between gap-4 rounded-xl px-2 py-1.5 text-sm transition-all hover:bg-muted/40"
-                    key={subject.name}
-                    to="/library"
-                  >
-                    <span className="font-semibold text-foreground text-xs">
-                      {subject.name}
-                    </span>
-                    <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                      {subject.count}
-                    </span>
-                  </Link>
-                ))
-              )}
-            </div>
-            <Button
-              asChild
-              className="mt-5 w-full rounded-xl"
-              variant="outline"
-            >
-              <Link to="/subjects">Manage subjects</Link>
-            </Button>
-          </article>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Documents by subject
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col gap-2">
+                {loading ? (
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <div
+                      className="flex items-center justify-between gap-4 p-1"
+                      key={i}
+                    >
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-3 w-6" />
+                    </div>
+                  ))
+                ) : subjectClusters.length === 0 ? (
+                  <p className="text-sm text-muted-foreground p-1">
+                    No subjects yet.
+                  </p>
+                ) : (
+                  subjectClusters.map((subject) => (
+                    <Link
+                      className="flex items-center justify-between gap-4 rounded-xl px-2 py-1.5 text-sm transition-all hover:bg-muted/40 active:scale-[0.98]"
+                      key={subject.name}
+                      to="/library"
+                    >
+                      <span className="font-medium text-foreground text-sm">
+                        {subject.name}
+                      </span>
+                      <span className="text-sm font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                        {subject.count}
+                      </span>
+                    </Link>
+                  ))
+                )}
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button asChild className="w-full" variant="outline">
+                <Link to="/subjects">Manage subjects</Link>
+              </Button>
+            </CardFooter>
+          </Card>
         </aside>
       </section>
-
-      {/* Footer statistics bar */}
-      <section className="mt-6 flex flex-col gap-4 p-5 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex min-w-0 items-center gap-3">
-          <span className="size-2 rounded-full bg-primary shrink-0" />
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            {docs.length === 0
-              ? "Upload documents to start building your research library."
-              : docsPerDay
-                ? `The library grows at ${docsPerDay} documents per day. ${docs.length} total files available.`
-                : `${docs.length} document${docs.length === 1 ? "" : "s"} in your library.`}
-          </p>
-        </div>
-        <div className="grid grid-cols-2 gap-8 text-xs shrink-0">
-          <div>
-            <p className="text-[10px] text-muted-foreground font-semibold">
-              Indexed docs
-            </p>
-            <p className="mt-1 font-bold text-foreground">
-              {docs.filter((doc) => (doc.totalChunks ?? 0) > 0).length}
-            </p>
-          </div>
-          <div>
-            <p className="text-[10px] text-muted-foreground font-semibold">
-              Workspace
-            </p>
-            <p className="mt-1 font-bold text-primary">Connected</p>
-          </div>
-        </div>
-      </section>
-
-      {/* Floating Plus button */}
-      <Button
-        asChild
-        className="fixed bottom-6 right-6 z-40 size-12 rounded-xl shadow-sm hover:scale-105 active:scale-95 transition-transform"
-        title="New document"
-      >
-        <Link to="/library">
-          <Plus aria-hidden="true" className="size-5" />
-        </Link>
-      </Button>
     </PageShell>
   );
 }

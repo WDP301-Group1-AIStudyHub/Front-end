@@ -257,12 +257,6 @@ export default function StudyMaterialsListPage() {
   return (
     <PageShell>
       <PageHeader
-        eyebrow={
-          <span className="flex items-center gap-1.5 justify-start text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            <Brain className="size-4 text-primary" />
-            AI Practice Hub
-          </span>
-        }
         title="Study Materials"
         description="Generate and practice multiple choice quizzes and flip flashcard decks based on your library documents."
       />

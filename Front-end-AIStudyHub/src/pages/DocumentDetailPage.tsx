@@ -16,6 +16,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/layout/PageHeader";
 import {
   Dialog,
   DialogContent,
@@ -116,7 +117,7 @@ function QuotaBadge() {
         Your API key has an issue — using free quota (
         {planState.used}/{planState.limit})
         {" · "}
-        <Link className="underline" to="/profile">
+        <Link className="underline" to="/settings">
           Fix key
         </Link>
       </span>
@@ -509,105 +510,103 @@ export default function DocumentDetailPage() {
 
   return (
     <PageShell>
-      <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="min-w-0">
-          <Button asChild variant="secondary">
-            <Link to={document?.isShared ? "/library?view=shared" : "/library"}>
-              <ArrowLeft data-icon="inline-start" aria-hidden="true" />
-              Back to My Document
-            </Link>
-          </Button>
-          <h1 className="mt-4 text-2xl font-bold tracking-tight md:text-3xl wrap-break-word">
-            {document?.title || "Document detail"}
-          </h1>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            disabled={!document || isStarring}
-            onClick={toggleStar}
-            type="button"
-            variant="secondary"
-          >
-            <Star
-              data-icon="inline-start"
-              aria-hidden="true"
-              className={
-                document?.isStarred
-                  ? "fill-amber-400 text-amber-500"
-                  : undefined
-              }
-            />
-            {document?.isStarred ? "Unstar" : "Star"}
-          </Button>
-          {canManage && (
+      <PageHeader
+        title={document?.title || "Document Details"}
+        description="Review document metadata, AI insights, chunks, and analysis."
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <Button asChild variant="outline">
+              <Link to={document?.isShared ? "/library?view=shared" : "/library"}>
+                <ArrowLeft className="size-4 mr-1.5" aria-hidden="true" />
+                Back to Library
+              </Link>
+            </Button>
             <Button
-              disabled={!document}
-              onClick={() => setIsShareOpen(true)}
+              disabled={!document || isStarring}
+              onClick={toggleStar}
               type="button"
               variant="secondary"
             >
-              <Users data-icon="inline-start" aria-hidden="true" />
-              Share
+              <Star
+                aria-hidden="true"
+                className={`size-4 mr-1.5 ${
+                  document?.isStarred
+                    ? "fill-amber-400 text-amber-500"
+                    : ""
+                }`}
+              />
+              {document?.isStarred ? "Unstar" : "Star"}
             </Button>
-          )}
-          {canClassifyShared && (
+            {canManage && (
+              <Button
+                disabled={!document}
+                onClick={() => setIsShareOpen(true)}
+                type="button"
+                variant="secondary"
+              >
+                <Users className="size-4 mr-1.5" aria-hidden="true" />
+                Share
+              </Button>
+            )}
+            {canClassifyShared && (
+              <Button
+                disabled={!document}
+                onClick={() => setIsSubjectProfileOpen(true)}
+                type="button"
+                variant="secondary"
+              >
+                <BookOpen className="size-4 mr-1.5" aria-hidden="true" />
+                Assign subject
+              </Button>
+            )}
+            {canEdit && (
+              <Button
+                disabled={!document}
+                onClick={openEdit}
+                type="button"
+                variant="secondary"
+              >
+                <Pencil className="size-4 mr-1.5" aria-hidden="true" />
+                Edit details
+              </Button>
+            )}
+            {document?.isOwner && summaryPhase !== "done" && (
+              <Button
+                disabled={summaryPhase === "starting" || summaryPhase === "polling"}
+                onClick={handleSummarize}
+                type="button"
+                variant="secondary"
+              >
+                <Sparkles className="size-4 mr-1.5" aria-hidden="true" />
+                {summaryPhase === "starting" || summaryPhase === "polling"
+                  ? "Summarizing..."
+                  : summaryPhase === "error"
+                    ? "Retry summary"
+                    : "Summarize with AI"}
+              </Button>
+            )}
             <Button
-              disabled={!document}
-              onClick={() => setIsSubjectProfileOpen(true)}
+              disabled={!document?.fileUrl}
+              onClick={downloadDocument}
               type="button"
-              variant="secondary"
             >
-              <BookOpen data-icon="inline-start" aria-hidden="true" />
-              Assign subject
+              <Download className="size-4 mr-1.5" aria-hidden="true" />
+              Download
             </Button>
-          )}
-          {canEdit && (
-            <Button
-              disabled={!document}
-              onClick={openEdit}
-              type="button"
-              variant="secondary"
-            >
-              <Pencil data-icon="inline-start" aria-hidden="true" />
-              Edit details
-            </Button>
-          )}
-          {document?.isOwner && summaryPhase !== "done" && (
-            <Button
-              disabled={summaryPhase === "starting" || summaryPhase === "polling"}
-              onClick={handleSummarize}
-              type="button"
-              variant="secondary"
-            >
-              <Sparkles data-icon="inline-start" aria-hidden="true" />
-              {summaryPhase === "starting" || summaryPhase === "polling"
-                ? "Summarizing..."
-                : summaryPhase === "error"
-                  ? "Retry summary"
-                  : "Summarize with AI"}
-            </Button>
-          )}
-          <Button
-            disabled={!document?.fileUrl}
-            onClick={downloadDocument}
-            type="button"
-          >
-            <Download data-icon="inline-start" aria-hidden="true" />
-            Download
-          </Button>
-          {canManage && (
-            <Button
-              disabled={!document || isDeleting}
-              onClick={handleDelete}
-              type="button"
-              variant="destructive"
-            >
-              <Trash2 data-icon="inline-start" aria-hidden="true" />
-              {isDeleting ? "Moving..." : "Move to trash"}
-            </Button>
-          )}
-        </div>
-      </header>
+            {canManage && (
+              <Button
+                disabled={!document || isDeleting}
+                onClick={handleDelete}
+                type="button"
+                variant="destructive"
+              >
+                <Trash2 className="size-4 mr-1.5" aria-hidden="true" />
+                {isDeleting ? "Moving..." : "Move to trash"}
+              </Button>
+            )}
+          </div>
+        }
+      />
 
       {document?.isOwner ? (
         <div className="-mt-2 flex justify-end">
@@ -757,7 +756,7 @@ export default function DocumentDetailPage() {
                       <div className="mt-2">
                         <Link
                           className="inline-flex items-center gap-1 font-semibold underline"
-                          to="/profile"
+                          to="/settings"
                         >
                           Add your own API key
                           <ExternalLink className="size-3" />

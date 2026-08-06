@@ -3,6 +3,7 @@ import { ChevronDownIcon, LockIcon, X } from "lucide-react";
 
 import type { DocumentItem } from "@/types/document";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 import { IconTile } from "@/components/shared/IconTile";
 import {
@@ -62,63 +63,37 @@ export function DocumentPreviewPage({
 
   return (
     <main className="fixed inset-0 z-50 flex min-w-0 flex-col overflow-hidden bg-[#282828] text-foreground">
-      <header className="flex shrink-0 flex-col border-b border-[#4B4B4B] bg-[#3C3C3C] ">
-        <div className="flex min-h-16 min-w-0 items-center justify-between gap-4 px-4 py-3">
-          <div className="flex min-w-0 items-center gap-2 text-white">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="rounded-full text-white/80 hover:text-white hover:bg-white/10 [&>svg]:size-6!"
-              aria-label="Close preview"
-              onClick={closePreview}
-            >
-              <X aria-hidden="true" />
-            </Button>
-
-            <IconTile fileName={document?.fileName} size={"sm"} />
-
-            <div className="flex min-w-0 flex-col gap-1 text-white">
-              <div className="flex min-w-0 items-center gap-2 text-lg">
-                <strong className="truncate text-sm font-medium">
-                  {previewTitle}
-                </strong>
-              </div>
-
-              <nav
-                className="flex flex-wrap items-center -ml-2 -mt-1"
-                aria-label="Preview menu"
+      <header className="flex shrink-0 flex-col border-b border-[#4B4B4B] bg-[#3C3C3C] p-4">
+        <PageHeader
+          title={
+            <div className="flex items-center gap-3 text-white">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-full text-white/80 hover:text-white hover:bg-white/10 [&>svg]:size-6!"
+                aria-label="Close preview"
+                onClick={closePreview}
               >
-                {["File", "Edit", "View", "Help"].map((item) => (
-                  <Button
-                    className="text-sm font-normal text-white/80 hover:text-white hover:bg-white/10 h-6 px-2"
-                    variant="ghost"
-                    size="sm"
-                    key={item}
-                  >
-                    {item}
-                  </Button>
-                ))}
-              </nav>
+                <X aria-hidden="true" />
+              </Button>
+              <IconTile fileName={document?.fileName} size={"sm"} />
+              <span>{previewTitle}</span>
             </div>
-          </div>
-
-          <ButtonGroup>
-            <Button
-              size="lg"
-              className="bg-accent/90 text-primary hover:bg-accent"
-            >
-              <LockIcon data-icon="inline-start" />
-              Share
-            </Button>
-            <ButtonGroupSeparator />
-            <Button
-              size="icon-lg"
-              className="bg-accent/90 text-primary hover:bg-accent"
-            >
-              <ChevronDownIcon data-icon="inline-start" />
-            </Button>
-          </ButtonGroup>
-        </div>
+          }
+          description={<span className="text-white/70">Preview raw document file contents.</span>}
+          actions={
+            <ButtonGroup>
+              <Button
+                size="lg"
+                className="bg-accent/90 text-primary hover:bg-accent"
+              >
+                <LockIcon data-icon="inline-start" />
+                Share
+                <ChevronDownIcon data-icon="inline-end" />
+              </Button>
+            </ButtonGroup>
+          }
+        />
       </header>
 
       <section className="min-h-0 flex-1 overflow-hidden">
