@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { CurrentPlanDropZone } from "../components/storage/CurrentPlanDropZone";
 import { PurchaseConfirmDialog } from "../components/storage/PurchaseConfirmDialog";
 import { StoragePackageCard } from "../components/storage/StoragePackageCard";
@@ -112,29 +113,24 @@ export default function StoragePackagesPage() {
   return (
     <main className="moonlit-page flex min-h-svh w-full min-w-0 flex-col overflow-y-auto text-foreground">
       <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-5 py-6 sm:px-8 lg:px-10">
-        <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="botanical-kicker">Storage</p>
-            <h1 className="moonlit-title page-title">Storage plans</h1>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Pick the plan that fits how much you upload. Every plan caps
-              individual files at 10 MB.
-            </p>
-          </div>
-          <Button
-            className="min-h-11!"
-            disabled={isReconciling}
-            onClick={handleReconcile}
-            type="button"
-            variant="outline"
-          >
-            <RefreshCw
-              aria-hidden="true"
-              className={`size-4 ${isReconciling ? "animate-spin" : ""}`}
-            />
-            Recalculate usage
-          </Button>
-        </header>
+        <PageHeader
+          title="Storage Plans"
+          description="Pick the plan that fits how much you upload. Every plan caps individual files at 10 MB."
+          actions={
+            <Button
+              disabled={isReconciling}
+              onClick={handleReconcile}
+              type="button"
+              variant="outline"
+            >
+              <RefreshCw
+                aria-hidden="true"
+                className={`size-4 ${isReconciling ? "animate-spin" : ""}`}
+              />
+              Recalculate usage
+            </Button>
+          }
+        />
 
         {loading && !storage ? (
           <Skeleton className="h-40 w-full" />
