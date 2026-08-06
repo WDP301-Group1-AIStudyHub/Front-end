@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { PageShell } from "@/components/layout/PageShell";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { IconTile } from '@/components/shared/IconTile'
 import {
   AlertCircle,
@@ -205,37 +206,34 @@ export default function Summary() {
 
   return (
     <PageShell>
-        <header className="flex flex-col gap-4 border-b border-border/60 pb-5 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <div className="mb-3 flex flex-wrap items-center gap-2 text-xs font-semibold text-muted-foreground">
-              <Link to="/evaluation">
-                <span>Benchmark</span>
-              </Link>
-              <span>/</span>
-              <span className="text-foreground">Summary</span>
-              <span className="ml-2 rounded-full border border-border/70 px-2 py-1 text-[10px] uppercase tracking-[0.14em]">
-                DR-RAG
-              </span>
-            </div>
-            <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
-              Benchmark Summary
-            </h1>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Aggregate quality metrics for the single DR-RAG pipeline.
-            </p>
+      <PageHeader
+        title="Evaluation Summary"
+        description="Aggregate quality metrics for the single DR-RAG pipeline across all benchmark runs."
+        actions={
+          <div className="flex flex-wrap gap-2">
+            <Button
+              onClick={exportJson}
+              type="button"
+              variant="outline"
+            >
+              <ArrowDownToLine className="size-4 mr-1" aria-hidden="true" />
+              Export
+            </Button>
+            <Button
+              disabled={loading}
+              onClick={loadSummary}
+              type="button"
+              variant="outline"
+            >
+              <RefreshCw
+                className={`size-4 mr-1 ${loading ? "animate-spin" : ""}`}
+                aria-hidden="true"
+              />
+              Refresh
+            </Button>
           </div>
-
-          <Button
-            className="px-4"
-            onClick={exportJson}
-            size="lg"
-            type="button"
-            variant="outline"
-          >
-            <ArrowDownToLine data-icon="inline-start" aria-hidden="true" />
-            Export
-          </Button>
-        </header>
+        }
+      />
 
         {error && (
           <div className="flex flex-col gap-3 rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive sm:flex-row sm:items-center sm:justify-between">

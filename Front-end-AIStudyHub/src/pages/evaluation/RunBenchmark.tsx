@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import { Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { PageShell } from "@/components/layout/PageShell";
+import { PageHeader } from "@/components/layout/PageHeader";
 import {
   AlertCircle,
   ArrowDownToLine,
@@ -183,60 +184,40 @@ export default function RunBenchmark() {
 
   return (
     <PageShell>
-        <header className="flex flex-col gap-4 border-b border-border/60 pb-5 xl:flex-row xl:items-end xl:justify-between">
-          <div className="min-w-0">
-            <div className="mb-3 flex flex-wrap items-center gap-2 text-xs font-semibold text-muted-foreground">
-              <span>Benchmark</span>
-              <span>/</span>
-              <span className="text-foreground">
-                Run #{result?.id || questionId || "pending"}
-              </span>
-              <span className="ml-2 rounded-full border border-border/70 px-2 py-1 text-[10px] uppercase tracking-[0.14em]">
-                DR-RAG
-              </span>
-            </div>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-              {formatDate(result?.createdAt)}
-            </p>
-            <h1 className="mt-2 text-2xl font-bold tracking-tight md:text-3xl line-clamp-2">
-              {result?.question || "Running benchmark..."}
-            </h1>
-            <p className="mt-2 text-sm text-muted-foreground">
-              The benchmark runs the single DR-RAG pipeline and scores the generated answer.
-            </p>
-          </div>
-
+      <PageHeader
+        title="Run Evaluation Benchmark"
+        description="The benchmark runs the single DR-RAG pipeline and scores the generated answer."
+        actions={
           <div className="flex flex-wrap gap-2">
-            <Link
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-border px-4 text-sm font-semibold text-muted-foreground transition hover:text-foreground"
-              to="/evaluation"
-            >
-              <ChevronLeft className="size-4" />
-              Back
-            </Link>
+            <Button asChild variant="outline">
+              <Link to="/evaluation">
+                <ChevronLeft className="size-4 mr-1" />
+                Back
+              </Link>
+            </Button>
             <Button
-              className="px-4"
               disabled={!result}
               onClick={exportJson}
-              size="lg"
               type="button"
               variant="outline"
             >
-              <ArrowDownToLine data-icon="inline-start" aria-hidden="true" />
+              <ArrowDownToLine className="size-4 mr-1" aria-hidden="true" />
               Export JSON
             </Button>
             <Button
-              className="px-4"
               disabled={loading || rerunning}
               onClick={() => runBenchmark(true)}
-              size="lg"
               type="button"
             >
-              {rerunning ? <Loader2 data-icon="inline-start" className="animate-spin" aria-hidden="true" /> : <RefreshCw data-icon="inline-start" aria-hidden="true" />}
-              Re-run
+              <RefreshCw
+                className={`size-4 mr-1 ${rerunning ? "animate-spin" : ""}`}
+                aria-hidden="true"
+              />
+              {rerunning ? "Running..." : "Re-run benchmark"}
             </Button>
           </div>
-        </header>
+        }
+      />
 
         {error && (
           <div className="flex flex-col gap-3 rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive sm:flex-row sm:items-center sm:justify-between">
