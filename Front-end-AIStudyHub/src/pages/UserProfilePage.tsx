@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
   AtSign,
   CalendarDays,
   CheckCircle2,
-  Pencil,
+  KeyRound,
   ShieldCheck,
   UserRound,
 } from 'lucide-react'
@@ -80,7 +81,7 @@ export default function UserProfilePage() {
   const storedUser = getStoredUser()
 
   const [fullName, setFullName] = useState(storedUser?.fullName ?? '')
-  const [avatar, setAvatar] = useState(storedUser?.avatar ?? '')
+  const avatar = storedUser?.avatar ?? ''
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -93,7 +94,7 @@ export default function UserProfilePage() {
     setError(null)
     setSaved(false)
     try {
-      const updated = await updateProfile({ fullName, avatar })
+      const updated = await updateProfile({ fullName })
       const token = getStoredToken()
       if (token) storeAuthSession(token, updated)
       setSaved(true)
@@ -123,7 +124,7 @@ export default function UserProfilePage() {
       <PageHeader
         eyebrow="Account settings"
         title="My Profile"
-        description="Manage your display name and avatar across AI Study Hub."
+        description="Manage your display name across AI Study Hub."
       />
 
       <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
@@ -144,9 +145,6 @@ export default function UserProfilePage() {
                 >
                   {initials || <UserRound className="size-8" />}
                 </span>
-              </div>
-              <div className="absolute -bottom-1 -right-1 flex size-7 items-center justify-center rounded-full border border-border bg-background shadow">
-                <Pencil className="size-3 text-muted-foreground" />
               </div>
             </div>
 
@@ -192,7 +190,7 @@ export default function UserProfilePage() {
             <div className="mb-5 border-b border-border/60 pb-4">
               <h2 className="text-base font-semibold">Personal information</h2>
               <p className="mt-0.5 text-sm text-muted-foreground">
-                Update your display name and profile picture.
+                Update your display name.
               </p>
             </div>
 
@@ -204,27 +202,6 @@ export default function UserProfilePage() {
                 placeholder="Enter your full name"
                 value={fullName}
               />
-              <Field
-                icon={<Pencil />}
-                label="Avatar URL"
-                onChange={setAvatar}
-                placeholder="https://example.com/your-photo.jpg"
-                value={avatar}
-              />
-
-              {avatar && (
-                <div className="flex items-center gap-3 rounded-xl border border-border/60 bg-muted/20 p-3">
-                  <img
-                    alt="Preview"
-                    className="size-10 rounded-full object-cover"
-                    onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).src = ''
-                    }}
-                    src={avatar}
-                  />
-                  <p className="text-xs text-muted-foreground">Avatar preview</p>
-                </div>
-              )}
             </div>
           </div>
 
@@ -252,6 +229,22 @@ export default function UserProfilePage() {
                 value={storedUser?.role === 'admin' ? 'Administrator' : 'Student'}
               />
             </div>
+          </div>
+
+          {/* Password */}
+          <div className="p-6">
+            <div className="mb-5 border-b border-border/60 pb-4">
+              <h2 className="text-base font-semibold">Password</h2>
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                Change the password used to sign in to your account.
+              </p>
+            </div>
+            <Button asChild variant="secondary">
+              <Link to="/profile/change-password">
+                <KeyRound data-icon="inline-start" aria-hidden="true" />
+                Change password
+              </Link>
+            </Button>
           </div>
 
           {/* AI Credential & Quota Settings */}

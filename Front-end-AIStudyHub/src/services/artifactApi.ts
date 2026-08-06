@@ -113,6 +113,21 @@ export const createDocumentSummary = async (
   };
 };
 
+/**
+ * Read-only counterpart to createDocumentSummary — never creates or charges.
+ * Lets a page restore an already-generated summary on mount without risking
+ * a silent quota charge for a document that was never summarized. Returns
+ * null when no summary exists yet.
+ */
+export const getExistingDocumentSummary = async (
+  documentId: string,
+): Promise<ArtifactRecord | null> => {
+  const response = await apiClient.get(
+    `/api/documents/${documentId}/summaries`,
+  );
+  return unwrapApiData(response.data, "Failed to check for an existing summary");
+};
+
 export type ArtifactSharePermission = "VIEW";
 
 export interface ArtifactShareUser {
