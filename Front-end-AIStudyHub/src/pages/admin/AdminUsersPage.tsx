@@ -1,14 +1,14 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from "react";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { Ban, Search, ShieldCheck, Users } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+} from "@/components/ui/select";
+import { Ban, Search, ShieldCheck, Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Sheet,
   SheetContent,
@@ -16,90 +16,90 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from '@/components/ui/sheet'
-import { Textarea } from '@/components/ui/textarea'
-import { LoadingState } from '@/components/shared/CelestialLoading'
-import { listAdminUsers, banUser, unbanUser } from '@/services/adminApi'
-import type { AdminUser } from '@/types/admin'
-import { formatDateTime, StatusBadge } from './adminPageUtils'
-import { PageShell } from '@/components/layout/PageShell'
-import { PageHeader } from '@/components/layout/PageHeader'
+} from "@/components/ui/sheet";
+import { Textarea } from "@/components/ui/textarea";
+import { LoadingState } from "@/components/shared/CelestialLoading";
+import { listAdminUsers, banUser, unbanUser } from "@/services/adminApi";
+import type { AdminUser } from "@/types/admin";
+import { formatDateTime, StatusBadge } from "./adminPageUtils";
+import { PageShell } from "@/components/layout/PageShell";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 export default function AdminUsersPage() {
-  const [isLoading, setIsLoading] = useState(true)
-  const [query, setQuery] = useState('')
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all')
-  const [currentPage, setCurrentPage] = useState(1)
-  const ITEMS_PER_PAGE = 10
-  const [users, setUsers] = useState<AdminUser[]>([])
+  const [isLoading, setIsLoading] = useState(true);
+  const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "active" | "inactive"
+  >("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
+  const [users, setUsers] = useState<AdminUser[]>([]);
 
   // Ban dialog state
-  const [banTarget, setBanTarget] = useState<AdminUser | null>(null)
-  const [banReason, setBanReason] = useState('')
+  const [banTarget, setBanTarget] = useState<AdminUser | null>(null);
+  const [banReason, setBanReason] = useState("");
 
   useEffect(() => {
     listAdminUsers()
       .then(setUsers)
-      .finally(() => setIsLoading(false))
-  }, [])
+      .finally(() => setIsLoading(false));
+  }, []);
 
   const filteredUsers = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase()
+    const normalizedQuery = query.trim().toLowerCase();
 
     return users.filter((user) => {
       const matchesQuery =
         !normalizedQuery ||
         user.fullName.toLowerCase().includes(normalizedQuery) ||
-        user.email.toLowerCase().includes(normalizedQuery)
-      const matchesStatus = statusFilter === 'all' || user.status === statusFilter
+        user.email.toLowerCase().includes(normalizedQuery);
+      const matchesStatus =
+        statusFilter === "all" || user.status === statusFilter;
 
-      return matchesQuery && matchesStatus
-    })
-  }, [query, statusFilter, users])
+      return matchesQuery && matchesStatus;
+    });
+  }, [query, statusFilter, users]);
 
   useEffect(() => {
-    setCurrentPage(1)
-  }, [query, statusFilter])
+    setCurrentPage(1);
+  }, [query, statusFilter]);
 
   const paginatedUsers = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
-    return filteredUsers.slice(startIndex, startIndex + ITEMS_PER_PAGE)
-  }, [filteredUsers, currentPage])
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredUsers.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredUsers, currentPage]);
 
-  const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE)
+  const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
 
   function openBanDialog(user: AdminUser) {
-    setBanTarget(user)
-    setBanReason('')
+    setBanTarget(user);
+    setBanReason("");
   }
 
   async function handleBan() {
-    if (!banTarget || !banReason.trim()) return
+    if (!banTarget || !banReason.trim()) return;
     try {
-      const nextUser = await banUser(banTarget.id, banReason.trim())
-      setUsers((cur) => cur.map((u) => (u.id === nextUser.id ? nextUser : u)))
-      setBanTarget(null)
+      const nextUser = await banUser(banTarget.id, banReason.trim());
+      setUsers((cur) => cur.map((u) => (u.id === nextUser.id ? nextUser : u)));
+      setBanTarget(null);
     } catch (err: any) {
-      alert(err.message || 'Failed to ban user')
+      alert(err.message || "Failed to ban user");
     }
   }
 
   async function handleUnban(user: AdminUser) {
     try {
-      const nextUser = await unbanUser(user.id)
-      setUsers((cur) => cur.map((u) => (u.id === nextUser.id ? nextUser : u)))
+      const nextUser = await unbanUser(user.id);
+      setUsers((cur) => cur.map((u) => (u.id === nextUser.id ? nextUser : u)));
     } catch (err: any) {
-      alert(err.message || 'Failed to unban user')
+      alert(err.message || "Failed to unban user");
     }
   }
-
-
 
   return (
     <PageShell>
       <PageHeader
         description="View users, update roles, and ban or unban accounts."
-        eyebrow="Admin users"
         title="User Management"
       />
 
@@ -118,10 +118,14 @@ export default function AdminUsersPage() {
           <div className="flex flex-wrap items-center gap-3">
             {/* Status filter */}
             <div className="flex items-center gap-1.5">
-              <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Status:</span>
+              <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">
+                Status:
+              </span>
               <Select
                 value={statusFilter}
-                onValueChange={(val) => setStatusFilter(val as typeof statusFilter)}
+                onValueChange={(val) =>
+                  setStatusFilter(val as typeof statusFilter)
+                }
               >
                 <SelectTrigger className="h-8 w-[130px]">
                   <SelectValue />
@@ -133,7 +137,9 @@ export default function AdminUsersPage() {
                 </SelectContent>
               </Select>
             </div>
-            <StatusBadge severity="info">{filteredUsers.length} users</StatusBadge>
+            <StatusBadge severity="info">
+              {filteredUsers.length} users
+            </StatusBadge>
           </div>
         </div>
 
@@ -158,26 +164,40 @@ export default function AdminUsersPage() {
             </div>
           ) : (
             paginatedUsers.map((user) => (
-              <article className="grid gap-4 p-5 transition-colors hover:bg-muted/35 xl:grid-cols-[1fr_140px_170px_200px]" key={user.id}>
+              <article
+                className="grid gap-4 p-5 transition-colors hover:bg-muted/35 xl:grid-cols-[1fr_140px_170px_200px]"
+                key={user.id}
+              >
                 <div className="flex min-w-0 items-center gap-3">
                   <span className="grid size-11 shrink-0 place-items-center rounded-xl border border-[var(--accent-teal)]/35 bg-[color-mix(in_oklab,var(--accent-teal)_16%,transparent)]">
                     {user.avatar ? (
-                      <img alt="" className="size-9 rounded-lg object-cover" src={user.avatar} />
+                      <img
+                        alt=""
+                        className="size-9 rounded-lg object-cover"
+                        src={user.avatar}
+                      />
                     ) : (
                       <Users className="size-5 text-muted-foreground" />
                     )}
                   </span>
                   <div className="min-w-0">
-                    <h2 className="truncate font-semibold text-foreground">{user.fullName}</h2>
-                    <p className="truncate text-sm text-muted-foreground">{user.email}</p>
+                    <h2 className="truncate font-semibold text-foreground">
+                      {user.fullName}
+                    </h2>
+                    <p className="truncate text-sm text-muted-foreground">
+                      {user.email}
+                    </p>
                   </div>
                 </div>
                 <div className="flex flex-col justify-center">
-                  <StatusBadge severity={user.isActive ? 'active' : 'inactive'}>
-                    {user.isActive ? 'Active' : 'Banned'}
+                  <StatusBadge severity={user.isActive ? "active" : "inactive"}>
+                    {user.isActive ? "Active" : "Banned"}
                   </StatusBadge>
                   {user.banReason && (
-                    <p className="mt-1 text-xs text-muted-foreground truncate" title={user.banReason}>
+                    <p
+                      className="mt-1 text-xs text-muted-foreground truncate"
+                      title={user.banReason}
+                    >
                       {user.banReason}
                     </p>
                   )}
@@ -187,12 +207,22 @@ export default function AdminUsersPage() {
                 </div>
                 <div className="flex flex-wrap items-center justify-start gap-2 xl:justify-end">
                   {user.isActive ? (
-                    <Button onClick={() => openBanDialog(user)} size="sm" type="button" variant="destructive">
+                    <Button
+                      onClick={() => openBanDialog(user)}
+                      size="sm"
+                      type="button"
+                      variant="destructive"
+                    >
                       <Ban data-icon="inline-start" />
                       Ban
                     </Button>
                   ) : (
-                    <Button onClick={() => void handleUnban(user)} size="sm" type="button" variant="default">
+                    <Button
+                      onClick={() => void handleUnban(user)}
+                      size="sm"
+                      type="button"
+                      variant="default"
+                    >
                       <ShieldCheck data-icon="inline-start" />
                       Unban
                     </Button>
@@ -207,13 +237,31 @@ export default function AdminUsersPage() {
         {totalPages > 1 && (
           <div className="flex items-center justify-between border-t border-border/50 px-5 py-4 bg-muted/20">
             <div className="text-sm text-muted-foreground">
-              Showing {Math.min(filteredUsers.length, (currentPage - 1) * ITEMS_PER_PAGE + 1)} to {Math.min(filteredUsers.length, currentPage * ITEMS_PER_PAGE)} of {filteredUsers.length} entries
+              Showing{" "}
+              {Math.min(
+                filteredUsers.length,
+                (currentPage - 1) * ITEMS_PER_PAGE + 1,
+              )}{" "}
+              to {Math.min(filteredUsers.length, currentPage * ITEMS_PER_PAGE)}{" "}
+              of {filteredUsers.length} entries
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage(p => Math.max(1, p - 1))}>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              >
                 Previous
               </Button>
-              <Button variant="outline" size="sm" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage === totalPages}
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(totalPages, p + 1))
+                }
+              >
                 Next
               </Button>
             </div>
@@ -221,16 +269,17 @@ export default function AdminUsersPage() {
         )}
       </section>
 
-
-
       {/* Ban dialog sheet */}
-      <Sheet open={Boolean(banTarget)} onOpenChange={(open) => !open && setBanTarget(null)}>
+      <Sheet
+        open={Boolean(banTarget)}
+        onOpenChange={(open) => !open && setBanTarget(null)}
+      >
         <SheetContent className="sm:max-w-md">
           <SheetHeader>
             <SheetTitle>Ban user account</SheetTitle>
             <SheetDescription>
-              You are about to ban <strong>{banTarget?.fullName}</strong> ({banTarget?.email}).
-              Please provide a reason.
+              You are about to ban <strong>{banTarget?.fullName}</strong> (
+              {banTarget?.email}). Please provide a reason.
             </SheetDescription>
           </SheetHeader>
           <div className="grid gap-4 p-4">
@@ -256,5 +305,5 @@ export default function AdminUsersPage() {
         </SheetContent>
       </Sheet>
     </PageShell>
-  )
+  );
 }
