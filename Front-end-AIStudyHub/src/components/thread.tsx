@@ -202,7 +202,7 @@ const ThreadRoot: FC<{ isEmpty: boolean }> = ({ isEmpty }) => {
 
           <ThreadPrimitive.ViewportFooter
             className={cn(
-              "aui-thread-viewport-footer bg-background flex flex-col gap-4 overflow-visible pb-6 md:pb-8",
+              "aui-thread-viewport-footer bg-background flex flex-col gap-4 overflow-visible pb-6 md:pb-4",
               !isEmpty &&
                 "sticky bottom-0 mt-auto rounded-t-(--composer-radius)",
             )}
@@ -247,7 +247,7 @@ const ThreadScrollToBottom: FC = () => {
 
 const ThreadWelcome: FC = () => {
   return (
-    <div className="aui-thread-welcome-root mb-6 flex flex-col items-center px-4 text-left">
+    <div className="aui-thread-welcome-root mb-8 flex flex-col items-center px-4 text-left">
       <h1 className="aui-thread-welcome-message-inner fade-in slide-in-from-bottom-1 animate-in fill-mode-both text-3xl font-medium duration-200 font-serif w-full">
         How can I help you today?
       </h1>
@@ -681,9 +681,7 @@ const UserMessage: FC = () => {
       <div className="aui-user-message-content-wrapper relative col-start-2 min-w-0">
         <div className="aui-user-message-content peer bg-muted text-foreground text-sm rounded-xl px-4 py-2 wrap-break-word empty:hidden">
           <MessagePrimitive.Parts
-            components={
-              UserMessageText ? { Text: UserMessageText } : undefined
-            }
+            components={UserMessageText ? { Text: UserMessageText } : undefined}
           />
         </div>
         <div className="aui-user-action-bar-wrapper absolute inset-s-0 top-1/2 -translate-x-full -translate-y-1/2 pe-2 peer-empty:hidden rtl:translate-x-full">

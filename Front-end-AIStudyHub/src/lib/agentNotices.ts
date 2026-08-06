@@ -5,14 +5,14 @@
 
 export const NOTICE_TEXT: Record<string, string> = {
   DEGRADED_MODE:
-    'Your saved API key was rejected, so this answer used your free monthly allowance. Update the key in [Settings](/profile) to go back to unlimited use.',
+    'Your saved API key was rejected, so this answer used your free monthly allowance. Update the key in [Settings](/settings) to go back to unlimited use.',
 }
 
 const QUOTA_ERROR_TEXT: Record<string, string> = {
   QUOTA_EXHAUSTED_NO_KEY:
-    "You've used every free message for this month. Add your own Gemini API key in [Settings](/profile) for unlimited use, or wait for the allowance to reset on the 1st.",
+    "You've used every free message for this month. Add your own Gemini API key in [Settings](/settings) for unlimited use, or wait for the allowance to reset on the 1st.",
   QUOTA_EXHAUSTED_INVALID_KEY:
-    "You've used every free message for this month, and your saved API key was rejected. Update the key in [Settings](/profile) to keep asking.",
+    "You've used every free message for this month, and your saved API key was rejected. Update the key in [Settings](/settings) to keep asking.",
 }
 
 /**

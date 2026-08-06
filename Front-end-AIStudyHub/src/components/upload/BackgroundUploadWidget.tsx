@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import {
   AlertCircle,
   CheckCircle2,
@@ -12,13 +13,21 @@ import {
 import { Button } from "@/components/ui/button";
 import { useUploadStore } from "@/store/useUploadStore";
 
-export default function BackgroundUploadWidget() {
+const UPLOAD_WIDGET_TOAST_ID = "background-upload-widget";
+
+function UploadWidgetCard({
+  isExpanded,
+  setIsExpanded,
+  activeTab,
+  setActiveTab,
+}: {
+  isExpanded: boolean;
+  setIsExpanded: (val: boolean | ((prev: boolean) => boolean)) => void;
+  activeTab: "all" | "completed" | "failed";
+  setActiveTab: (tab: "all" | "completed" | "failed") => void;
+}) {
   const { uploads, cancelUpload, cancelAll, removeUpload, clearFinished } =
     useUploadStore();
-  const [isExpanded, setIsExpanded] = useState(true);
-  const [activeTab, setActiveTab] = useState<"all" | "completed" | "failed">(
-    "all",
-  );
 
   if (uploads.length === 0) return null;
 
@@ -44,33 +53,45 @@ export default function BackgroundUploadWidget() {
 
   if (!isExpanded) {
     return (
-      <Button
-        onClick={() => setIsExpanded(true)}
-        className="fixed bottom-4 right-4 z-50 flex h-auto w-80 justify-between rounded-xl px-4 py-3 text-foreground shadow-sm"
-        type="button"
-        variant="outline"
-      >
-        <span className="flex items-center gap-2 text-sm font-medium">
-          {activeCount > 0 ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Upload className="h-4 w-4" />
-          )}
-          <span>
-            {activeCount > 0
-              ? `Uploading ${activeCount} item${activeCount > 1 ? "s" : ""}`
-              : `Uploads complete (${completedCount} success)`}
-          </span>
-        </span>
-        <ChevronUp className="h-4 w-4 text-muted-foreground" />
-      </Button>
+      <div className="w-80 rounded-xl border border-border bg-card text-foreground p-1 shadow-lg pointer-events-auto">
+        <div className="h-auto w-full flex items-center justify-between">
+          <Button
+            onClick={() => setIsExpanded(true)}
+            className="flex-1 flex justify-between rounded-lg px-3 py-2 text-foreground"
+            type="button"
+            variant="ghost"
+          >
+            <span className="flex items-center gap-2 text-sm font-medium">
+              {activeCount > 0 ? (
+                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              ) : (
+                <Upload className="h-4 w-4 text-primary" />
+              )}
+              <span>
+                {activeCount > 0
+                  ? `Uploading ${activeCount} item${activeCount > 1 ? "s" : ""}`
+                  : `Uploads complete (${completedCount} success)`}
+              </span>
+            </span>
+            <ChevronUp className="h-4 w-4 text-muted-foreground" />
+          </Button>
+          <Button
+            onClick={() => toast.dismiss(UPLOAD_WIDGET_TOAST_ID)}
+            className="text-muted-foreground w-auto h-auto p-2"
+            type="button"
+            variant="ghost"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
     );
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex w-[min(24rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-xl border border-border bg-card text-foreground shadow-[0_18px_48px_rgb(28_29_26/0.12)]">
-      <div className="flex items-center justify-between border-b border-border px-4 py-3">
-        <span className="text-base font-semibold">Uploads</span>
+    <div className="flex w-[min(24rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-xl border border-border bg-card text-foreground shadow-2xl pointer-events-auto">
+      <div className="flex items-center justify-between p-2.5">
+        <span className="text-base font-semibold px-1">Uploads</span>
         <div className="flex items-center gap-2">
           {activeCount > 0 ? (
             <Button
@@ -83,20 +104,32 @@ export default function BackgroundUploadWidget() {
               Cancel all
             </Button>
           ) : null}
-          <Button
-            aria-label="Collapse uploads"
-            onClick={() => setIsExpanded(false)}
-            className="text-muted-foreground"
-            size="icon-sm"
-            type="button"
-            variant="ghost"
-          >
-            <ChevronDown className="h-4 w-4" />
-          </Button>
+          <div>
+            <Button
+              aria-label="Collapse uploads"
+              onClick={() => setIsExpanded(false)}
+              className="text-muted-foreground"
+              size="icon-sm"
+              type="button"
+              variant="ghost"
+            >
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+            <Button
+              aria-label="Collapse uploads"
+              onClick={() => toast.dismiss(UPLOAD_WIDGET_TOAST_ID)}
+              className="text-muted-foreground"
+              size="icon-sm"
+              type="button"
+              variant="ghost"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
 
-      <div className="flex items-center gap-1.5 border-b border-border px-4 py-3">
+      <div className="flex items-center gap-1.5 border-border px-3.5 pb-2.5 border-b">
         {[
           ["all", `All (${uploads.length})`],
           ["completed", `Completed (${completedCount})`],
@@ -104,7 +137,6 @@ export default function BackgroundUploadWidget() {
         ].map(([value, label]) => (
           <Button
             aria-pressed={activeTab === value}
-            className="rounded-full px-3"
             key={value}
             onClick={() => setActiveTab(value as typeof activeTab)}
             size="xs"
@@ -121,7 +153,7 @@ export default function BackgroundUploadWidget() {
         <span className="font-medium text-foreground">Library</span>
       </div>
 
-      <div className="max-h-64 flex-1 divide-y divide-border overflow-y-auto">
+      <div className="max-h-64 flex-1 divide-y divide-border overflow-y-auto scrollbar-thin">
         {filteredUploads.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
             <FileText className="mb-2 h-8 w-8 stroke-1 opacity-60" />
@@ -131,7 +163,7 @@ export default function BackgroundUploadWidget() {
           filteredUploads.map((item) => (
             <div
               key={item.id}
-              className="relative flex flex-col p-4 transition-colors hover:bg-muted/50"
+              className="relative flex flex-col p-3.5 transition-colors hover:bg-muted/50"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 flex-1 items-center gap-2.5">
@@ -164,7 +196,7 @@ export default function BackgroundUploadWidget() {
                       {item.fileName}
                     </span>
                     <div className="mt-1 flex items-center gap-1.5">
-                      <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                      <span className="rounded bg-muted px-1.5 text-[10px] font-semibold text-muted-foreground">
                         {getFileExtension(item.fileName)}
                       </span>
                       <span className="truncate text-[11px] text-muted-foreground">
@@ -175,7 +207,9 @@ export default function BackgroundUploadWidget() {
                           (item.progress >= 95
                             ? "Indexing"
                             : "Extracting text")}
-                        {item.status === "success" && !item.warning && "Completed"}
+                        {item.status === "success" &&
+                          !item.warning &&
+                          "Completed"}
                         {item.status === "failed" && (item.error || "Failed")}
                       </span>
                       {item.status === "success" && item.warning && (
@@ -212,7 +246,7 @@ export default function BackgroundUploadWidget() {
                     <Button
                       aria-label="Remove from list"
                       onClick={() => removeUpload(item.id)}
-                      className="text-muted-foreground opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+                      className="text-muted-foreground opacity-80 hover:opacity-100"
                       size="icon-sm"
                       type="button"
                       variant="ghost"
@@ -240,9 +274,9 @@ export default function BackgroundUploadWidget() {
       <div className="flex items-center justify-between border-t border-border px-4 py-3">
         <div className="flex items-center gap-2 text-sm font-medium">
           {activeCount > 0 ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <Loader2 className="h-4 w-4 animate-spin text-primary" />
           ) : (
-            <Upload className="h-4 w-4" />
+            <Upload className="h-4 w-4 text-primary" />
           )}
           <span>
             {activeCount > 0
@@ -265,4 +299,37 @@ export default function BackgroundUploadWidget() {
       </div>
     </div>
   );
+}
+
+export default function BackgroundUploadWidget() {
+  const uploads = useUploadStore((state) => state.uploads);
+  const [isExpanded, setIsExpanded] = useState(true);
+  const [activeTab, setActiveTab] = useState<"all" | "completed" | "failed">(
+    "all",
+  );
+
+  useEffect(() => {
+    if (uploads.length === 0) {
+      toast.dismiss(UPLOAD_WIDGET_TOAST_ID);
+      return;
+    }
+
+    toast.custom(
+      () => (
+        <UploadWidgetCard
+          isExpanded={isExpanded}
+          setIsExpanded={setIsExpanded}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+        />
+      ),
+      {
+        id: UPLOAD_WIDGET_TOAST_ID,
+        duration: Infinity,
+        position: "bottom-right",
+      },
+    );
+  }, [uploads, isExpanded, activeTab]);
+
+  return null;
 }

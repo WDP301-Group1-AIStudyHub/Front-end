@@ -444,3 +444,18 @@
     }
   }
 }
+
+.animate-slide-up-fade {
+  animation: slide-up-fade 0.15s ease-out;
+}
+
+@keyframes slide-up-fade {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

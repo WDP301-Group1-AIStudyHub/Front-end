@@ -41,12 +41,14 @@ const StudyMaterialsListPage = lazy(
   () => import("@/pages/StudyMaterialsListPage"),
 );
 const SubjectsPage = lazy(() => import("@/pages/SubjectsPage"));
+const SubjectDetailPage = lazy(() => import("@/pages/SubjectDetailPage"));
 const NewAIChatboxPage = lazy(() => import("@/pages/new-AIChatboxPage"));
 const EvaluationPage = lazy(() => import("@/pages/evaluation/EvaluationPage"));
 const NewQuestion = lazy(() => import("@/pages/evaluation/NewQuestion"));
 const RunBenchmark = lazy(() => import("@/pages/evaluation/RunBenchmark"));
 const Summary = lazy(() => import("@/pages/evaluation/Summary"));
 const UserProfilePage = lazy(() => import("@/pages/UserProfilePage"));
+const ProfilePage = lazy(() => import("@/pages/ProfilePage"));
 const AdminDashboardPage = lazy(
   () => import("@/pages/admin/AdminDashboardPage"),
 );
@@ -57,6 +59,7 @@ const AdminDocumentsPage = lazy(
 const AdminActivityPage = lazy(() => import("@/pages/admin/AdminActivityPage"));
 const AdminStoragePage = lazy(() => import("@/pages/admin/AdminStoragePage"));
 const AdminPaymentsPage = lazy(() => import("@/pages/admin/AdminPaymentsPage"));
+const ToastDemoPage = lazy(() => import("@/pages/ToastDemoPage"));
 
 const demoAdminUser: AuthUser = {
   id: "admin-001",
@@ -300,6 +303,14 @@ function App() {
             }
           />
           <Route
+            path="/subjects/:subjectId"
+            element={
+              <ProtectedRoute userOnly>
+                {() => routeWithShell(<SubjectDetailPage />)}
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/storage"
             element={
               <ProtectedRoute userOnly>
@@ -375,6 +386,14 @@ function App() {
             path="/profile"
             element={
               <ProtectedRoute>
+                {() => routeWithShell(<ProfilePage />)}
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
                 {() => routeWithShell(<UserProfilePage />)}
               </ProtectedRoute>
             }
@@ -427,6 +446,8 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route path="/toast-demo" element={<ToastDemoPage />} />
+          <Route path="/demo/toast" element={<ToastDemoPage />} />
           <Route path="*" element={<LandingPage />} />
         </Routes>
       </Suspense>

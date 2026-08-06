@@ -188,8 +188,8 @@ export function ArtifactsPanel({ className }: { className?: string }) {
       <CreateArtifactDialog
         type={createType}
         onClose={() => setCreateType(null)}
-        onCreate={async (type, instructions) => {
-          await create(type, instructions);
+        onCreate={async (type, instructions, scopeOptions) => {
+          await create(type, instructions, scopeOptions);
         }}
       />
 
