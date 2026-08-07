@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { RefreshCw, Sparkles, Users } from "lucide-react";
+import { ExternalLink, RefreshCw, Sparkles, Users } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CopyButton } from "@/components/chat/artifacts/ArtifactPreviewDialog";
 import { MARKDOWN_PREVIEW_CLASS } from "@/components/chat/artifacts/artifactTypes";
@@ -110,8 +112,8 @@ export default function SharedSummariesPage() {
           <p className="botanical-kicker">Summaries</p>
           <h1 className="moonlit-title page-title">Shared with me</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            AI summaries other people have shared with you. You can read
-            these without access to the original document.
+            AI summaries other people have shared with you. Sharing a summary
+            also gives you view access to its source document.
           </p>
         </header>
 
@@ -192,7 +194,22 @@ export default function SharedSummariesPage() {
                     <h2 className="text-lg font-semibold">
                       {selected.artifact.title}
                     </h2>
-                    <CopyButton text={recordToCopyText(selected.artifact)} />
+                    <div className="flex items-center gap-2">
+                      {selected.artifact.summaryDocumentId ? (
+                        <Button asChild size="sm" variant="outline">
+                          <Link
+                            to={`/library?preview=${selected.artifact.summaryDocumentId}`}
+                          >
+                            <ExternalLink
+                              data-icon="inline-start"
+                              aria-hidden="true"
+                            />
+                            Open document
+                          </Link>
+                        </Button>
+                      ) : null}
+                      <CopyButton text={recordToCopyText(selected.artifact)} />
+                    </div>
                   </div>
                   <div className={MARKDOWN_PREVIEW_CLASS}>
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>

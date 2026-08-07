@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronDownIcon, LockIcon, Sparkles, X } from "lucide-react";
+import { Sparkles, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -11,10 +11,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Link } from "react-router-dom";
 
 import { IconTile } from "@/components/shared/IconTile";
-import {
-  ButtonGroup,
-  ButtonGroupSeparator,
-} from "@/components/ui/button-group";
+import { ButtonGroup } from "@/components/ui/button-group";
 import {
   createDocumentSummary,
   getArtifactById,
@@ -343,54 +340,21 @@ export function DocumentPreviewPage({
                   {previewTitle}
                 </strong>
               </div>
-
-              <nav
-                className="flex flex-wrap items-center -ml-2 -mt-1"
-                aria-label="Preview menu"
-              >
-                {["File", "Edit", "View", "Help"].map((item) => (
-                  <Button
-                    className="text-sm font-normal text-white/80 hover:text-white hover:bg-white/10 h-6 px-2"
-                    variant="ghost"
-                    size="sm"
-                    key={item}
-                  >
-                    {item}
-                  </Button>
-                ))}
-              </nav>
             </div>
           </div>
 
-          <ButtonGroup>
-            {document?.isOwner ? (
-              <>
-                <Button
-                  size="lg"
-                  className="bg-accent/90 text-primary hover:bg-accent"
-                  onClick={() => setShowSummaryPanel((open) => !open)}
-                >
-                  <Sparkles data-icon="inline-start" aria-hidden="true" />
-                  Summarize
-                </Button>
-                <ButtonGroupSeparator />
-              </>
-            ) : null}
-            <Button
-              size="lg"
-              className="bg-accent/90 text-primary hover:bg-accent"
-            >
-              <LockIcon data-icon="inline-start" />
-              Share
-            </Button>
-            <ButtonGroupSeparator />
-            <Button
-              size="icon-lg"
-              className="bg-accent/90 text-primary hover:bg-accent"
-            >
-              <ChevronDownIcon data-icon="inline-start" />
-            </Button>
-          </ButtonGroup>
+          {document?.isOwner ? (
+            <ButtonGroup>
+              <Button
+                size="lg"
+                className="bg-accent/90 text-primary hover:bg-accent"
+                onClick={() => setShowSummaryPanel((open) => !open)}
+              >
+                <Sparkles data-icon="inline-start" aria-hidden="true" />
+                Summarize
+              </Button>
+            </ButtonGroup>
+          ) : null}
         </div>
       </header>
 
