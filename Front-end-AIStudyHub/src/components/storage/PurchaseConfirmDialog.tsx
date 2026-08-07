@@ -1,5 +1,5 @@
-import { ArrowRight } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -7,9 +7,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { formatStorageBytes, formatVnd } from '../../utils/formatStorage'
-import type { StoragePackage, UserStorage } from '../../types/storage'
+} from "@/components/ui/dialog";
+import { formatStorageBytes, formatVnd } from "../../utils/formatStorage";
+import type { StoragePackage, UserStorage } from "../../types/storage";
 
 export function PurchaseConfirmDialog({
   isSubmitting,
@@ -18,17 +18,17 @@ export function PurchaseConfirmDialog({
   storage,
   target,
 }: {
-  isSubmitting: boolean
-  onConfirm: () => void
-  onOpenChange: (open: boolean) => void
-  storage: UserStorage | null
-  target: StoragePackage | null
+  isSubmitting: boolean;
+  onConfirm: () => void;
+  onOpenChange: (open: boolean) => void;
+  storage: UserStorage | null;
+  target: StoragePackage | null;
 }) {
   if (!target) {
-    return null
+    return null;
   }
 
-  const isFree = target.priceVnd <= 0
+  const isFree = target.priceVnd <= 0;
 
   return (
     <Dialog onOpenChange={onOpenChange} open={Boolean(target)}>
@@ -44,7 +44,7 @@ export function PurchaseConfirmDialog({
           <div className="min-w-0">
             <p className="text-xs text-muted-foreground">Current plan</p>
             <p className="truncate font-semibold">
-              {storage?.package?.name ?? '—'}
+              {storage?.package?.name ?? "—"}
             </p>
             <p className="text-sm text-muted-foreground">
               {formatStorageBytes(storage?.quotaBytes ?? 0)}
@@ -71,15 +71,14 @@ export function PurchaseConfirmDialog({
         {/* The replace-not-add rule surprises people who expect capacity to
             stack, so it is stated on the confirmation itself. */}
         <p className="rounded-lg border border-border bg-muted/40 p-3 text-xs leading-5 text-muted-foreground">
-          The new plan <strong>replaces</strong> your current one — capacity does
-          not stack. Your quota becomes{' '}
+          The new plan <strong>replaces</strong> your current one — capacity
+          does not stack. Your quota becomes{" "}
           {formatStorageBytes(target.capacityBytes)}. Documents you already
           uploaded are unaffected.
         </p>
 
         <DialogFooter>
           <Button
-            className="min-h-11!"
             disabled={isSubmitting}
             onClick={() => onOpenChange(false)}
             type="button"
@@ -87,20 +86,15 @@ export function PurchaseConfirmDialog({
           >
             Cancel
           </Button>
-          <Button
-            className="min-h-11!"
-            disabled={isSubmitting}
-            onClick={onConfirm}
-            type="button"
-          >
+          <Button disabled={isSubmitting} onClick={onConfirm} type="button">
             {isSubmitting
-              ? 'Processing...'
+              ? "Processing..."
               : isFree
-                ? 'Switch to this plan'
-                : 'Continue to payment'}
+                ? "Switch to this plan"
+                : "Continue to payment"}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

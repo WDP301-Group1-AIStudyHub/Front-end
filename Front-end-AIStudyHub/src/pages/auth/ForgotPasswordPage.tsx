@@ -1,52 +1,66 @@
-import { useState } from 'react'
-import type { ChangeEvent, FormEvent } from 'react'
-import { Button } from '@/components/ui/button'
-import AuthIcon from '@/components/auth/AuthIcon'
-import AuthScaffold from '@/components/auth/AuthScaffold'
-import SplitInfoCard from '@/components/auth/SplitInfoCard'
-import { CelestialInlineLoader } from '@/components/shared/CelestialLoading'
-import { forgotPassword } from '@/services/authApi'
+import { useState } from "react";
+import type { ChangeEvent, FormEvent } from "react";
+import { Button } from "@/components/ui/button";
+import AuthIcon from "@/components/auth/AuthIcon";
+import AuthScaffold from "@/components/auth/AuthScaffold";
+import SplitInfoCard from "@/components/auth/SplitInfoCard";
+import { CelestialInlineLoader } from "@/components/shared/CelestialLoading";
+import { forgotPassword } from "@/services/authApi";
 
 export default function ForgotPasswordPage() {
-  const [email, setEmail] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [success, setSuccess] = useState('')
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState("");
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setEmail(event.target.value)
-  }
+    setEmail(event.target.value);
+  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    setError('')
-    setSuccess('')
-    setLoading(true)
+    event.preventDefault();
+    setError("");
+    setSuccess("");
+    setLoading(true);
 
     try {
-      const response = await forgotPassword({ email })
-      setSuccess(response.message)
+      const response = await forgotPassword({ email });
+      setSuccess(response.message);
     } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : 'Unable to request recovery')
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : "Unable to request recovery",
+      );
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <AuthScaffold action="Register" mode="split">
       <SplitInfoCard
         eyebrow="Account recovery"
         footer="Recovery support"
-        title={<>Need access<br />again?</>}
+        title={
+          <>
+            Need access
+            <br />
+            again?
+          </>
+        }
         variant="lost"
       />
       <section className="relative min-h-[430px] overflow-hidden p-12">
         <h2 className="m-0 mb-4 text-2xl font-bold leading-[1.2]">Recovery</h2>
-        <p className="mb-9 max-w-[330px] text-sm leading-[1.6] text-muted-foreground">Enter your email to receive a secure reset link.</p>
+        <p className="mb-9 max-w-[330px] text-sm leading-[1.6] text-muted-foreground">
+          Enter your email to receive a secure reset link.
+        </p>
         <form className="grid gap-5" onSubmit={handleSubmit}>
           <label className="grid gap-2" htmlFor="recovery-email">
-            <span className="text-sm font-medium text-muted-foreground">Email address</span>
+            <span className="text-sm font-medium text-muted-foreground">
+              Email address
+            </span>
             <input
               autoComplete="email"
               disabled={loading}
@@ -61,10 +75,14 @@ export default function ForgotPasswordPage() {
             />
           </label>
           {error ? (
-            <p className="m-0 rounded-lg border border-destructive/25 bg-destructive/10 px-3 py-2 text-xs leading-relaxed text-destructive">{error}</p>
+            <p className="m-0 rounded-lg border border-destructive/25 bg-destructive/10 px-3 py-2 text-xs leading-relaxed text-destructive">
+              {error}
+            </p>
           ) : null}
           {success ? (
-            <p className="m-0 rounded-lg border border-primary/20 bg-primary/10 px-3 py-2 text-xs leading-relaxed text-primary">{success}</p>
+            <p className="m-0 rounded-lg border border-primary/20 bg-primary/10 px-3 py-2 text-xs leading-relaxed text-primary">
+              {success}
+            </p>
           ) : null}
           <Button
             className="min-h-[52px] w-full"
@@ -72,7 +90,14 @@ export default function ForgotPasswordPage() {
             size="lg"
             type="submit"
           >
-            {loading ? <CelestialInlineLoader className="justify-center" label="Sending..." /> : 'Send recovery link'}
+            {loading ? (
+              <CelestialInlineLoader
+                className="justify-center"
+                label="Sending..."
+              />
+            ) : (
+              "Send recovery link"
+            )}
           </Button>
         </form>
         <a
@@ -84,5 +109,5 @@ export default function ForgotPasswordPage() {
         </a>
       </section>
     </AuthScaffold>
-  )
+  );
 }

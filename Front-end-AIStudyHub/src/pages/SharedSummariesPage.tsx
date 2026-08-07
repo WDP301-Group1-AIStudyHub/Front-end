@@ -151,7 +151,8 @@ export default function SharedSummariesPage() {
                         {artifact.title}
                       </span>
                       <span className="text-sm text-muted-foreground">
-                        Shared by {sharedBy?.fullName ?? sharedBy?.email ?? "someone"}
+                        Shared by{" "}
+                        {sharedBy?.fullName ?? sharedBy?.email ?? "someone"}
                       </span>
                       <span className="text-xs text-muted-foreground">
                         {formatDateTime(sharedAt)}
@@ -162,7 +163,10 @@ export default function SharedSummariesPage() {
                             "Failed"
                           ) : (
                             <span className="inline-flex items-center gap-1">
-                              <RefreshCw className="size-3 animate-spin" aria-hidden="true" />
+                              <RefreshCw
+                                className="size-3 animate-spin"
+                                aria-hidden="true"
+                              />
                               Generating
                             </span>
                           )}
@@ -185,7 +189,10 @@ export default function SharedSummariesPage() {
                 </p>
               ) : selected.artifact.status !== "COMPLETED" ? (
                 <p className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <RefreshCw className="size-4 animate-spin" aria-hidden="true" />
+                  <RefreshCw
+                    className="size-4 animate-spin"
+                    aria-hidden="true"
+                  />
                   Still generating — this will update automatically.
                 </p>
               ) : (
@@ -213,7 +220,8 @@ export default function SharedSummariesPage() {
                   </div>
                   <div className={MARKDOWN_PREVIEW_CLASS}>
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                      {selected.artifact.content && "markdown" in selected.artifact.content
+                      {selected.artifact.content &&
+                      "markdown" in selected.artifact.content
                         ? selected.artifact.content.markdown
                         : ""}
                     </ReactMarkdown>

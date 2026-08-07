@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 import { ChevronsLeftIcon, ChevronsRightIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export const ChatRightRail: React.FC<{ className?: string }> = ({
+export const SourcesAside: React.FC<{ className?: string }> = ({
   className,
 }) => {
   const { sources } = useThreadSources();
@@ -103,9 +103,10 @@ export const SourcesOverlay: React.FC<{ children: React.ReactNode }> = ({
       <PopoverContent
         align="end"
         sideOffset={8}
-        className="w-80 p-0 border-0 shadow-2xl bg-transparent focus:outline-none"
+        className="w-80 p-0 ring-0 rounded-none shadow-none bg-transparent focus:outline-none"
       >
         <SourcesPanel collapsible={false} />
+        <ArtifactsPanel collapsible={false} />
       </PopoverContent>
     </Popover>
   );

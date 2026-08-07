@@ -1,82 +1,97 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from "react";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { IconTile } from '@/components/shared/IconTile'
-import { Eye, FileCog, Search, FileText, Database, User, Shield, Info } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+} from "@/components/ui/select";
+import { IconTile } from "@/components/shared/IconTile";
 import {
-  Dialog,
-  DialogContent,
-} from '@/components/ui/dialog'
-import { LoadingState } from '@/components/shared/CelestialLoading'
-import { listAdminDocuments } from '@/services/adminApi'
-import type { AdminDocument } from '@/types/admin'
-import { StatusBadge } from './adminPageUtils'
-import { PageShell } from '@/components/layout/PageShell'
-import { PageHeader } from '@/components/layout/PageHeader'
-
-
+  Eye,
+  FileCog,
+  Search,
+  FileText,
+  Database,
+  User,
+  Shield,
+  Info,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { LoadingState } from "@/components/shared/CelestialLoading";
+import { listAdminDocuments } from "@/services/adminApi";
+import type { AdminDocument } from "@/types/admin";
+import { StatusBadge } from "./adminPageUtils";
+import { PageShell } from "@/components/layout/PageShell";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 export default function AdminDocumentsPage() {
-  const [documents, setDocuments] = useState<AdminDocument[]>([])
-  const [viewingDocument, setViewingDocument] = useState<AdminDocument | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [query, setQuery] = useState('')
-  const [statusFilter, setStatusFilter] = useState<'all' | 'indexed' | 'processing' | 'failed'>('all')
-  const [currentPage, setCurrentPage] = useState(1)
-  const ITEMS_PER_PAGE = 10
+  const [documents, setDocuments] = useState<AdminDocument[]>([]);
+  const [viewingDocument, setViewingDocument] = useState<AdminDocument | null>(
+    null,
+  );
+  const [isLoading, setIsLoading] = useState(true);
+  const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "indexed" | "processing" | "failed"
+  >("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
 
   useEffect(() => {
     listAdminDocuments()
       .then(setDocuments)
-      .finally(() => setIsLoading(false))
-  }, [])
+      .finally(() => setIsLoading(false));
+  }, []);
 
   const filteredDocuments = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase()
+    const normalizedQuery = query.trim().toLowerCase();
 
     return documents.filter((document) => {
-      const matchesStatus = statusFilter === 'all' || document.indexedStatus === statusFilter
+      const matchesStatus =
+        statusFilter === "all" || document.indexedStatus === statusFilter;
 
-      if (!normalizedQuery) return matchesStatus
-      const subjectName = (typeof document.subject === 'object' ? document.subject?.name : document.subject) || ''
-      const matchesQuery = [document.title, subjectName, document.ownerName, document.fileName]
+      if (!normalizedQuery) return matchesStatus;
+      const subjectName =
+        (typeof document.subject === "object"
+          ? document.subject?.name
+          : document.subject) || "";
+      const matchesQuery = [
+        document.title,
+        subjectName,
+        document.ownerName,
+        document.fileName,
+      ]
         .filter((value): value is string => Boolean(value))
-        .some((value) => value.toLowerCase().includes(normalizedQuery))
+        .some((value) => value.toLowerCase().includes(normalizedQuery));
 
-      return matchesQuery && matchesStatus
-    })
-  }, [documents, query, statusFilter])
+      return matchesQuery && matchesStatus;
+    });
+  }, [documents, query, statusFilter]);
 
   useEffect(() => {
-    setCurrentPage(1)
-  }, [query, statusFilter])
+    setCurrentPage(1);
+  }, [query, statusFilter]);
 
   const paginatedDocuments = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
-    return filteredDocuments.slice(startIndex, startIndex + ITEMS_PER_PAGE)
-  }, [filteredDocuments, currentPage])
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredDocuments.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredDocuments, currentPage]);
 
-  const totalPages = Math.ceil(filteredDocuments.length / ITEMS_PER_PAGE)
-
+  const totalPages = Math.ceil(filteredDocuments.length / ITEMS_PER_PAGE);
 
   return (
     <PageShell>
       <PageHeader
         description="Review all uploaded documents across the platform. Change status, visibility, or remove documents."
-        eyebrow="Admin documents"
         title="Document Oversight"
       />
 
@@ -94,10 +109,14 @@ export default function AdminDocumentsPage() {
           </label>
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-1.5">
-              <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Extraction:</span>
+              <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">
+                Extraction:
+              </span>
               <Select
                 value={statusFilter}
-                onValueChange={(val) => setStatusFilter(val as typeof statusFilter)}
+                onValueChange={(val) =>
+                  setStatusFilter(val as typeof statusFilter)
+                }
               >
                 <SelectTrigger className="h-8 w-[140px]">
                   <SelectValue />
@@ -110,7 +129,9 @@ export default function AdminDocumentsPage() {
                 </SelectContent>
               </Select>
             </div>
-            <StatusBadge severity="info">{filteredDocuments.length} documents</StatusBadge>
+            <StatusBadge severity="info">
+              {filteredDocuments.length} documents
+            </StatusBadge>
           </div>
         </div>
 
@@ -136,36 +157,62 @@ export default function AdminDocumentsPage() {
             </div>
           ) : (
             paginatedDocuments.map((document) => (
-              <article className="grid gap-4 p-5 transition-colors hover:bg-muted/35 xl:grid-cols-[1.4fr_1fr_110px_140px_220px]" key={document.id}>
+              <article
+                className="grid gap-4 p-5 transition-colors hover:bg-muted/35 xl:grid-cols-[1.4fr_1fr_110px_140px_220px]"
+                key={document.id}
+              >
                 <div className="flex min-w-0 items-center gap-3">
                   <IconTile fileName={document.fileName}>
                     <FileCog className="size-4" />
                   </IconTile>
                   <div className="min-w-0">
-                    <h2 className="truncate font-semibold text-foreground">{document.title}</h2>
+                    <h2 className="truncate font-semibold text-foreground">
+                      {document.title}
+                    </h2>
                     <p className="truncate text-xs text-muted-foreground">
                       {document.fileName} · {formatFileSize(document.fileSize)}
                     </p>
                   </div>
                 </div>
                 <div className="flex flex-col justify-center text-sm text-muted-foreground">
-                  <span className="font-medium text-foreground">{document.ownerName || 'Unknown'}</span>
-                  <span className="truncate text-xs">{document.ownerEmail}</span>
+                  <span className="font-medium text-foreground">
+                    {document.ownerName || "Unknown"}
+                  </span>
+                  <span className="truncate text-xs">
+                    {document.ownerEmail}
+                  </span>
                 </div>
                 <div className="flex items-center">
-                  <StatusBadge severity={document.indexedStatus}>{document.indexedStatus}</StatusBadge>
+                  <StatusBadge severity={document.indexedStatus}>
+                    {document.indexedStatus}
+                  </StatusBadge>
                 </div>
                 <div className="flex flex-col justify-center text-sm">
-                  <span className="font-medium text-foreground">{document.status ?? 'ACTIVE'}</span>
-                  <span className="text-xs text-muted-foreground">{document.visibility ?? 'PRIVATE'}</span>
+                  <span className="font-medium text-foreground">
+                    {document.status ?? "ACTIVE"}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {document.visibility ?? "PRIVATE"}
+                  </span>
                 </div>
                 <div className="flex flex-wrap items-center justify-start gap-2 xl:justify-end">
                   {document.fileUrl && (
                     <Button asChild size="sm" type="button" variant="outline">
-                      <a href={document.fileUrl} rel="noreferrer" target="_blank">Open</a>
+                      <a
+                        href={document.fileUrl}
+                        rel="noreferrer"
+                        target="_blank"
+                      >
+                        Open
+                      </a>
                     </Button>
                   )}
-                  <Button onClick={() => setViewingDocument(document)} size="sm" type="button" variant="secondary">
+                  <Button
+                    onClick={() => setViewingDocument(document)}
+                    size="sm"
+                    type="button"
+                    variant="secondary"
+                  >
                     <Eye data-icon="inline-start" />
                     View
                   </Button>
@@ -179,13 +226,32 @@ export default function AdminDocumentsPage() {
         {totalPages > 1 && (
           <div className="flex items-center justify-between border-t border-border/50 px-5 py-4 bg-muted/20">
             <div className="text-sm text-muted-foreground">
-              Showing {Math.min(filteredDocuments.length, (currentPage - 1) * ITEMS_PER_PAGE + 1)} to {Math.min(filteredDocuments.length, currentPage * ITEMS_PER_PAGE)} of {filteredDocuments.length} entries
+              Showing{" "}
+              {Math.min(
+                filteredDocuments.length,
+                (currentPage - 1) * ITEMS_PER_PAGE + 1,
+              )}{" "}
+              to{" "}
+              {Math.min(filteredDocuments.length, currentPage * ITEMS_PER_PAGE)}{" "}
+              of {filteredDocuments.length} entries
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage(p => Math.max(1, p - 1))}>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              >
                 Previous
               </Button>
-              <Button variant="outline" size="sm" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage === totalPages}
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(totalPages, p + 1))
+                }
+              >
                 Next
               </Button>
             </div>
@@ -193,7 +259,10 @@ export default function AdminDocumentsPage() {
         )}
       </section>
 
-      <Dialog open={Boolean(viewingDocument)} onOpenChange={(open) => !open && setViewingDocument(null)}>
+      <Dialog
+        open={Boolean(viewingDocument)}
+        onOpenChange={(open) => !open && setViewingDocument(null)}
+      >
         <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto p-0 border-0 bg-background/95 backdrop-blur-md">
           <div className="flex flex-col h-full border-0 shadow-none">
             <div className="flex flex-col gap-2 border-b border-border/70 p-6">
@@ -202,7 +271,9 @@ export default function AdminDocumentsPage() {
                   <FileText className="size-6" />
                 </IconTile>
                 <div>
-                  <h2 className="text-xl font-bold tracking-tight text-foreground">Document Metadata</h2>
+                  <h2 className="text-xl font-bold tracking-tight text-foreground">
+                    Document Metadata
+                  </h2>
                   <p className="text-sm text-muted-foreground mt-0.5">
                     Detailed information about "{viewingDocument?.title}"
                   </p>
@@ -217,24 +288,44 @@ export default function AdminDocumentsPage() {
                   <section className="col-span-1 lg:col-span-2 rounded-xl border border-border/50 bg-card/40 shadow-sm overflow-hidden">
                     <div className="border-b border-border/50 bg-muted/20 px-4 py-2.5 flex items-center gap-2">
                       <Info className="size-4 text-muted-foreground" />
-                      <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">General Info</h3>
+                      <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        General Info
+                      </h3>
                     </div>
                     <div className="divide-y divide-border/30">
                       <div className="flex flex-col sm:flex-row gap-2 p-4">
-                        <div className="sm:w-32 text-sm font-medium text-muted-foreground shrink-0">ID</div>
-                        <div className="font-mono text-sm">{viewingDocument.id}</div>
+                        <div className="sm:w-32 text-sm font-medium text-muted-foreground shrink-0">
+                          ID
+                        </div>
+                        <div className="font-mono text-sm">
+                          {viewingDocument.id}
+                        </div>
                       </div>
                       <div className="flex flex-col sm:flex-row gap-2 p-4">
-                        <div className="sm:w-32 text-sm font-medium text-muted-foreground shrink-0">Title</div>
-                        <div className="text-sm font-semibold">{viewingDocument.title}</div>
+                        <div className="sm:w-32 text-sm font-medium text-muted-foreground shrink-0">
+                          Title
+                        </div>
+                        <div className="text-sm font-semibold">
+                          {viewingDocument.title}
+                        </div>
                       </div>
                       <div className="flex flex-col sm:flex-row gap-2 p-4">
-                        <div className="sm:w-32 text-sm font-medium text-muted-foreground shrink-0">Description</div>
-                        <div className="text-sm">{viewingDocument.description || 'N/A'}</div>
+                        <div className="sm:w-32 text-sm font-medium text-muted-foreground shrink-0">
+                          Description
+                        </div>
+                        <div className="text-sm">
+                          {viewingDocument.description || "N/A"}
+                        </div>
                       </div>
                       <div className="flex flex-col sm:flex-row gap-2 p-4">
-                        <div className="sm:w-32 text-sm font-medium text-muted-foreground shrink-0">Subject</div>
-                        <div className="text-sm">{typeof viewingDocument.subject === 'object' ? viewingDocument.subject?.name : viewingDocument.subject || 'N/A'}</div>
+                        <div className="sm:w-32 text-sm font-medium text-muted-foreground shrink-0">
+                          Subject
+                        </div>
+                        <div className="text-sm">
+                          {typeof viewingDocument.subject === "object"
+                            ? viewingDocument.subject?.name
+                            : viewingDocument.subject || "N/A"}
+                        </div>
                       </div>
                     </div>
                   </section>
@@ -243,20 +334,34 @@ export default function AdminDocumentsPage() {
                   <section className="col-span-1 rounded-xl border border-border/50 bg-card/40 shadow-sm overflow-hidden">
                     <div className="border-b border-border/50 bg-muted/20 px-4 py-2.5 flex items-center gap-2">
                       <Database className="size-4 text-muted-foreground" />
-                      <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">File Details</h3>
+                      <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        File Details
+                      </h3>
                     </div>
                     <div className="divide-y divide-border/30">
                       <div className="flex flex-col gap-1 p-4">
-                        <div className="text-xs font-medium text-muted-foreground">File Name</div>
-                        <div className="text-sm break-all">{viewingDocument.fileName}</div>
+                        <div className="text-xs font-medium text-muted-foreground">
+                          File Name
+                        </div>
+                        <div className="text-sm break-all">
+                          {viewingDocument.fileName}
+                        </div>
                       </div>
                       <div className="flex flex-col gap-1 p-4">
-                        <div className="text-xs font-medium text-muted-foreground">File Type</div>
-                        <div className="text-sm break-all">{viewingDocument.fileType}</div>
+                        <div className="text-xs font-medium text-muted-foreground">
+                          File Type
+                        </div>
+                        <div className="text-sm break-all">
+                          {viewingDocument.fileType}
+                        </div>
                       </div>
                       <div className="flex flex-col gap-1 p-4">
-                        <div className="text-xs font-medium text-muted-foreground">Size</div>
-                        <div className="text-sm font-mono">{formatFileSize(viewingDocument.fileSize)}</div>
+                        <div className="text-xs font-medium text-muted-foreground">
+                          Size
+                        </div>
+                        <div className="text-sm font-mono">
+                          {formatFileSize(viewingDocument.fileSize)}
+                        </div>
                       </div>
                     </div>
                   </section>
@@ -265,27 +370,45 @@ export default function AdminDocumentsPage() {
                   <section className="col-span-1 rounded-xl border border-border/50 bg-card/40 shadow-sm overflow-hidden">
                     <div className="border-b border-border/50 bg-muted/20 px-4 py-2.5 flex items-center gap-2">
                       <Shield className="size-4 text-muted-foreground" />
-                      <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Admin Status</h3>
+                      <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Admin Status
+                      </h3>
                     </div>
                     <div className="divide-y divide-border/30">
                       <div className="flex flex-col gap-1 p-4">
-                        <div className="text-xs font-medium text-muted-foreground mb-1">Owner</div>
+                        <div className="text-xs font-medium text-muted-foreground mb-1">
+                          Owner
+                        </div>
                         <div className="flex items-center gap-2">
                           <User className="size-4 text-muted-foreground" />
-                          <span className="text-sm font-medium">{viewingDocument.ownerName}</span>
+                          <span className="text-sm font-medium">
+                            {viewingDocument.ownerName}
+                          </span>
                         </div>
-                        <span className="text-xs text-muted-foreground ml-6">{viewingDocument.ownerEmail}</span>
+                        <span className="text-xs text-muted-foreground ml-6">
+                          {viewingDocument.ownerEmail}
+                        </span>
                       </div>
                       <div className="flex items-center justify-between p-4">
-                        <div className="text-xs font-medium text-muted-foreground">Status / Visibility</div>
+                        <div className="text-xs font-medium text-muted-foreground">
+                          Status / Visibility
+                        </div>
                         <div className="flex gap-2">
-                          <StatusBadge severity="info">{viewingDocument.status ?? 'ACTIVE'}</StatusBadge>
-                          <StatusBadge severity="info">{viewingDocument.visibility ?? 'PRIVATE'}</StatusBadge>
+                          <StatusBadge severity="info">
+                            {viewingDocument.status ?? "ACTIVE"}
+                          </StatusBadge>
+                          <StatusBadge severity="info">
+                            {viewingDocument.visibility ?? "PRIVATE"}
+                          </StatusBadge>
                         </div>
                       </div>
                       <div className="flex items-center justify-between p-4">
-                        <div className="text-xs font-medium text-muted-foreground">Extraction</div>
-                        <StatusBadge severity={viewingDocument.indexedStatus}>{viewingDocument.indexedStatus}</StatusBadge>
+                        <div className="text-xs font-medium text-muted-foreground">
+                          Extraction
+                        </div>
+                        <StatusBadge severity={viewingDocument.indexedStatus}>
+                          {viewingDocument.indexedStatus}
+                        </StatusBadge>
                       </div>
                     </div>
                   </section>
@@ -296,5 +419,5 @@ export default function AdminDocumentsPage() {
         </DialogContent>
       </Dialog>
     </PageShell>
-  )
+  );
 }

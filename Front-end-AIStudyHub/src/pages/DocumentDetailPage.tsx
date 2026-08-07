@@ -1,16 +1,22 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   AlertTriangle,
   ArrowLeft,
   BookOpen,
   Download,
+  ExternalLink,
   Pencil,
+  Share2,
+  Sparkles,
   Star,
   Trash2,
   Users,
 } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/layout/PageHeader";
 import {
   Dialog,
   DialogContent,
@@ -28,14 +34,29 @@ import {
   setDocumentStar,
   updateDocument,
 } from "../services/documentApi";
+import {
+  createDocumentSummary,
+  getArtifactById,
+  type ArtifactRecord,
+} from "@/services/artifactApi";
+import { ApiClientError } from "@/services/apiClient";
 import { listSubjects, type SubjectItem } from "../services/subjectApi";
 import DocumentShareDialog from "../components/documents/DocumentShareDialog";
 import SharedDocumentSubjectDialog from "../components/documents/SharedDocumentSubjectDialog";
+import SummaryShareDialog from "@/components/artifacts/SummaryShareDialog";
 import { getStoredUser } from "../services/authStorage";
 import type { DocumentDetail, DocumentSubject } from "../types/document";
 import { PageShell } from "@/components/layout/PageShell";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { getDocumentIndexIssue } from "@/lib/chatScope";
+import { useToast } from "@/hooks/useToast";
+import {
+  useAiUsage,
+  deriveAiPlanState,
+  notifyAiUsageChanged,
+} from "@/hooks/useAiUsage";
+import { MARKDOWN_PREVIEW_CLASS } from "@/components/chat/artifacts/artifactTypes";
+import { CopyButton } from "@/components/chat/artifacts/ArtifactPreviewDialog";
 import {
   Select,
   SelectContent,
@@ -53,6 +74,66 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+} from "@/components/ui/card";
+
+const SUMMARY_POLL_INTERVAL_MS = 2000;
+const SUMMARY_POLL_TIMEOUT_MS = 90_000;
+
+type SummaryPhase = "idle" | "starting" | "polling" | "done" | "error";
+
+interface SummaryErrorState {
+  code?: string;
+  message: string;
+  details?: Record<string, unknown>;
+}
+
+function QuotaBadge() {
+  const { usage } = useAiUsage();
+  const planState = deriveAiPlanState(usage);
+
+  if (planState.kind === "loading") {
+    return (
+      <span className="text-xs text-muted-foreground">
+        Checking AI usage...
+      </span>
+    );
+  }
+
+  if (planState.kind === "byok" || planState.kind === "exempt") {
+    return (
+      <span className="text-sm font-medium text-muted-foreground">
+        Unlimited summaries
+      </span>
+    );
+  }
+
+  if (
+    planState.kind === "degraded" ||
+    planState.kind === "degraded_exhausted"
+  ) {
+    return (
+      <span className="text-xs font-medium text-warning">
+        Your API key has an issue — using free quota ({planState.used}/
+        {planState.limit}){" · "}
+        <Link className="underline" to="/settings">
+          Fix key
+        </Link>
+      </span>
+    );
+  }
+
+  return (
+    <span className="text-xs font-medium text-muted-foreground">
+      {planState.limit - planState.used}/{planState.limit} summaries left this
+      week
+    </span>
+  );
+}
 
 function formatDate(value?: string | null): string {
   if (!value) return "Unknown";
@@ -84,21 +165,25 @@ function InfoCard({
   items: Array<{ label: string; value: string | number }>;
 }) {
   return (
-    <section className="p-5">
-      <h2 className="text-lg font-black">{title}</h2>
-      <dl className="mt-4 grid gap-4 sm:grid-cols-2">
-        {items.map((item) => (
-          <div className="min-w-0" key={item.label}>
-            <dt className="text-xs font-black uppercase tracking-[0.12em] text-muted-foreground">
-              {item.label}
-            </dt>
-            <dd className="mt-1 wrap-break-word text-sm">
-              {item.value || "None"}
-            </dd>
-          </div>
-        ))}
-      </dl>
-    </section>
+    <Card className="gap-0">
+      <CardHeader>
+        <h2 className="text-base font-medium">{title}</h2>
+      </CardHeader>
+      <CardContent>
+        <dl className="mt-4 grid gap-4 sm:grid-cols-2">
+          {items.map((item) => (
+            <div className="min-w-0" key={item.label}>
+              <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                {item.label}
+              </dt>
+              <dd className="mt-1 wrap-break-word text-sm">
+                {item.value || "None"}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -123,6 +208,32 @@ export default function DocumentDetailPage() {
     "PRIVATE",
   );
   const [error, setError] = useState<string | null>(null);
+  const { showToast } = useToast();
+
+  // AI summary state. Deliberately component-local, not persisted: per the
+  // confirmed product decision, the "Summarize" button always shows again on
+  // a fresh page load even if a summary already exists — clicking it then is
+  // a free, near-instant cache hit (200), never a silent auto-charge on mount.
+  const [summaryRecord, setSummaryRecord] = useState<ArtifactRecord | null>(
+    null,
+  );
+  const [summaryPhase, setSummaryPhase] = useState<SummaryPhase>("idle");
+  const [summaryError, setSummaryError] = useState<SummaryErrorState | null>(
+    null,
+  );
+  const [isSummaryShareOpen, setIsSummaryShareOpen] = useState(false);
+  const pollTimeoutRef = useRef<number | null>(null);
+  // Bumped on every new click so a stale poll from a superseded run cannot
+  // clobber state after the user has already started a fresh one.
+  const pollGenerationRef = useRef(0);
+
+  useEffect(() => {
+    return () => {
+      if (pollTimeoutRef.current !== null) {
+        window.clearTimeout(pollTimeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!id) {
@@ -277,35 +388,171 @@ export default function DocumentDetailPage() {
     }
   }
 
+  function pollSummary(
+    artifactId: string,
+    generation: number,
+    startedAt: number,
+  ) {
+    pollTimeoutRef.current = window.setTimeout(async () => {
+      // A newer click superseded this poll chain — stop silently.
+      if (generation !== pollGenerationRef.current) return;
+
+      try {
+        const record = await getArtifactById(artifactId);
+        if (generation !== pollGenerationRef.current) return;
+
+        if (record.status === "COMPLETED") {
+          setSummaryRecord(record);
+          setSummaryPhase("done");
+          return;
+        }
+        if (record.status === "FAILED") {
+          setSummaryRecord(record);
+          setSummaryError({
+            message: record.error || "Summary generation failed.",
+          });
+          setSummaryPhase("error");
+          return;
+        }
+        if (Date.now() - startedAt >= SUMMARY_POLL_TIMEOUT_MS) {
+          // A pending job is never reported as a failure — it may just be slow.
+          setSummaryError({
+            message:
+              "Still processing — reopen this page in a moment to see the result.",
+          });
+          setSummaryPhase("error");
+          return;
+        }
+        setSummaryRecord(record);
+        pollSummary(artifactId, generation, startedAt);
+      } catch {
+        if (generation !== pollGenerationRef.current) return;
+        setSummaryError({
+          message: "Lost connection while checking the summary status.",
+        });
+        setSummaryPhase("error");
+      }
+    }, SUMMARY_POLL_INTERVAL_MS);
+  }
+
+  async function handleSummarize() {
+    if (!id) return;
+    if (summaryPhase === "starting" || summaryPhase === "polling") return;
+
+    // Disable immediately — a double click must never register as two
+    // separate quota-consuming requests.
+    setSummaryPhase("starting");
+    setSummaryError(null);
+    const generation = ++pollGenerationRef.current;
+
+    try {
+      const { record, status } = await createDocumentSummary(id);
+
+      if (status === 202) {
+        // A fresh generation just consumed one quota unit — refresh anywhere
+        // usage is shown (this page's badge, the sidebar) without polling.
+        notifyAiUsageChanged();
+      }
+
+      if (record.status === "COMPLETED") {
+        setSummaryRecord(record);
+        setSummaryPhase("done");
+        return;
+      }
+      if (record.status === "FAILED") {
+        setSummaryRecord(record);
+        setSummaryError({
+          message: record.error || "Summary generation failed.",
+        });
+        setSummaryPhase("error");
+        return;
+      }
+
+      setSummaryRecord(record);
+      setSummaryPhase("polling");
+      pollSummary(record._id, generation, Date.now());
+    } catch (caughtError) {
+      if (caughtError instanceof ApiClientError) {
+        if (caughtError.status === 429) {
+          setSummaryError({
+            code: caughtError.code,
+            message: caughtError.message,
+            details: caughtError.details,
+          });
+          setSummaryPhase("error");
+          return;
+        }
+        if (caughtError.status === 400) {
+          setSummaryError({
+            code: caughtError.code,
+            message:
+              "This document isn't ready to summarize yet — it may still be processing, or it's a scanned/image file with no extracted text.",
+          });
+          setSummaryPhase("error");
+          return;
+        }
+        if (caughtError.status === 403) {
+          showToast({
+            tone: "error",
+            message: "You don't have permission to summarize this document.",
+          });
+          setSummaryPhase("idle");
+          return;
+        }
+        showToast({ tone: "error", message: caughtError.message });
+        setSummaryPhase("idle");
+        return;
+      }
+
+      showToast({
+        tone: "error",
+        message:
+          caughtError instanceof Error
+            ? caughtError.message
+            : "Unable to create summary.",
+      });
+      setSummaryPhase("idle");
+    }
+  }
+
   return (
     <PageShell>
-      <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="min-w-0">
-          <Button asChild variant="secondary">
-            <Link to={document?.isShared ? "/library?view=shared" : "/library"}>
-              <ArrowLeft data-icon="inline-start" aria-hidden="true" />
-              Back to My Document
-            </Link>
-          </Button>
-          <h1 className="mt-4 text-2xl font-bold tracking-tight md:text-3xl wrap-break-word">
-            {document?.title || "Document detail"}
-          </h1>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
+      <PageHeader
+        title={
+          document?.title || (
+            <>
+              <Skeleton className="h-6 w-48" />
+            </>
+          )
+        }
+        description={
+          document?.title ? (
+            "Review document metadata, AI insights, chunks, and analysis."
+          ) : (
+            <Skeleton className="h-4 w-5/6" />
+          )
+        }
+      />
+
+      <div className="flex items-center justify-between">
+        <Button asChild variant="outline">
+          <Link to={document?.isShared ? "/library?view=shared" : "/library"}>
+            <ArrowLeft className="size-4 mr-1.5" aria-hidden="true" />
+            Back
+          </Link>
+        </Button>
+        <div className="flex gap-2">
           <Button
             disabled={!document || isStarring}
             onClick={toggleStar}
             type="button"
-            variant="secondary"
+            variant="outline"
           >
             <Star
-              data-icon="inline-start"
               aria-hidden="true"
-              className={
-                document?.isStarred
-                  ? "fill-amber-400 text-amber-500"
-                  : undefined
-              }
+              className={`size-4 mr-1.5 ${
+                document?.isStarred ? "fill-amber-400 text-amber-500" : ""
+              }`}
             />
             {document?.isStarred ? "Unstar" : "Star"}
           </Button>
@@ -314,9 +561,9 @@ export default function DocumentDetailPage() {
               disabled={!document}
               onClick={() => setIsShareOpen(true)}
               type="button"
-              variant="secondary"
+              variant="outline"
             >
-              <Users data-icon="inline-start" aria-hidden="true" />
+              <Users className="size-4 mr-1.5" aria-hidden="true" />
               Share
             </Button>
           )}
@@ -325,9 +572,9 @@ export default function DocumentDetailPage() {
               disabled={!document}
               onClick={() => setIsSubjectProfileOpen(true)}
               type="button"
-              variant="secondary"
+              variant="outline"
             >
-              <BookOpen data-icon="inline-start" aria-hidden="true" />
+              <BookOpen className="size-4 mr-1.5" aria-hidden="true" />
               Assign subject
             </Button>
           )}
@@ -336,10 +583,27 @@ export default function DocumentDetailPage() {
               disabled={!document}
               onClick={openEdit}
               type="button"
-              variant="secondary"
+              variant="outline"
             >
-              <Pencil data-icon="inline-start" aria-hidden="true" />
+              <Pencil className="size-4 mr-1.5" aria-hidden="true" />
               Edit details
+            </Button>
+          )}
+          {document?.isOwner && summaryPhase !== "done" && (
+            <Button
+              disabled={
+                summaryPhase === "starting" || summaryPhase === "polling"
+              }
+              onClick={handleSummarize}
+              type="button"
+              variant="outline"
+            >
+              <Sparkles className="size-4 mr-1.5" aria-hidden="true" />
+              {summaryPhase === "starting" || summaryPhase === "polling"
+                ? "Summarizing..."
+                : summaryPhase === "error"
+                  ? "Retry summary"
+                  : "Summarize"}
             </Button>
           )}
           <Button
@@ -347,7 +611,7 @@ export default function DocumentDetailPage() {
             onClick={downloadDocument}
             type="button"
           >
-            <Download data-icon="inline-start" aria-hidden="true" />
+            <Download className="size-4 mr-1.5" aria-hidden="true" />
             Download
           </Button>
           {canManage && (
@@ -357,12 +621,18 @@ export default function DocumentDetailPage() {
               type="button"
               variant="destructive"
             >
-              <Trash2 data-icon="inline-start" aria-hidden="true" />
+              <Trash2 className="size-4 mr-1.5" aria-hidden="true" />
               {isDeleting ? "Moving..." : "Move to trash"}
             </Button>
           )}
         </div>
-      </header>
+      </div>
+
+      {document?.isOwner ? (
+        <div className="-mt-2 flex justify-end">
+          <QuotaBadge />
+        </div>
+      ) : null}
 
       {error ? (
         <Alert variant="destructive" className="mb-4">
@@ -393,7 +663,9 @@ export default function DocumentDetailPage() {
             return (
               <Alert className="mb-4 border-amber-500/50 bg-amber-500/10 text-amber-900 dark:text-amber-200">
                 <AlertTriangle className="size-4 text-amber-600 dark:text-amber-400" />
-                <AlertTitle className="font-semibold">{indexIssue.summary}</AlertTitle>
+                <AlertTitle className="font-semibold">
+                  {indexIssue.summary}
+                </AlertTitle>
                 <AlertDescription className="text-amber-800 dark:text-amber-300">
                   {indexIssue.action}
                 </AlertDescription>
@@ -452,6 +724,94 @@ export default function DocumentDetailPage() {
               ]}
             />
           </div>
+
+          {summaryPhase !== "idle" ? (
+            <Card className="gap-0">
+              <CardHeader>
+                <h2 className="text-base font-medium leading-5">
+                  <Sparkles
+                    className="size-5 text-primary mr-2 inline-block"
+                    aria-hidden="true"
+                  />
+                  AI Summary
+                </h2>
+                <CardAction>
+                  {summaryPhase === "done" &&
+                  summaryRecord?.content &&
+                  "markdown" in summaryRecord.content ? (
+                    <div className="flex items-center gap-2">
+                      <CopyButton text={summaryRecord.content.markdown} />
+                      <Button
+                        onClick={() => setIsSummaryShareOpen(true)}
+                        size="sm"
+                        type="button"
+                        variant="outline"
+                      >
+                        <Share2 data-icon="inline-start" aria-hidden="true" />
+                        Share
+                      </Button>
+                    </div>
+                  ) : null}
+                </CardAction>
+              </CardHeader>
+
+              <CardContent>
+                {(summaryPhase === "starting" ||
+                  summaryPhase === "polling") && (
+                  <div className="mt-4 flex flex-col gap-2">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-5/6" />
+                    <Skeleton className="h-4 w-2/3" />
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Generating summary...
+                    </p>
+                  </div>
+                )}
+
+                {summaryPhase === "error" && summaryError ? (
+                  <Alert className="mt-4" variant="destructive">
+                    <AlertTitle>
+                      {summaryError.code === "QUOTA_EXHAUSTED_NO_KEY" ||
+                      summaryError.code === "QUOTA_EXHAUSTED_INVALID_KEY"
+                        ? "Weekly AI quota exhausted"
+                        : "Couldn't create summary"}
+                    </AlertTitle>
+                    <AlertDescription>
+                      {summaryError.message}
+                      {summaryError.details &&
+                      typeof summaryError.details.resetAt === "string" ? (
+                        <div className="mt-1">
+                          Resets {formatDate(summaryError.details.resetAt)}.
+                        </div>
+                      ) : null}
+                      {summaryError.code === "QUOTA_EXHAUSTED_NO_KEY" ||
+                      summaryError.code === "QUOTA_EXHAUSTED_INVALID_KEY" ? (
+                        <div className="mt-2">
+                          <Link
+                            className="inline-flex items-center gap-1 font-semibold underline"
+                            to="/settings"
+                          >
+                            Add your own API key
+                            <ExternalLink className="size-3" />
+                          </Link>
+                        </div>
+                      ) : null}
+                    </AlertDescription>
+                  </Alert>
+                ) : null}
+
+                {summaryPhase === "done" &&
+                summaryRecord?.content &&
+                "markdown" in summaryRecord.content ? (
+                  <div className={`mt-4 ${MARKDOWN_PREVIEW_CLASS}`}>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {summaryRecord.content.markdown}
+                    </ReactMarkdown>
+                  </div>
+                ) : null}
+              </CardContent>
+            </Card>
+          ) : null}
         </>
       ) : null}
 
@@ -532,7 +892,7 @@ export default function DocumentDetailPage() {
               <Button
                 disabled={isSavingEdit}
                 type="button"
-                variant="secondary"
+                variant="outline"
                 onClick={() => setIsEditOpen(false)}
               >
                 Cancel
@@ -557,6 +917,12 @@ export default function DocumentDetailPage() {
         onUpdated={(updatedDocument) =>
           setDocument(updatedDocument as DocumentDetail)
         }
+      />
+      <SummaryShareDialog
+        artifactId={summaryRecord?._id ?? null}
+        onOpenChange={setIsSummaryShareOpen}
+        open={isSummaryShareOpen}
+        title={document?.title}
       />
       <AlertDialog
         open={isDeleteConfirmOpen}

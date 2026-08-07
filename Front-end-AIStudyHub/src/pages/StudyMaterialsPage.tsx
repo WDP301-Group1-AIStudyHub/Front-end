@@ -8,6 +8,7 @@ import McqQuiz from "@/components/shared/McqQuiz";
 import { ArrowLeft, BookOpen, AlertCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageShell } from "@/components/layout/PageShell";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 export default function StudyMaterialsPage() {
  const { materialId } = useParams<{ materialId: string }>();
@@ -173,14 +174,18 @@ export default function StudyMaterialsPage() {
   return (
     <PageShell variant="centered">
       <div className="w-full max-w-4xl flex flex-col gap-6">
-        <header className="flex items-center gap-4">
-          <Button asChild variant="secondary" size="sm">
-            <Link to={`/study-materials`}>
-              <ArrowLeft data-icon="inline-start" aria-hidden="true" />
-              Back
-            </Link>
-          </Button>
-        </header>
+        <PageHeader
+          title={material.title || "Material Practice"}
+          description="Review flashcards or test your knowledge with multiple choice quizzes."
+          actions={
+            <Button asChild variant="outline" size="sm">
+              <Link to="/study-materials">
+                <ArrowLeft className="size-4 mr-1.5" aria-hidden="true" />
+                Back
+              </Link>
+            </Button>
+          }
+        />
 
         {material.sourceStatus === "DELETED" ? (
           <div className="flex items-center gap-2 rounded-md border border-border bg-muted px-4 py-3 text-sm text-muted-foreground" role="status">

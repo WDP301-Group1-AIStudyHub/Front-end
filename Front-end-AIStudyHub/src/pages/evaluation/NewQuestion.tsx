@@ -8,6 +8,7 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { PageShell } from "@/components/layout/PageShell";
+import { PageHeader } from "@/components/layout/PageHeader";
 import {
   AlertCircle,
   BookOpen,
@@ -255,67 +256,40 @@ export default function NewQuestion() {
         className="flex w-full flex-col gap-5"
         onSubmit={handleSubmit}
       >
-        <header className="flex flex-col gap-4 border-b border-border/60 pb-5 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <div className="mb-3 flex flex-wrap items-center gap-2 text-xs font-semibold text-muted-foreground">
-              <Link className="hover:text-foreground" to="/evaluation">
-                <span>Benchmark</span>
-              </Link>
-              <span>/</span>
-              <Link className="hover:text-foreground" to="/evaluation">
-                Questions
-              </Link>
-              <span>/</span>
-              <span className="text-foreground">New</span>
-              <span className="ml-2 rounded-full border border-border/70 px-2 py-1 text-[10px] uppercase tracking-[0.14em]">
-                DR-RAG
-              </span>
+        <PageHeader
+          title="Create Benchmark Question"
+          description="Define a ground-truth question the system can be tested against."
+          actions={
+            <div className="flex flex-wrap gap-2">
+              <Button asChild variant="outline">
+                <Link to="/evaluation">
+                  <ChevronLeft className="size-4 mr-1" />
+                  Cancel
+                </Link>
+              </Button>
+              <Button
+                onClick={saveDraft}
+                type="button"
+                variant="outline"
+              >
+                {draftSaved ? (
+                  <Check className="size-4 mr-1" />
+                ) : (
+                  <Save className="size-4 mr-1" />
+                )}
+                {draftSaved ? "Saved" : "Save draft"}
+              </Button>
+              <Button disabled={saving} type="submit">
+                {saving ? (
+                  <Loader2 className="size-4 animate-spin mr-1" />
+                ) : (
+                  <Play className="size-4 mr-1" />
+                )}
+                Save & run
+              </Button>
             </div>
-            <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
-              New Benchmark Question
-            </h1>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Define a ground-truth question the system can be tested against.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <Link
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-border px-4 text-sm font-semibold text-muted-foreground transition hover:text-foreground"
-              to="/evaluation"
-            >
-              <ChevronLeft className="size-4" />
-              Cancel
-            </Link>
-            <Button
-              className="px-4"
-              onClick={saveDraft}
-              size="lg"
-              type="button"
-              variant="outline"
-            >
-              {draftSaved ? (
-                <Check className="size-4" />
-              ) : (
-                <Save className="size-4" />
-              )}
-              {draftSaved ? "Draft saved" : "Save draft"}
-            </Button>
-            <Button
-              className="px-4"
-              disabled={saving}
-              size="lg"
-              type="submit"
-            >
-              {saving ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Play className="size-4" />
-              )}
-              Save & run
-            </Button>
-          </div>
-        </header>
+          }
+        />
 
         {error && (
           <div className="flex items-center gap-2 rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">

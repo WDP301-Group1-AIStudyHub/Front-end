@@ -1,29 +1,31 @@
-import { formatStorageBytes } from '../../utils/formatStorage'
-import type { StorageStatus } from '../../types/storage'
+import { formatStorageBytes } from "../../utils/formatStorage";
+import type { StorageStatus } from "../../types/storage";
 
 const TONE_BY_STATUS: Record<StorageStatus, string> = {
-  OK: 'bg-primary',
-  WARNING: 'bg-amber-500',
-  CRITICAL: 'bg-destructive',
-  FULL: 'bg-destructive',
-}
+  OK: "bg-primary",
+  WARNING: "bg-amber-500",
+  CRITICAL: "bg-destructive",
+  FULL: "bg-destructive",
+};
 
 export function StorageUsageBar({
-  className = '',
+  className = "",
   quotaBytes,
   showLabel = true,
   status,
   usedBytes,
 }: {
-  className?: string
-  quotaBytes: number
-  showLabel?: boolean
-  status: StorageStatus
-  usedBytes: number
+  className?: string;
+  quotaBytes: number;
+  showLabel?: boolean;
+  status: StorageStatus;
+  usedBytes: number;
 }) {
   const percent =
-    quotaBytes > 0 ? Math.max(0, Math.min(100, (usedBytes / quotaBytes) * 100)) : 100
-  const label = `${formatStorageBytes(usedBytes)} / ${formatStorageBytes(quotaBytes)}`
+    quotaBytes > 0
+      ? Math.max(0, Math.min(100, (usedBytes / quotaBytes) * 100))
+      : 100;
+  const label = `${formatStorageBytes(usedBytes)} / ${formatStorageBytes(quotaBytes)}`;
 
   return (
     <div className={className}>
@@ -44,9 +46,11 @@ export function StorageUsageBar({
       {showLabel ? (
         <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
           <span>{label}</span>
-          <span className="font-semibold">{percent.toFixed(percent >= 10 ? 0 : 1)}%</span>
+          <span className="font-semibold">
+            {percent.toFixed(percent >= 10 ? 0 : 1)}%
+          </span>
         </div>
       ) : null}
     </div>
-  )
+  );
 }
