@@ -198,7 +198,7 @@ export default function SharedSummariesPage() {
                       {selected.artifact.summaryDocumentId ? (
                         <Button asChild size="sm" variant="outline">
                           <Link
-                            to={`/library?preview=${selected.artifact.summaryDocumentId}`}
+                            to={`/library?view=shared&preview=${selected.artifact.summaryDocumentId}`}
                           >
                             <ExternalLink
                               data-icon="inline-start"
