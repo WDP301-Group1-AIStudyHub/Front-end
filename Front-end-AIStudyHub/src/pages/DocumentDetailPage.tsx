@@ -1,15 +1,20 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   AlertTriangle,
   ArrowLeft,
   BookOpen,
   Download,
+  ExternalLink,
   Pencil,
+  Share2,
+  Sparkles,
   Star,
   Trash2,
   Users,
 } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/layout/PageHeader";
 import {
@@ -29,9 +34,16 @@ import {
   setDocumentStar,
   updateDocument,
 } from "../services/documentApi";
+import {
+  createDocumentSummary,
+  getArtifactById,
+  type ArtifactRecord,
+} from "@/services/artifactApi";
+import { ApiClientError } from "@/services/apiClient";
 import { listSubjects, type SubjectItem } from "../services/subjectApi";
 import DocumentShareDialog from "../components/documents/DocumentShareDialog";
 import SharedDocumentSubjectDialog from "../components/documents/SharedDocumentSubjectDialog";
+import SummaryShareDialog from "@/components/artifacts/SummaryShareDialog";
 import { getStoredUser } from "../services/authStorage";
 import type { DocumentDetail, DocumentSubject } from "../types/document";
 import { PageShell } from "@/components/layout/PageShell";
@@ -196,6 +208,32 @@ export default function DocumentDetailPage() {
     "PRIVATE",
   );
   const [error, setError] = useState<string | null>(null);
+  const { showToast } = useToast();
+
+  // AI summary state. Deliberately component-local, not persisted: per the
+  // confirmed product decision, the "Summarize" button always shows again on
+  // a fresh page load even if a summary already exists — clicking it then is
+  // a free, near-instant cache hit (200), never a silent auto-charge on mount.
+  const [summaryRecord, setSummaryRecord] = useState<ArtifactRecord | null>(
+    null,
+  );
+  const [summaryPhase, setSummaryPhase] = useState<SummaryPhase>("idle");
+  const [summaryError, setSummaryError] = useState<SummaryErrorState | null>(
+    null,
+  );
+  const [isSummaryShareOpen, setIsSummaryShareOpen] = useState(false);
+  const pollTimeoutRef = useRef<number | null>(null);
+  // Bumped on every new click so a stale poll from a superseded run cannot
+  // clobber state after the user has already started a fresh one.
+  const pollGenerationRef = useRef(0);
+
+  useEffect(() => {
+    return () => {
+      if (pollTimeoutRef.current !== null) {
+        window.clearTimeout(pollTimeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!id) {
@@ -347,6 +385,133 @@ export default function DocumentDetailPage() {
       );
     } finally {
       setIsStarring(false);
+    }
+  }
+
+  function pollSummary(
+    artifactId: string,
+    generation: number,
+    startedAt: number,
+  ) {
+    pollTimeoutRef.current = window.setTimeout(async () => {
+      // A newer click superseded this poll chain — stop silently.
+      if (generation !== pollGenerationRef.current) return;
+
+      try {
+        const record = await getArtifactById(artifactId);
+        if (generation !== pollGenerationRef.current) return;
+
+        if (record.status === "COMPLETED") {
+          setSummaryRecord(record);
+          setSummaryPhase("done");
+          return;
+        }
+        if (record.status === "FAILED") {
+          setSummaryRecord(record);
+          setSummaryError({
+            message: record.error || "Summary generation failed.",
+          });
+          setSummaryPhase("error");
+          return;
+        }
+        if (Date.now() - startedAt >= SUMMARY_POLL_TIMEOUT_MS) {
+          // A pending job is never reported as a failure — it may just be slow.
+          setSummaryError({
+            message:
+              "Still processing — reopen this page in a moment to see the result.",
+          });
+          setSummaryPhase("error");
+          return;
+        }
+        setSummaryRecord(record);
+        pollSummary(artifactId, generation, startedAt);
+      } catch {
+        if (generation !== pollGenerationRef.current) return;
+        setSummaryError({
+          message: "Lost connection while checking the summary status.",
+        });
+        setSummaryPhase("error");
+      }
+    }, SUMMARY_POLL_INTERVAL_MS);
+  }
+
+  async function handleSummarize() {
+    if (!id) return;
+    if (summaryPhase === "starting" || summaryPhase === "polling") return;
+
+    // Disable immediately — a double click must never register as two
+    // separate quota-consuming requests.
+    setSummaryPhase("starting");
+    setSummaryError(null);
+    const generation = ++pollGenerationRef.current;
+
+    try {
+      const { record, status } = await createDocumentSummary(id);
+
+      if (status === 202) {
+        // A fresh generation just consumed one quota unit — refresh anywhere
+        // usage is shown (this page's badge, the sidebar) without polling.
+        notifyAiUsageChanged();
+      }
+
+      if (record.status === "COMPLETED") {
+        setSummaryRecord(record);
+        setSummaryPhase("done");
+        return;
+      }
+      if (record.status === "FAILED") {
+        setSummaryRecord(record);
+        setSummaryError({
+          message: record.error || "Summary generation failed.",
+        });
+        setSummaryPhase("error");
+        return;
+      }
+
+      setSummaryRecord(record);
+      setSummaryPhase("polling");
+      pollSummary(record._id, generation, Date.now());
+    } catch (caughtError) {
+      if (caughtError instanceof ApiClientError) {
+        if (caughtError.status === 429) {
+          setSummaryError({
+            code: caughtError.code,
+            message: caughtError.message,
+            details: caughtError.details,
+          });
+          setSummaryPhase("error");
+          return;
+        }
+        if (caughtError.status === 400) {
+          setSummaryError({
+            code: caughtError.code,
+            message:
+              "This document isn't ready to summarize yet — it may still be processing, or it's a scanned/image file with no extracted text.",
+          });
+          setSummaryPhase("error");
+          return;
+        }
+        if (caughtError.status === 403) {
+          showToast({
+            tone: "error",
+            message: "You don't have permission to summarize this document.",
+          });
+          setSummaryPhase("idle");
+          return;
+        }
+        showToast({ tone: "error", message: caughtError.message });
+        setSummaryPhase("idle");
+        return;
+      }
+
+      showToast({
+        tone: "error",
+        message:
+          caughtError instanceof Error
+            ? caughtError.message
+            : "Unable to create summary.",
+      });
+      setSummaryPhase("idle");
     }
   }
 
@@ -752,6 +917,12 @@ export default function DocumentDetailPage() {
         onUpdated={(updatedDocument) =>
           setDocument(updatedDocument as DocumentDetail)
         }
+      />
+      <SummaryShareDialog
+        artifactId={summaryRecord?._id ?? null}
+        onOpenChange={setIsSummaryShareOpen}
+        open={isSummaryShareOpen}
+        title={document?.title}
       />
       <AlertDialog
         open={isDeleteConfirmOpen}
