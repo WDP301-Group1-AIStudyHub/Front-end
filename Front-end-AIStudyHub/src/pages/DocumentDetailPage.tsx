@@ -80,7 +80,6 @@ import {
   CardContent,
   CardHeader,
 } from "@/components/ui/card";
-import { BorderBeam } from "border-beam";
 
 const SUMMARY_POLL_INTERVAL_MS = 2000;
 const SUMMARY_POLL_TIMEOUT_MS = 90_000;
