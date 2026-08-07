@@ -5,6 +5,7 @@ import { RefreshCw, Sparkles, Users } from "lucide-react";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { PageShell } from "@/components/layout/PageShell";
 import { CopyButton } from "@/components/chat/artifacts/ArtifactPreviewDialog";
 import { MARKDOWN_PREVIEW_CLASS } from "@/components/chat/artifacts/artifactTypes";
 import { recordToCopyText } from "@/components/chat/artifacts/artifactTypes";
@@ -105,12 +106,11 @@ export default function SharedSummariesPage() {
   const selected = entries.find((entry) => entry.artifact._id === selectedId);
 
   return (
-    <main className="moonlit-page flex min-h-svh w-full min-w-0 flex-col overflow-y-auto text-foreground">
-      <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-5 py-6 sm:px-8 lg:px-10">
-        <PageHeader
-          title="Shared Summaries"
-          description="AI summaries other people have shared with you. You can read these without access to the original document."
-        />
+    <PageShell>
+      <PageHeader
+        title="Shared Summaries"
+        description="AI summaries other people have shared with you. You can read these without access to the original document."
+      />
 
         {isLoading ? (
           <div className="grid gap-4 sm:grid-cols-2">
@@ -146,7 +146,8 @@ export default function SharedSummariesPage() {
                         {artifact.title}
                       </span>
                       <span className="text-sm text-muted-foreground">
-                        Shared by {sharedBy?.fullName ?? sharedBy?.email ?? "someone"}
+                        Shared by{" "}
+                        {sharedBy?.fullName ?? sharedBy?.email ?? "someone"}
                       </span>
                       <span className="text-xs text-muted-foreground">
                         {formatDateTime(sharedAt)}
@@ -157,7 +158,10 @@ export default function SharedSummariesPage() {
                             "Failed"
                           ) : (
                             <span className="inline-flex items-center gap-1">
-                              <RefreshCw className="size-3 animate-spin" aria-hidden="true" />
+                              <RefreshCw
+                                className="size-3 animate-spin"
+                                aria-hidden="true"
+                              />
                               Generating
                             </span>
                           )}
@@ -180,7 +184,10 @@ export default function SharedSummariesPage() {
                 </p>
               ) : selected.artifact.status !== "COMPLETED" ? (
                 <p className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <RefreshCw className="size-4 animate-spin" aria-hidden="true" />
+                  <RefreshCw
+                    className="size-4 animate-spin"
+                    aria-hidden="true"
+                  />
                   Still generating — this will update automatically.
                 </p>
               ) : (
@@ -193,7 +200,8 @@ export default function SharedSummariesPage() {
                   </div>
                   <div className={MARKDOWN_PREVIEW_CLASS}>
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                      {selected.artifact.content && "markdown" in selected.artifact.content
+                      {selected.artifact.content &&
+                      "markdown" in selected.artifact.content
                         ? selected.artifact.content.markdown
                         : ""}
                     </ReactMarkdown>
@@ -203,7 +211,6 @@ export default function SharedSummariesPage() {
             </div>
           </div>
         )}
-      </div>
-    </main>
+    </PageShell>
   );
 }
