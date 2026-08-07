@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Sparkles, X } from "lucide-react";
+import { FileText, LoaderCircle, Sparkles, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -127,6 +127,9 @@ export function DocumentPreviewPage({
   );
   const [documentLoadError, setDocumentLoadError] = useState<string | null>(null);
   const [documentLoadAttempt, setDocumentLoadAttempt] = useState(0);
+  const targetDocumentId = initialDocument?.id || previewDocumentId;
+  const initialDocumentRef = useRef(initialDocument);
+  initialDocumentRef.current = initialDocument;
   const previewTitle = document
     ? getPreviewTitle(document.fileName || document.title)
     : getPreviewTitle(previewParam);
@@ -139,37 +142,25 @@ export function DocumentPreviewPage({
   const [isSummaryShareOpen, setIsSummaryShareOpen] = useState(false);
   const pollTimeoutRef = useRef<number | null>(null);
   const pollGenerationRef = useRef(0);
-  // Tracks the id this instance has already fetched (or is fetching), so the
-  // detail call only ever runs once per id — not once when initialDocument
-  // is still unresolved and again the moment the parent's document list
-  // finishes loading and hands us the same document under a new object
-  // identity.
-  const fetchedDocumentIdRef = useRef<string | null>(null);
-
+  // Fetch against a stable id so a parent list refresh cannot cancel the
+  // detail request and leave the preview stuck in its loading state.
   useEffect(() => {
-    const documentId = initialDocument?.id || previewDocumentId;
-
-    if (!documentId) {
-      setDocument(initialDocument);
+    if (!targetDocumentId) {
+      setDocument(initialDocumentRef.current);
       setIsDocumentLoading(false);
       setDocumentLoadError(null);
       return;
     }
 
-    // Already have (or are fetching) the authoritative detail for this id —
-    // leave it alone. Without this guard, a parent re-render that briefly
-    // hands us a null/stale initialDocument for the same id (e.g. its list
-    // re-fetching) would wipe out an already-loaded document via the
-    // setDocument below, with nothing left to restore it since the fetch
-    // itself is correctly skipped as a dupe.
-    if (fetchedDocumentIdRef.current === documentId) return;
-
-    setDocument(initialDocument);
-    setIsDocumentLoading(!initialDocument?.fileUrl);
+    const fallbackDocument =
+      initialDocumentRef.current?.id === targetDocumentId
+        ? initialDocumentRef.current
+        : null;
+    setDocument(fallbackDocument);
+    setIsDocumentLoading(!fallbackDocument?.fileUrl);
     setDocumentLoadError(null);
-    fetchedDocumentIdRef.current = documentId;
     let cancelled = false;
-    getDocument(documentId)
+    getDocument(targetDocumentId)
       .then((detail) => {
         if (!cancelled) {
           setDocument(detail);
@@ -177,12 +168,14 @@ export function DocumentPreviewPage({
         }
       })
       .catch(() => {
-        // Keep the list item or filename fallback, and allow a retry if the
-        // id comes back around (e.g. the list resolves after this failed).
         if (!cancelled) {
-          fetchedDocumentIdRef.current = null;
+          const latestFallback =
+            initialDocumentRef.current?.id === targetDocumentId
+              ? initialDocumentRef.current
+              : null;
+          setDocument(latestFallback);
           setIsDocumentLoading(false);
-          if (!initialDocument?.fileUrl) {
+          if (!latestFallback?.fileUrl) {
             setDocumentLoadError(
               "We couldn't load this document. Check your access and try again.",
             );
@@ -193,13 +186,7 @@ export function DocumentPreviewPage({
     return () => {
       cancelled = true;
     };
-    // initialDocument is intentionally not a dep: the parent's document list
-    // re-fetches independently and hands us a new object identity for the
-    // same id, which used to re-trigger this effect and double-fetch the
-    // document. Only an actual id or previewParam change should re-run it,
-    // and the ref guard above still applies even then.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [documentLoadAttempt, initialDocument?.id, previewDocumentId]);
+  }, [documentLoadAttempt, targetDocumentId]);
 
   useEffect(() => {
     return () => {
@@ -385,7 +372,16 @@ export function DocumentPreviewPage({
             <div className="flex min-w-0 flex-col gap-1 text-white">
               <div className="flex min-w-0 items-center gap-2 text-lg">
                 {isDocumentLoading ? (
-                  <Skeleton className="h-4 w-44 bg-white/15" />
+                  <span
+                    className="flex items-center gap-2 text-sm font-medium text-white/80"
+                    role="status"
+                  >
+                    <LoaderCircle
+                      aria-hidden="true"
+                      className="size-4 animate-spin motion-reduce:animate-none"
+                    />
+                    Opening document...
+                  </span>
                 ) : (
                   <strong className="truncate text-sm font-medium">
                     {previewTitle}
@@ -414,11 +410,29 @@ export function DocumentPreviewPage({
         {isDocumentLoading ? (
           <div
             aria-live="polite"
-            className="flex h-full flex-col items-center justify-center gap-3 px-6 text-sm text-white/80"
+            className="flex h-full flex-col items-center justify-center px-6 text-center text-white"
+            role="status"
           >
-            <Skeleton className="h-4 w-40 bg-white/15" />
-            <Skeleton className="h-3 w-56 bg-white/10" />
-            <span className="sr-only">Loading document preview</span>
+            <div className="relative mb-5 flex size-16 items-center justify-center rounded-2xl bg-white/8 ring-1 ring-white/15">
+              <FileText aria-hidden="true" className="size-8 text-white/85" />
+              <span className="absolute -bottom-1.5 -right-1.5 flex size-7 items-center justify-center rounded-full bg-[#3C3C3C] ring-2 ring-[#282828]">
+                <LoaderCircle
+                  aria-hidden="true"
+                  className="size-4 animate-spin text-white motion-reduce:animate-none"
+                />
+              </span>
+            </div>
+
+            <p className="text-sm font-semibold">Opening document</p>
+            <p className="mt-1 text-xs text-white/60">
+              Preparing the preview. This may take a moment.
+            </p>
+
+            <div aria-hidden="true" className="mt-4 flex items-center gap-1.5">
+              <span className="size-1.5 animate-pulse rounded-full bg-white/35 motion-reduce:animate-none" />
+              <span className="size-1.5 animate-pulse rounded-full bg-white/55 [animation-delay:150ms] motion-reduce:animate-none" />
+              <span className="size-1.5 animate-pulse rounded-full bg-white/75 [animation-delay:300ms] motion-reduce:animate-none" />
+            </div>
           </div>
         ) : documentLoadError ? (
           <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center text-sm text-white">
