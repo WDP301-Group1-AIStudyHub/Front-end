@@ -13,9 +13,12 @@ import { cn } from "@/lib/utils";
 import { ChevronsLeftIcon, ChevronsRightIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export const SourcesAside: React.FC<{ className?: string }> = ({
-  className,
-}) => {
+import type { DocumentItem } from "@/types/document";
+
+export const SourcesAside: React.FC<{
+  className?: string;
+  attachedDocuments?: DocumentItem[];
+}> = ({ className, attachedDocuments }) => {
   const { sources } = useThreadSources();
   const { artifacts, railToggleCount } = useArtifacts();
   const [isHidden, setIsHidden] = useState<boolean>(false);
@@ -80,7 +83,7 @@ export const SourcesAside: React.FC<{ className?: string }> = ({
           className="flex flex-col p-1 gap-3 max-h-[calc(100vh-5rem)] overflow-y-auto pr-1 transition-transform duration-300"
         >
           <SourcesPanel />
-          <ArtifactsPanel />
+          <ArtifactsPanel attachedDocuments={attachedDocuments} />
         </div>
       </div>
     </div>
