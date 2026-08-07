@@ -119,6 +119,14 @@ export function DocumentPreviewPage({
   const navigate = useNavigate();
   const { showToast } = useToast();
   const [document, setDocument] = useState<DocumentItem | null>(initialDocument);
+  const previewDocumentId = /^[a-f0-9]{24}$/i.test(previewParam)
+    ? previewParam
+    : "";
+  const [isDocumentLoading, setIsDocumentLoading] = useState(
+    Boolean(!initialDocument?.fileUrl && previewDocumentId),
+  );
+  const [documentLoadError, setDocumentLoadError] = useState<string | null>(null);
+  const [documentLoadAttempt, setDocumentLoadAttempt] = useState(0);
   const previewTitle = document
     ? getPreviewTitle(document.fileName || document.title)
     : getPreviewTitle(previewParam);
@@ -139,11 +147,12 @@ export function DocumentPreviewPage({
   const fetchedDocumentIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    const documentId = initialDocument?.id ||
-      (/^[a-f0-9]{24}$/i.test(previewParam) ? previewParam : "");
+    const documentId = initialDocument?.id || previewDocumentId;
 
     if (!documentId) {
       setDocument(initialDocument);
+      setIsDocumentLoading(false);
+      setDocumentLoadError(null);
       return;
     }
 
@@ -156,16 +165,29 @@ export function DocumentPreviewPage({
     if (fetchedDocumentIdRef.current === documentId) return;
 
     setDocument(initialDocument);
+    setIsDocumentLoading(!initialDocument?.fileUrl);
+    setDocumentLoadError(null);
     fetchedDocumentIdRef.current = documentId;
     let cancelled = false;
     getDocument(documentId)
       .then((detail) => {
-        if (!cancelled) setDocument(detail);
+        if (!cancelled) {
+          setDocument(detail);
+          setIsDocumentLoading(false);
+        }
       })
       .catch(() => {
         // Keep the list item or filename fallback, and allow a retry if the
         // id comes back around (e.g. the list resolves after this failed).
-        if (!cancelled) fetchedDocumentIdRef.current = null;
+        if (!cancelled) {
+          fetchedDocumentIdRef.current = null;
+          setIsDocumentLoading(false);
+          if (!initialDocument?.fileUrl) {
+            setDocumentLoadError(
+              "We couldn't load this document. Check your access and try again.",
+            );
+          }
+        }
       });
 
     return () => {
@@ -177,7 +199,7 @@ export function DocumentPreviewPage({
     // document. Only an actual id or previewParam change should re-run it,
     // and the ref guard above still applies even then.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialDocument?.id, previewParam]);
+  }, [documentLoadAttempt, initialDocument?.id, previewDocumentId]);
 
   useEffect(() => {
     return () => {
@@ -362,9 +384,13 @@ export function DocumentPreviewPage({
 
             <div className="flex min-w-0 flex-col gap-1 text-white">
               <div className="flex min-w-0 items-center gap-2 text-lg">
-                <strong className="truncate text-sm font-medium">
-                  {previewTitle}
-                </strong>
+                {isDocumentLoading ? (
+                  <Skeleton className="h-4 w-44 bg-white/15" />
+                ) : (
+                  <strong className="truncate text-sm font-medium">
+                    {previewTitle}
+                  </strong>
+                )}
               </div>
             </div>
           </div>
@@ -385,7 +411,28 @@ export function DocumentPreviewPage({
       </header>
 
       <section className="relative min-h-0 flex-1 overflow-hidden">
-        {viewerSrc ? (
+        {isDocumentLoading ? (
+          <div
+            aria-live="polite"
+            className="flex h-full flex-col items-center justify-center gap-3 px-6 text-sm text-white/80"
+          >
+            <Skeleton className="h-4 w-40 bg-white/15" />
+            <Skeleton className="h-3 w-56 bg-white/10" />
+            <span className="sr-only">Loading document preview</span>
+          </div>
+        ) : documentLoadError ? (
+          <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center text-sm text-white">
+            <p>{documentLoadError}</p>
+            <Button
+              className="border-white/30 text-white hover:bg-white/10 hover:text-white"
+              onClick={() => setDocumentLoadAttempt((attempt) => attempt + 1)}
+              type="button"
+              variant="outline"
+            >
+              Try again
+            </Button>
+          </div>
+        ) : viewerSrc ? (
           <iframe
             className="h-full w-full border-0"
             src={document?.fileUrl ? viewerSrc : ""}
