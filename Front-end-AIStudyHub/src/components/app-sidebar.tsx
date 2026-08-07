@@ -154,7 +154,7 @@ function SidebarUsageCard() {
           <div className="flex items-center justify-between text-xs font-medium text-sidebar-foreground">
             <span>Free Plan usage</span>
             <span className="text-muted-foreground">
-              {planState.percentage}%
+              {planState.used}/{planState.limit}
             </span>
           </div>
           <Progress

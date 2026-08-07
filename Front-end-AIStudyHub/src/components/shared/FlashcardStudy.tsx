@@ -169,7 +169,7 @@ export default function FlashcardStudy({
         <div className="inline-flex items-center justify-center p-4 bg-primary/10 rounded-full text-primary mb-2">
           <Play className="size-8" />
         </div>
-        <h2 className="text-2xl font-black text-foreground">Resume Deck?</h2>
+        <h2 className="text-2xl font-semibold text-foreground">Resume Deck?</h2>
         <p className="text-muted-foreground text-sm max-w-md mx-auto">
           You have an unfinished session for this flashcard deck. Would you like
           to pick up where you left off?
@@ -348,7 +348,7 @@ export default function FlashcardStudy({
         <div className="absolute -top-24 -left-24 size-48 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
         <div className="absolute -bottom-24 -right-24 size-48 rounded-full bg-blue-500/10 blur-3xl pointer-events-none" />
 
-        <h2 className="text-2xl font-black text-foreground tracking-tight">
+        <h2 className="text-2xl font-semibold text-foreground tracking-tight">
           {accuracyPercent >= 70
             ? "Fantastic Effort!"
             : "You'll get it next time"}
@@ -378,7 +378,7 @@ export default function FlashcardStudy({
             />
           </svg>
           <div className="absolute flex flex-col items-center justify-center text-center">
-            <span className="text-2xl font-black text-foreground">
+            <span className="text-2xl font-semibold text-foreground">
               {gotItCount}/{activeItems.length}
             </span>
             <span className="text-xs font-bold text-primary">
@@ -397,7 +397,7 @@ export default function FlashcardStudy({
             <div className="text-xs text-muted-foreground uppercase tracking-wide">
               Got it
             </div>
-            <div className="mt-1 text-lg font-black text-emerald-600 ">
+            <div className="mt-1 text-lg font-semibold text-emerald-600 ">
               {gotItCount}
             </div>
           </div>
@@ -405,7 +405,7 @@ export default function FlashcardStudy({
             <div className="text-xs text-muted-foreground uppercase tracking-wide">
               Missed it
             </div>
-            <div className="mt-1 text-lg font-black text-red-500 ">
+            <div className="mt-1 text-lg font-semibold text-red-500 ">
               {missedItCount}
             </div>
           </div>
@@ -413,7 +413,7 @@ export default function FlashcardStudy({
             <div className="text-xs text-muted-foreground uppercase tracking-wide">
               Skipped
             </div>
-            <div className="mt-1 text-lg font-black text-muted-foreground">
+            <div className="mt-1 text-lg font-semibold text-muted-foreground">
               {skippedCount}
             </div>
           </div>
@@ -486,7 +486,7 @@ export default function FlashcardStudy({
                 />
               </svg>
               <div className="absolute flex flex-col items-center justify-center text-center">
-                <span className="text-sm font-black text-foreground">
+                <span className="text-sm font-semibold text-foreground">
                   {accuracyPercent}%
                 </span>
                 <span className="text-4xs text-muted-foreground uppercase">
@@ -495,7 +495,7 @@ export default function FlashcardStudy({
               </div>
             </div>
             <div>
-              <h3 className="text-base font-black text-foreground">
+              <h3 className="text-base font-semibold text-foreground">
                 Practice Session Finished
               </h3>
               <p className="text-xs text-muted-foreground mt-0.5">
@@ -508,19 +508,19 @@ export default function FlashcardStudy({
           <div className="flex gap-4 text-center font-semibold text-xs border-t sm:border-t-0 sm:border-l border-border/60 pt-4 sm:pt-0 sm:pl-6 w-full sm:w-auto justify-around">
             <div>
               <span className="text-muted-foreground">Got it:</span>
-              <span className="ml-1.5 text-emerald-600 font-black">
+              <span className="ml-1.5 text-emerald-600 font-semibold">
                 {gotItCount}
               </span>
             </div>
             <div>
               <span className="text-muted-foreground">Missed:</span>
-              <span className="ml-1.5 text-red-500 font-black">
+              <span className="ml-1.5 text-red-500 font-semibold">
                 {missedItCount}
               </span>
             </div>
             <div>
               <span className="text-muted-foreground">Skipped:</span>
-              <span className="ml-1.5 text-muted-foreground font-black">
+              <span className="ml-1.5 text-muted-foreground font-semibold">
                 {skippedCount}
               </span>
             </div>
@@ -531,7 +531,7 @@ export default function FlashcardStudy({
         <div className="grid gap-6 md:grid-cols-2">
           {/* Topics Covered */}
           <div className="space-y-3 bg-muted/10 p-5 rounded-2xl border border-border/65">
-            <h4 className="text-xs font-black uppercase tracking-wider text-muted-foreground">
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Topics covered
             </h4>
             <ul className="space-y-2 text-sm leading-relaxed text-foreground">
@@ -551,7 +551,7 @@ export default function FlashcardStudy({
           {/* Keep Learning / Follow-up */}
           <div className="space-y-4 flex flex-col justify-between">
             <div className="space-y-3">
-              <h4 className="text-xs font-black uppercase tracking-wider text-muted-foreground">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Keep learning
               </h4>
               <p className="text-xs text-muted-foreground leading-normal">
@@ -591,7 +591,7 @@ export default function FlashcardStudy({
 
         {/* Practice Modes footer */}
         <div className="space-y-3 pt-4 border-t border-border/80">
-          <h4 className="text-2xs font-black uppercase tracking-wider text-muted-foreground text-center">
+          <h4 className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground text-center">
             Practise again
           </h4>
           <div className="grid grid-cols-3 gap-2">
@@ -685,7 +685,7 @@ export default function FlashcardStudy({
           {/* Card Front */}
           <div className="flashcard-face absolute inset-0 p-8 flex flex-col justify-between items-center text-center">
             <div className="w-full flex justify-between items-center">
-              <span className="text-xs text-muted-foreground font-black">
+              <span className="text-xs text-muted-foreground font-semibold">
                 {currentIndex + 1} / {activeItems.length}
               </span>
 
@@ -740,7 +740,7 @@ export default function FlashcardStudy({
           {/* Card Back */}
           <div className="flashcard-face flashcard-back absolute inset-0 p-8 flex flex-col justify-between items-center text-center bg-accent/10">
             <div className="w-full flex justify-between items-center">
-              <span className="text-xs text-muted-foreground font-black">
+              <span className="text-xs text-muted-foreground font-semibold">
                 {currentIndex + 1} / {activeItems.length}
               </span>
 
@@ -859,7 +859,7 @@ export default function FlashcardStudy({
             <div className="flex items-center justify-between border-b border-border/80 px-6 py-4 bg-muted/10">
               <div className="flex items-center gap-2">
                 <Sparkles className="size-5 text-amber-500" />
-                <h3 className="text-sm font-black text-foreground">
+                <h3 className="text-sm font-semibold text-foreground">
                   AI Concept Explanation
                 </h3>
               </div>

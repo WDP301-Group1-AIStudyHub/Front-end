@@ -133,7 +133,7 @@ export function CreateArtifactDialog({
         InitiateArtifactPayload,
         "type" | "instructions" | "threadId"
       > = {
-        documentIds: selectedCount > 0 ? selectedSourceIds : undefined,
+        documentIds: selectedCount > 1 ? selectedSourceIds : undefined,
         documentId: selectedCount === 1 ? selectedSourceIds[0] : undefined,
       };
       await onCreate(type, instructions.trim(), scopeOptions);
@@ -151,18 +151,18 @@ export function CreateArtifactDialog({
 
   return (
     <Dialog onOpenChange={(open) => !open && onClose()} open={type !== null}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md min-w-0 w-full max-w-[calc(100vw-2rem)] overflow-hidden">
         {type && (
-          <>
+          <div className="flex flex-col gap-4 min-w-0 w-full overflow-hidden">
             <DialogHeader>
               <DialogTitle>
                 Create {TYPE_META[type].label.toLowerCase()}
               </DialogTitle>
             </DialogHeader>
 
-            <div className="space-y-4 py-1">
+            <div className="space-y-4 py-1 min-w-0 w-full overflow-hidden">
               {/* Topic or Focus Input */}
-              <div className="space-y-2">
+              <div className="space-y-2 min-w-0 w-full">
                 <label
                   className="text-xs font-medium text-muted-foreground"
                   htmlFor="artifact-topic"
@@ -178,30 +178,32 @@ export function CreateArtifactDialog({
                       void submit();
                     }
                   }}
-                  className="mt-2"
+                  className="mt-2 min-w-0 w-full resize-none min-h-20 max-h-36 [field-sizing:fixed]"
                   placeholder="e.g. Chapter 3: normalization and functional dependencies"
                   value={instructions}
                 />
               </div>
 
               {/* Source Scope Block */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-medium text-muted-foreground">
-                    Sources ({selectedCount} selected)
+              <div className="space-y-2 min-w-0 w-full">
+                <div className="flex items-center justify-between gap-2 min-w-0">
+                  <label className="text-xs font-medium text-muted-foreground truncate">
+                    Sources ({selectedCount} of {effectiveSources.length} selected)
                   </label>
-                  {effectiveSources.length > 1 && (
-                    <button
+                  {effectiveSources.length > 0 && (
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="xs"
                       onClick={handleToggleAll}
-                      className="text-xs font-medium text-primary hover:underline cursor-pointer"
+                      className="h-6 px-2 text-xs font-medium text-primary hover:text-primary hover:bg-primary/10 shrink-0 cursor-pointer"
                     >
                       {allSelected ? "Deselect all" : "Select all"}
-                    </button>
+                    </Button>
                   )}
                 </div>
 
-                <div className="max-h-40 overflow-y-auto rounded-lg border border-border bg-muted/30 p-2 space-y-1">
+                <div className="max-h-40 overflow-y-auto rounded-lg border border-border bg-muted/30 p-2 space-y-1 min-w-0 w-full">
                   {hasAttachedDocs ? (
                     effectiveSources.map((source) => {
                       const isChecked = selectedSourceIds.includes(source.id);
@@ -279,7 +281,7 @@ export function CreateArtifactDialog({
                 })`}
               </Button>
             </div>
-          </>
+          </div>
         )}
       </DialogContent>
     </Dialog>
