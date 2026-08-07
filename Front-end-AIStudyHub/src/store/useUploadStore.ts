@@ -5,6 +5,7 @@ import { findOrCreateSubjectByName } from "../services/subjectApi";
 import { buildQuotaErrorMessage } from "../utils/formatStorage";
 import { useStorageStore } from "./useStorageStore";
 import { INDEX_ISSUE_ACTIONS } from "../lib/chatScope";
+import { subscribeToUploadSession } from "../services/socket";
 import type { DocumentItem } from "../types/document";
 import type { StorageQuotaDetails } from "../types/storage";
 
@@ -16,6 +17,8 @@ export interface UploadItem {
   fileName: string;
   progress: number;
   status: "pending" | "uploading" | "processing" | "success" | "failed";
+  step?: string;
+  message?: string;
   error?: string;
   /**
    * Set when the upload itself succeeded but the file produced nothing
@@ -126,6 +129,14 @@ export const useUploadStore = create<UploadState>((set, get) => ({
     const id = crypto.randomUUID();
     const abortController = new AbortController();
 
+    console.log("[Upload Debug] uploadFile initiated", {
+      uploadSessionId: id,
+      fileName: payload.file.name,
+      fileSize: payload.file.size,
+      title: payload.title,
+      subjectInput: payload.subject,
+    });
+
     const newItem: UploadItem = {
       id,
       fileName: payload.file.name,
@@ -136,6 +147,36 @@ export const useUploadStore = create<UploadState>((set, get) => ({
 
     set((state) => ({ uploads: [newItem, ...state.uploads] }));
 
+    // Subscribe to real-time Socket.IO upload progress events
+    const unsubscribeSocket = subscribeToUploadSession(id, (progressPayload) => {
+      console.log(`[Upload Debug] Applying socket update to upload store item [${id}]`, progressPayload);
+      set((state) => ({
+        uploads: state.uploads.map((item) => {
+          if (item.id === id) {
+            const nextStatus =
+              progressPayload.status === "completed"
+                ? "success"
+                : progressPayload.status === "failed"
+                  ? "failed"
+                  : "processing";
+
+            return {
+              ...item,
+              progress: progressPayload.progress,
+              status: nextStatus,
+              step: progressPayload.step,
+              message: progressPayload.message,
+              error:
+                progressPayload.status === "failed"
+                  ? progressPayload.message
+                  : item.error,
+            };
+          }
+          return item;
+        }),
+      }));
+    });
+
     // Every upload entry point funnels through here, so one guard covers the
     // library dialog, the dashboard dropzone and any future caller. The server
     // is still authoritative; this only avoids a pointless round trip.
@@ -143,6 +184,7 @@ export const useUploadStore = create<UploadState>((set, get) => ({
       .getState()
       .hasCapacityFor(payload.file.size);
     if (capacity.known && !capacity.ok) {
+      unsubscribeSocket();
       const message = buildQuotaErrorMessage({
         availableBytes: capacity.available,
         packageName: useStorageStore.getState().storage?.package?.name ?? "",
@@ -164,7 +206,7 @@ export const useUploadStore = create<UploadState>((set, get) => ({
       set((state) => ({
         uploads: state.uploads.map((item) =>
           item.id === id
-            ? { ...item, status: "processing", progress: 5 }
+            ? { ...item, status: "processing", progress: 5, message: "Resolving subject..." }
             : item,
         ),
       }));
@@ -172,6 +214,10 @@ export const useUploadStore = create<UploadState>((set, get) => ({
       let subjectId = "";
       if (payload.subject?.trim()) {
         subjectId = await findOrCreateSubjectByName(payload.subject.trim());
+        console.log("[Upload Debug] Subject resolved:", {
+          inputSubject: payload.subject,
+          resolvedSubjectId: subjectId,
+        });
       } else {
         throw new Error("Subject is required");
       }
@@ -180,7 +226,7 @@ export const useUploadStore = create<UploadState>((set, get) => ({
       set((state) => ({
         uploads: state.uploads.map((item) =>
           item.id === id
-            ? { ...item, status: "uploading", progress: 10 }
+            ? { ...item, status: "uploading", progress: 10, message: "Uploading file to server..." }
             : item,
         ),
       }));
@@ -189,6 +235,7 @@ export const useUploadStore = create<UploadState>((set, get) => ({
       formData.set("file", payload.file);
       formData.set("title", payload.title.trim());
       formData.set("subjectId", subjectId);
+      formData.set("uploadSessionId", id);
       if (payload.description?.trim()) {
         formData.set("description", payload.description.trim());
       }
@@ -198,6 +245,13 @@ export const useUploadStore = create<UploadState>((set, get) => ({
       if (overwriteId) {
         formData.set("overwriteId", overwriteId);
       }
+
+      console.log(`[Upload Debug] Sending Axios POST /api/documents/upload`, {
+        uploadSessionId: id,
+        subjectId,
+        fileName: payload.file.name,
+        targetUrl: `${API_BASE_URL}/api/documents/upload`,
+      });
 
       const token = getStoredToken();
       const headers: Record<string, string> = {};
@@ -216,15 +270,28 @@ export const useUploadStore = create<UploadState>((set, get) => ({
               const percentage = Math.round(
                 (progressEvent.loaded * 100) / progressEvent.total,
               );
+              // Scale HTTP upload to 10% - 25% of total progress
+              const scaledProgress = Math.min(
+                25,
+                10 + Math.round((percentage * 15) / 100),
+              );
+              console.log(`[Upload Debug] Axios HTTP Upload Progress: ${percentage}% (scaled: ${scaledProgress}%)`);
               set((state) => ({
                 uploads: state.uploads.map((item) => {
                   if (item.id === id) {
                     const status =
                       percentage >= 100 ? "processing" : "uploading";
+                    const message =
+                      percentage >= 100
+                        ? item.message && item.message !== "Uploading file to server..."
+                          ? item.message
+                          : "Processing document on server..."
+                        : `Uploading file (${percentage}%)...`;
                     return {
                       ...item,
-                      progress: Math.min(percentage, 99),
+                      progress: Math.max(item.progress, scaledProgress),
                       status,
+                      message,
                     };
                   }
                   return item;
@@ -234,6 +301,8 @@ export const useUploadStore = create<UploadState>((set, get) => ({
           },
         },
       );
+
+      console.log("[Upload Debug] Axios HTTP response received:", response.data);
 
       if (response.data?.success) {
         // A 2xx only means the file was stored. Indexing runs inside the same
@@ -251,7 +320,13 @@ export const useUploadStore = create<UploadState>((set, get) => ({
         set((state) => ({
           uploads: state.uploads.map((item) =>
             item.id === id
-              ? { ...item, status: "success", progress: 100, warning }
+              ? {
+                  ...item,
+                  status: "success",
+                  progress: 100,
+                  message: "Upload completed successfully",
+                  warning,
+                }
               : item,
           ),
         }));
@@ -263,6 +338,7 @@ export const useUploadStore = create<UploadState>((set, get) => ({
         throw new Error(response.data?.message || "Server upload failed");
       }
     } catch (err: unknown) {
+      console.error("[Upload Debug] uploadFile caught error:", err);
       if (
         axios.isCancel(err) ||
         (err instanceof Error && err.name === "CanceledError")
@@ -298,6 +374,8 @@ export const useUploadStore = create<UploadState>((set, get) => ({
             : item,
         ),
       }));
+    } finally {
+      unsubscribeSocket();
     }
   },
 

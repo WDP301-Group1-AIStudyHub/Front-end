@@ -1,8 +1,8 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { PageShell } from "@/components/layout/PageShell";
-import { IconTile } from '@/components/shared/IconTile'
+import { PageHeader } from "@/components/layout/PageHeader";
+import { IconTile } from "@/components/shared/IconTile";
 import {
   AlertCircle,
   ArrowDownToLine,
@@ -52,9 +52,7 @@ function Panel({
   children: ReactNode;
   className?: string;
 }) {
-  return (
-    <section className={className}>{children}</section>
-  );
+  return <section className={className}>{children}</section>;
 }
 
 function KpiCard({
@@ -67,7 +65,7 @@ function KpiCard({
   detail: string;
   icon: ReactNode;
   label: string;
-  tone: 'blue' | 'emerald' | 'coral' | 'gold' | 'teal' | 'mist';
+  tone: "blue" | "emerald" | "coral" | "gold" | "teal" | "mist";
   value: string;
 }) {
   return (
@@ -80,7 +78,19 @@ function KpiCard({
           <p className="mt-3 text-3xl font-semibold tracking-tight">{value}</p>
           <p className="mt-2 text-sm text-muted-foreground">{detail}</p>
         </div>
-        <IconTile tone={tone === 'emerald' ? 'success' : tone === 'coral' ? 'destructive' : tone === 'gold' ? 'warning' : 'info'}>{icon}</IconTile>
+        <IconTile
+          tone={
+            tone === "emerald"
+              ? "success"
+              : tone === "coral"
+                ? "destructive"
+                : tone === "gold"
+                  ? "warning"
+                  : "info"
+          }
+        >
+          {icon}
+        </IconTile>
       </div>
     </article>
   );
@@ -113,7 +123,9 @@ function MetricBars({ summary }: { summary: BenchmarkSummary }) {
   return (
     <Panel className="p-4 md:p-5">
       <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-lg font-bold tracking-tight">Average score per metric</h2>
+        <h2 className="text-lg font-bold tracking-tight">
+          Average score per metric
+        </h2>
         <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
           <span className="size-3 rounded bg-primary" />
           DR-RAG judge score
@@ -205,97 +217,90 @@ export default function Summary() {
 
   return (
     <PageShell>
-        <header className="flex flex-col gap-4 border-b border-border/60 pb-5 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <div className="mb-3 flex flex-wrap items-center gap-2 text-xs font-semibold text-muted-foreground">
-              <Link to="/evaluation">
-                <span>Benchmark</span>
-              </Link>
-              <span>/</span>
-              <span className="text-foreground">Summary</span>
-              <span className="ml-2 rounded-full border border-border/70 px-2 py-1 text-[10px] uppercase tracking-[0.14em]">
-                DR-RAG
-              </span>
-            </div>
-            <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
-              Benchmark Summary
-            </h1>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Aggregate quality metrics for the single DR-RAG pipeline.
-            </p>
-          </div>
-
-          <Button
-            className="px-4"
-            onClick={exportJson}
-            size="lg"
-            type="button"
-            variant="outline"
-          >
-            <ArrowDownToLine data-icon="inline-start" aria-hidden="true" />
-            Export
-          </Button>
-        </header>
-
-        {error && (
-          <div className="flex flex-col gap-3 rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive sm:flex-row sm:items-center sm:justify-between">
-            <span className="inline-flex items-center gap-2">
-              <AlertCircle className="size-4" />
-              {error}
-            </span>
+      <PageHeader
+        title="Evaluation Summary"
+        description="Aggregate quality metrics for the single DR-RAG pipeline across all benchmark runs."
+        actions={
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={exportJson} type="button" variant="outline">
+              <ArrowDownToLine className="size-4 mr-1" aria-hidden="true" />
+              Export
+            </Button>
             <Button
-              className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+              disabled={loading}
               onClick={loadSummary}
-              size="sm"
               type="button"
               variant="outline"
             >
-              <RefreshCw data-icon="inline-start" aria-hidden="true" />
-              Retry
+              <RefreshCw
+                className={`size-4 mr-1 ${loading ? "animate-spin" : ""}`}
+                aria-hidden="true"
+              />
+              Refresh
             </Button>
           </div>
-        )}
+        }
+      />
 
-        {loading ? (
-          <Panel className="grid min-h-80 place-items-center p-8">
-            <Loader2 className="size-8 animate-spin text-muted-foreground" />
-          </Panel>
-        ) : (
-          <>
-            <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              <KpiCard
-                detail="Completed benchmark runs"
-                icon={<Sigma />}
-                label="Total benchmarks"
-                tone="blue"
-                value={String(summary.totalRuns)}
-              />
-              <KpiCard
-                detail="LLM judge aggregate"
-                icon={<BarChart3 />}
-                label="Average score"
-                tone="teal"
-                value={scoreText(summary.averageScore)}
-              />
-              <KpiCard
-                detail="Grounded in retrieved context"
-                icon={<CheckCircle2 />}
-                label="Faithfulness"
-                tone="mist"
-                value={percent(summary.averageFaithfulness)}
-              />
-              <KpiCard
-                detail="Matches the expected answer"
-                icon={<CheckCircle2 />}
-                label="Correctness"
-                tone="gold"
-                value={percent(summary.averageAnswerCorrectness)}
-              />
-            </section>
+      {error && (
+        <div className="flex flex-col gap-3 rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive sm:flex-row sm:items-center sm:justify-between">
+          <span className="inline-flex items-center gap-2">
+            <AlertCircle className="size-4" />
+            {error}
+          </span>
+          <Button
+            className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+            onClick={loadSummary}
+            size="sm"
+            type="button"
+            variant="outline"
+          >
+            <RefreshCw data-icon="inline-start" aria-hidden="true" />
+            Retry
+          </Button>
+        </div>
+      )}
 
-            <MetricBars summary={summary} />
-          </>
-        )}
+      {loading ? (
+        <Panel className="grid min-h-80 place-items-center p-8">
+          <Loader2 className="size-8 animate-spin text-muted-foreground" />
+        </Panel>
+      ) : (
+        <>
+          <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <KpiCard
+              detail="Completed benchmark runs"
+              icon={<Sigma />}
+              label="Total benchmarks"
+              tone="blue"
+              value={String(summary.totalRuns)}
+            />
+            <KpiCard
+              detail="LLM judge aggregate"
+              icon={<BarChart3 />}
+              label="Average score"
+              tone="teal"
+              value={scoreText(summary.averageScore)}
+            />
+            <KpiCard
+              detail="Grounded in retrieved context"
+              icon={<CheckCircle2 />}
+              label="Faithfulness"
+              tone="mist"
+              value={percent(summary.averageFaithfulness)}
+            />
+            <KpiCard
+              detail="Matches the expected answer"
+              icon={<CheckCircle2 />}
+              label="Correctness"
+              tone="gold"
+              value={percent(summary.averageAnswerCorrectness)}
+            />
+          </section>
+
+          <MetricBars summary={summary} />
+        </>
+      )}
     </PageShell>
   );
 }

@@ -13,7 +13,7 @@ import { NOTICE_TEXT, askErrorText, quotaErrorText } from "@/lib/agentNotices";
 import type { AskChatPayload, AskChatResponse } from "@/types/chat";
 import { PageShell } from "@/components/layout/PageShell";
 import { SourcesPanelProvider } from "@/components/chat/sources/sourcesPanelStore";
-import { ChatRightRail } from "@/components/chat/sources/SourcesAside";
+import { SourcesAside } from "@/components/chat/sources/SourcesAside";
 import { useAskThreadListAdapter } from "@/components/chat/threads/useAskThreadListAdapter";
 import { useChatThreadStore } from "@/store/useChatThreadStore";
 import {
@@ -164,8 +164,8 @@ function AskPageContent() {
                     (event.phase === "retrieving"
                       ? "Searching your notes..."
                       : event.phase === "verifying"
-                      ? "Verifying answer against your notes..."
-                      : "Applying citations...");
+                        ? "Verifying answer against your notes..."
+                        : "Applying citations...");
 
                   // `verifying` and `citing` run after the answer has already
                   // streamed, and the last agent_step cleared
@@ -281,7 +281,10 @@ function AskPageContent() {
                 const quotaText = quotaErrorText(error);
                 if (quotaText) {
                   errorAnswer = quotaText;
-                } else if (error instanceof ChatApiError && error.status >= 500) {
+                } else if (
+                  error instanceof ChatApiError &&
+                  error.status >= 500
+                ) {
                   errorAnswer =
                     "The server is busy or still waking up. Please send the message again in 10-15 seconds.";
                 } else {
@@ -297,7 +300,11 @@ function AskPageContent() {
           const chunkSize = 4;
           const delayMs = 12;
 
-          while (!isDone || pendingAnswerDeltas.length > 0 || finalResult !== null) {
+          while (
+            !isDone ||
+            pendingAnswerDeltas.length > 0 ||
+            finalResult !== null
+          ) {
             if (abortSignal?.aborted) break;
 
             // Widened local: `finalResult` is only ever assigned inside the
@@ -477,7 +484,7 @@ function AskPageContent() {
       <AssistantRuntimeProvider runtime={runtime}>
         <SourcesPanelProvider>
           <Thread components={threadComponents} />
-          <ChatRightRail className="absolute top-17 right-4 max-w-90" />
+          <SourcesAside className="absolute top-17 right-4 max-w-90" />
         </SourcesPanelProvider>
       </AssistantRuntimeProvider>
     </PageShell>

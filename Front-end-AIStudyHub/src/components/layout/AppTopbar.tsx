@@ -19,6 +19,7 @@ const routeLabels: Record<string, string> = {
   '/evaluation/new': 'New benchmark question',
   '/evaluation/summary': 'Evaluation summary',
   '/profile': 'Profile',
+  '/settings': 'Settings',
   '/admin': 'Admin Dashboard',
   '/admin/users': 'Users',
   '/admin/documents': 'Documents',
@@ -82,10 +83,10 @@ export default function AppTopbar() {
         </form>
       ) : null}
 
-      <Button asChild aria-label="Open profile" className="shrink-0" size="icon-sm" variant="ghost">
-        <Link to="/profile">
+      <Button asChild aria-label="Open settings" className="shrink-0" size="icon-sm" variant="ghost">
+        <Link to="/settings">
           <CircleUserRound aria-hidden="true" />
-          <span className="sr-only">Profile</span>
+          <span className="sr-only">Settings</span>
         </Link>
       </Button>
     </header>

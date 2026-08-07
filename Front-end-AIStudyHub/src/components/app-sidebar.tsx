@@ -45,7 +45,7 @@ function SidebarUsageCard() {
 
   if (planState.kind === "loading") {
     return (
-      <div className="rounded-lg border border-sidebar-border bg-sidebar-accent/30 p-3.5 shadow-2xs group-data-[collapsible=icon]:hidden animate-pulse">
+      <div className="rounded-lg border border-sidebar-border bg-card p-3.5 shadow-2xs group-data-[collapsible=icon]:hidden animate-pulse">
         <div className="flex items-center justify-between text-xs font-medium text-sidebar-foreground">
           <div className="h-3.5 w-20 rounded bg-sidebar-accent" />
           <div className="h-3.5 w-8 rounded bg-sidebar-accent" />
@@ -71,9 +71,9 @@ function SidebarUsageCard() {
             value={planState.percentage}
             className="h-1.5 mt-2 bg-warning/20"
           />
-          <div className="mt-2.5">
+          <div className="mt-1">
             <Link
-              to="/profile"
+              to="/settings"
               className="inline-flex items-center gap-1 text-xs font-semibold text-warning-foreground hover:underline"
             >
               Fix your key <ExternalLink className="size-3" />
@@ -92,9 +92,9 @@ function SidebarUsageCard() {
           <p className="mt-1 text-[11px] leading-tight text-destructive-foreground/90">
             Your key is broken and monthly free quota is exhausted.
           </p>
-          <div className="mt-2.5">
+          <div className="mt-1">
             <Link
-              to="/profile"
+              to="/settings"
               className="inline-flex items-center gap-1 text-xs font-semibold text-destructive-foreground hover:underline"
             >
               Fix your key <ExternalLink className="size-3" />
@@ -105,25 +105,23 @@ function SidebarUsageCard() {
 
     case "byok":
       return (
-        <div className="rounded-lg border border-sidebar-border bg-sidebar-accent/30 p-3.5 shadow-2xs group-data-[collapsible=icon]:hidden">
+        <div className="rounded-lg border border-sidebar-border bg-card p-3.5 shadow-2xs group-data-[collapsible=icon]:hidden">
           <div className="flex items-center justify-between text-xs font-medium text-sidebar-foreground">
             <span>BYOK Plan</span>
             <span className="text-muted-foreground font-medium">Active</span>
           </div>
-          <div className="mt-2">
-            <Link
-              to="/profile"
-              className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-            >
-              Manage key <ExternalLink className="size-3" />
-            </Link>
-          </div>
+          <Link
+            to="/settings"
+            className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+          >
+            Manage key <ExternalLink className="size-3" />
+          </Link>
         </div>
       );
 
     case "exempt":
       return (
-        <div className="rounded-lg border border-sidebar-border bg-sidebar-accent/30 p-3.5 shadow-2xs group-data-[collapsible=icon]:hidden">
+        <div className="rounded-lg border border-sidebar-border bg-card p-3.5 shadow-2xs group-data-[collapsible=icon]:hidden">
           <div className="flex items-center justify-between text-xs font-medium text-sidebar-foreground">
             <span>Unlimited Plan</span>
             <span className="text-muted-foreground font-medium">Active</span>
@@ -139,9 +137,9 @@ function SidebarUsageCard() {
             <span className="font-semibold">Limit reached</span>
           </div>
           <Progress value={100} className="h-1.5 mt-2.5 bg-destructive/20" />
-          <div className="mt-2">
+          <div className="mt-1">
             <Link
-              to="/profile"
+              to="/settings"
               className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
             >
               Add a key <ExternalLink className="size-3" />
@@ -152,7 +150,7 @@ function SidebarUsageCard() {
 
     case "counting":
       return (
-        <div className="rounded-lg border border-sidebar-border bg-sidebar-accent/30 p-3.5 shadow-2xs group-data-[collapsible=icon]:hidden">
+        <div className="rounded-lg border border-sidebar-border bg-card p-3.5 shadow-2xs group-data-[collapsible=icon]:hidden">
           <div className="flex items-center justify-between text-xs font-medium text-sidebar-foreground">
             <span>Free Plan usage</span>
             <span className="text-muted-foreground">
@@ -163,9 +161,9 @@ function SidebarUsageCard() {
             value={planState.percentage}
             className="h-1.5 mt-2.5 bg-sidebar-accent"
           />
-          <div className="mt-2">
+          <div className="mt-1">
             <Link
-              to="/profile"
+              to="/settings"
               className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
             >
               Add a key <ExternalLink className="size-3" />

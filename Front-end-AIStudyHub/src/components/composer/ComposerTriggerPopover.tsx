@@ -83,7 +83,7 @@ export const ComposerTriggerPopover: FC<ComposerTriggerPopoverProps> = ({
 
       {/* Loading state */}
       {isLoading && (
-        <div className="text-muted-foreground flex items-center justify-center gap-2 p-3 text-xs">
+        <div className="animate-slide-up-fade absolute bottom-full px-1 pb-3 text-muted-foreground flex items-center justify-center gap-2 text-xs">
           <Loader2 className="size-4 animate-spin" />
           <span>Loading options...</span>
         </div>

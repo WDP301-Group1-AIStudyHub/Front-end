@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import {
   AlertTriangle,
-  Lock,
   RefreshCw,
   ShieldCheck,
   Sparkles,
@@ -24,14 +23,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { notifyAiUsageChanged } from "@/hooks/useAiUsage";
 import { ApiClientError } from "@/services/apiClient";
@@ -171,30 +163,8 @@ export function AiCredentialSettings() {
   };
 
   return (
-    <Card>
-      <CardHeader className="pb-4">
-        <CardTitle>Bring Your Own Key (BYOK)</CardTitle>
-        <CardDescription>
-          Connect your Google Gemini API key for unlimited AI features across AI
-          Study Hub.
-        </CardDescription>
-        <CardAction>
-          <div className="flex items-center justify-between">
-            {status && status.status === "valid" && (
-              <Badge className="bg-success/15 text-success border-success/30 font-medium">
-                <ShieldCheck className="size-3.5 mr-1" /> Valid Key Active
-              </Badge>
-            )}
-            {status && status.status === "invalid" && (
-              <Badge className="bg-warning/15 text-warning-foreground border-warning/30 font-medium">
-                <AlertTriangle className="size-3.5 mr-1" /> Action Required
-              </Badge>
-            )}
-          </div>
-        </CardAction>
-      </CardHeader>
-
-      <CardContent className="space-y-4">
+    <Card className="py-4">
+      <CardContent className="space-y-4 px-4">
         {/* Loading state */}
         {loading ? (
           <div className="py-8 flex justify-center">
@@ -204,27 +174,37 @@ export function AiCredentialSettings() {
           <>
             {/* Key Status Header info when a key is present or invalid */}
             {status && status.status !== "none" && (
-              <div className="rounded-xl border border-border bg-muted/20 p-4 space-y-3">
+              <div className="rounded-md border border-border bg-muted/20 p-4 space-y-3">
                 <div className="flex items-center justify-between flex-wrap gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  <div className="flex flex-col">
+                    <span className="text-xs font-medium text-muted-foreground uppercase">
                       Provider
                     </span>
                     <span className="text-sm font-semibold capitalize">
                       Google Gemini
                     </span>
                   </div>
+
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Key
-                    </span>
-                    <span className="font-mono text-xs bg-background border border-border px-2 py-0.5 rounded">
+                    <span className="font-mono text-sm ">
                       ••••••••{status.last4 || "????"}
                     </span>
+                    <div className="flex items-center justify-between">
+                      {status && status.status === "valid" && (
+                        <Badge className="bg-success/15 text-success border-success/30 font-medium">
+                          <ShieldCheck className="size-3.5" /> Valid Key Active
+                        </Badge>
+                      )}
+                      {status && status.status === "invalid" && (
+                        <Badge className="bg-warning/15 text-warning-foreground border-warning/30 font-medium">
+                          <AlertTriangle className="size-3.5" /> Action Required
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-muted-foreground pt-1 border-t border-border/60">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-muted-foreground pt-4 border-t border-border/60">
                   <div>
                     <span className="font-medium text-foreground">Added: </span>
                     {formatDate(status.addedAt)}
@@ -241,7 +221,7 @@ export function AiCredentialSettings() {
 
             {/* Warning banner for invalid key */}
             {status && status.status === "invalid" && (
-              <div className="rounded-xl border border-warning/30 bg-warning/15 p-4 text-xs text-warning-foreground leading-relaxed flex items-start gap-3">
+              <div className="rounded-md border border-warning/30 bg-warning/15 p-4 text-xs text-warning-foreground leading-relaxed flex items-start gap-3">
                 <AlertTriangle className="size-4 shrink-0 mt-0.5 text-warning-foreground" />
                 <div className="space-y-1">
                   <p className="font-semibold">Key validation failed</p>
@@ -257,17 +237,15 @@ export function AiCredentialSettings() {
 
             {/* Explanation box for NO key */}
             {(!status || status.status === "none") && (
-              <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-xs text-muted-foreground leading-relaxed flex items-start gap-3">
-                <Sparkles className="size-4 text-primary shrink-0 mt-0.5" />
-                <div className="space-y-1">
-                  <p className="font-semibold text-foreground">
-                    Unlock Unlimited AI Questions
-                  </p>
-                  <p>
-                    Without an API key, your account receives 20 free AI queries
-                    per monthly billing cycle. Providing your Google Gemini key
-                    gives you unlimited study assistance, faster response
-                    generation, and priority document chat.
+              <div className="rounded-md border border-primary/20 bg-primary/5 p-4 text-sm  leading-relaxed flex items-start gap-3 text-primary">
+                <Sparkles className="size-4 shrink-0 mt-0.5" />
+                <div className="">
+                  <p className="font-medium">Unlock Unlimited AI Questions</p>
+                  <p className="text-xs leading-relaxed">
+                    Without an API key, your account receives 15 free AI queries
+                    per week. Providing your Google Gemini key gives you
+                    unlimited study assistance, faster response generation, and
+                    priority document chat.
                   </p>
                 </div>
               </div>
@@ -285,13 +263,12 @@ export function AiCredentialSettings() {
                   <div className="relative flex-1">
                     <Input
                       type="password"
-                      placeholder="Paste your Gemini API key (e.g. AIzaSy...)"
+                      placeholder="AQ..."
                       value={apiKeyInput}
                       onChange={(e) => setApiKeyInput(e.target.value)}
                       disabled={saving || deleting}
                       className="pr-10"
                     />
-                    <Lock className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/60 pointer-events-none" />
                   </div>
                   <Button
                     type="submit"
@@ -304,16 +281,11 @@ export function AiCredentialSettings() {
                     )}
                   </Button>
                 </div>
-                <p className="text-[11px] text-muted-foreground flex items-center gap-1 mt-1">
-                  <Lock className="size-3" />
-                  Your key is validated live and encrypted securely. It is never
-                  exposed back to the UI.
-                </p>
               </div>
 
               {/* Error display */}
               {error && (
-                <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-3.5 text-xs text-destructive flex items-start gap-2.5">
+                <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3.5 text-xs text-destructive flex items-start gap-2.5">
                   <AlertTriangle className="size-4 shrink-0 mt-0.5" />
                   <div>
                     <p className="font-semibold">
@@ -348,7 +320,7 @@ export function AiCredentialSettings() {
                         <AlertDialogTitle>Remove API Key?</AlertDialogTitle>
                         <AlertDialogDescription>
                           Are you sure you want to remove your Google Gemini API
-                          key? Your account will revert to the standard 20 free
+                          key? Your account will revert to the standard 15 free
                           messages per period.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
@@ -373,7 +345,7 @@ export function AiCredentialSettings() {
 
             {/* Dev Scenario Control (Mock Mode Only) */}
             {isMockAiActive && (
-              <div className="mt-6 pt-4 border-t border-dashed border-border/80 bg-muted/10 p-3.5 rounded-xl space-y-2">
+              <div className="mt-6 pt-4 border-t border-dashed border-border/80 bg-muted/10 p-3.5 rounded-md space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
                     <Zap className="size-3 text-warning" /> Dev Mock Scenario

@@ -39,6 +39,7 @@ import {
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageShell } from "@/components/layout/PageShell";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Sheet,
@@ -821,19 +822,10 @@ export default function NewAIChatboxPage() {
 
   return (
     <PageShell variant="full">
-      <header className="border-b border-border px-2 pb-4 sm:px-3">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-3">
-            <div>
-              <h1 className="text-xl font-bold tracking-tight md:text-2xl">
-                AI Study Chat
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Searches and verifies before answering
-              </p>
-            </div>
-          </div>
-
+      <PageHeader
+        title="AI Chat Assistant"
+        description="Ask questions, generate practice questions, and extract insights from your documents."
+        actions={
           <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
             {threadId && (
               <Button
@@ -858,8 +850,8 @@ export default function NewAIChatboxPage() {
               Study context
             </Button>
           </div>
-        </div>
-      </header>
+        }
+      />
 
       <div
         className="mt-4 grid min-h-0 w-full flex-1 grid-cols-1 overflow-hidden lg:grid-cols-[minmax(0,1fr)_12px_var(--context-panel-width)]"

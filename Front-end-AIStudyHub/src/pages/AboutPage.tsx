@@ -1,6 +1,7 @@
 import { BookOpenCheck, Brain, Compass, Library } from "lucide-react";
 import { IconTile } from "@/components/shared/IconTile";
 import PublicNav from "@/components/shared/PublicNav";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 const stats = [
   ["Multi-format", "Document support"],
@@ -33,20 +34,11 @@ export default function AboutPage() {
       <PublicNav dashboardHref="/#workflow" />
 
       <main className="pb-20 pt-28 md:pt-32">
-        <section className="mx-auto grid w-[min(100%,1120px)] gap-8 px-4 py-12 md:grid-cols-[0.75fr_1fr] md:px-6">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Built for researchers
-          </p>
-          <div>
-            <h1 className="text-[clamp(2.5rem,6vw,4.8rem)] font-bold leading-none">
-              About AI Study Hub
-            </h1>
-            <p className="mt-6 max-w-[68ch] text-base leading-7 text-muted-foreground md:text-lg">
-              AI Study Hub helps students and researchers turn dense academic
-              material into searchable insight, guided study, and sharper
-              evaluation.
-            </p>
-          </div>
+        <section className="mx-auto w-[min(100%,1120px)] px-4 py-8 md:px-6">
+          <PageHeader
+            title="About AI Study Hub"
+            description="AI Study Hub helps students and researchers turn dense academic material into searchable insight, guided study, and sharper evaluation."
+          />
         </section>
 
         <section className="mx-auto grid w-[min(100%,1120px)] gap-5 px-4 md:grid-cols-[1.05fr_0.95fr] md:px-6">

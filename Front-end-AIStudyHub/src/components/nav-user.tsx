@@ -1,11 +1,10 @@
 "use client";
 
 import {
-  AlertTriangle,
-  KeyRound,
   LogOut,
   MoreHorizontalIcon,
-  UserRound,
+  Settings,
+  UserCircle2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -23,7 +22,6 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { useAiUsage, deriveAiPlanState } from "@/hooks/useAiUsage";
 
 export function NavUser({
   onLogout,
@@ -38,8 +36,6 @@ export function NavUser({
 }) {
   const { isMobile } = useSidebar();
   const navigate = useNavigate();
-  const { usage } = useAiUsage();
-  const planState = deriveAiPlanState(usage);
 
   const initials = user.name
     .split(" ")
@@ -47,11 +43,6 @@ export function NavUser({
     .join("")
     .slice(0, 2)
     .toUpperCase();
-
-  const isDegraded =
-    planState.kind === "degraded" || planState.kind === "degraded_exhausted";
-  const isExhausted =
-    planState.kind === "exhausted" || planState.kind === "degraded_exhausted";
 
   return (
     <SidebarMenu>
@@ -69,20 +60,6 @@ export function NavUser({
                   )}
                   <AvatarFallback>{initials}</AvatarFallback>
                 </Avatar>
-
-                {/* Collapsed sidebar icon affordances */}
-                {isDegraded && (
-                  <span
-                    className="absolute -top-0.5 -right-0.5 flex size-3 rounded-full bg-warning border-2 border-sidebar shadow-xs"
-                    title="Degraded state: Saved API key is invalid"
-                  />
-                )}
-                {isExhausted && !isDegraded && (
-                  <span
-                    className="absolute -top-0.5 -right-0.5 flex size-3 rounded-full bg-destructive border-2 border-sidebar shadow-xs"
-                    title="Quota exhausted"
-                  />
-                )}
               </div>
 
               {/* Name only: the plan and quota live in SidebarUsageCard
@@ -118,24 +95,14 @@ export function NavUser({
               </div>
             </div>
 
-            {/* Degraded prompt in dropdown */}
-            {isDegraded && (
-              <div className="mx-1 my-1.5 rounded-lg border border-warning/30 bg-warning/15 p-2 text-xs text-warning-foreground leading-snug flex items-start gap-1.5">
-                <AlertTriangle className="size-3.5 shrink-0 mt-0.5" />
-                <span>
-                  Your key is broken. Free quota is currently being spent.
-                </span>
-              </div>
-            )}
-
             <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={() => navigate("/profile")}>
-              <UserRound />
-              Edit Profile
+              <UserCircle2 />
+              Profile
             </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => navigate("/profile")}>
-              <KeyRound />
-              Manage API Key (BYOK)
+            <DropdownMenuItem onSelect={() => navigate("/settings")}>
+              <Settings />
+              Settings
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onLogout}>
