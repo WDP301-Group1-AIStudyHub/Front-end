@@ -131,27 +131,42 @@ export function DocumentPreviewPage({
   const [isSummaryShareOpen, setIsSummaryShareOpen] = useState(false);
   const pollTimeoutRef = useRef<number | null>(null);
   const pollGenerationRef = useRef(0);
+  // Tracks the id this instance has already fetched (or is fetching), so the
+  // detail call only ever runs once per id — not once when initialDocument
+  // is still unresolved and again the moment the parent's document list
+  // finishes loading and hands us the same document under a new object
+  // identity.
+  const fetchedDocumentIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     setDocument(initialDocument);
 
     const documentId = initialDocument?.id ||
       (/^[a-f0-9]{24}$/i.test(previewParam) ? previewParam : "");
-    if (!documentId) return;
+    if (!documentId || fetchedDocumentIdRef.current === documentId) return;
 
+    fetchedDocumentIdRef.current = documentId;
     let cancelled = false;
     getDocument(documentId)
       .then((detail) => {
         if (!cancelled) setDocument(detail);
       })
       .catch(() => {
-        // Keep the list item or filename fallback if the detail request fails.
+        // Keep the list item or filename fallback, and allow a retry if the
+        // id comes back around (e.g. the list resolves after this failed).
+        if (!cancelled) fetchedDocumentIdRef.current = null;
       });
 
     return () => {
       cancelled = true;
     };
-  }, [initialDocument, previewParam]);
+    // initialDocument is intentionally not a dep: the parent's document list
+    // re-fetches independently and hands us a new object identity for the
+    // same id, which used to re-trigger this effect and double-fetch the
+    // document. Only an actual id or previewParam change should re-run it,
+    // and the ref guard above still applies even then.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialDocument?.id, previewParam]);
 
   useEffect(() => {
     return () => {
