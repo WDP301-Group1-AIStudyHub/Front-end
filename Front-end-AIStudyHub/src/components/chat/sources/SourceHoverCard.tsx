@@ -15,6 +15,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface SourceHoverCardProps {
   group: GroupedSource;
@@ -49,7 +50,7 @@ export const SourceHoverCard: React.FC<SourceHoverCardProps> = ({
       </div>
 
       {/* Chunk Excerpts */}
-      <div className="flex flex-col gap-2.5 max-h-60 overflow-y-auto scrollbar-thin pr-1">
+      <ScrollArea className="flex flex-col gap-2.5 max-h-40 pr-2">
         {visibleChunks.map((chunk, idx) => {
           const locator = sourceLocator(chunk);
           return (
@@ -62,7 +63,7 @@ export const SourceHoverCard: React.FC<SourceHoverCardProps> = ({
                   {locator}
                 </div>
               )}
-              <p className="line-clamp-3 text-muted-foreground/90 leading-relaxed text-xs whitespace-pre-wrap">
+              <p className="text-muted-foreground leading-relaxed text-[13px] whitespace-pre-wrap">
                 {chunk.contentPreview}
               </p>
             </div>
@@ -74,7 +75,7 @@ export const SourceHoverCard: React.FC<SourceHoverCardProps> = ({
             +{remainingCount} more section{remainingCount > 1 ? "s" : ""}
           </div>
         )}
-      </div>
+      </ScrollArea>
 
       {/* Footer */}
       <div className="pt-2 border-t border-border/50 flex items-center justify-between">
@@ -110,9 +111,9 @@ export const SourceHoverCard: React.FC<SourceHoverCardProps> = ({
   }
 
   return (
-    <HoverCard openDelay={200} closeDelay={150}>
+    <HoverCard openDelay={200} closeDelay={200}>
       <HoverCardTrigger asChild>{children}</HoverCardTrigger>
-      <HoverCardContent className="w-80 p-3" align="start">
+      <HoverCardContent className="w-80 p-3.5" align="start">
         {cardContent}
       </HoverCardContent>
     </HoverCard>

@@ -1,4 +1,4 @@
-import { Loader2, Plus, FileText, MessageSquare } from "lucide-react";
+import { Loader2, Plus, FileText, MessageCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import {
@@ -15,6 +15,7 @@ import type {
 } from "@/services/artifactApi";
 import type { DocumentItem } from "@/types/document";
 import { TYPE_META } from "./artifactTypes";
+import { Textarea } from "@/components/ui/textarea";
 
 export interface SessionSource {
   id: string;
@@ -168,8 +169,7 @@ export function CreateArtifactDialog({
                 >
                   Topic or focus (optional)
                 </label>
-                <textarea
-                  className="min-h-20 w-full resize-none rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary/50"
+                <Textarea
                   id="artifact-topic"
                   onChange={(event) => setInstructions(event.target.value)}
                   onKeyDown={(event) => {
@@ -178,6 +178,7 @@ export function CreateArtifactDialog({
                       void submit();
                     }
                   }}
+                  className="mt-2"
                   placeholder="e.g. Chapter 3: normalization and functional dependencies"
                   value={instructions}
                 />
@@ -237,8 +238,8 @@ export function CreateArtifactDialog({
                         onChange={(e) => setUseChatHistory(e.target.checked)}
                         className="h-4 w-4 rounded border-input text-primary focus:ring-primary/40 accent-primary"
                       />
-                      <MessageSquare className="size-4 shrink-0 text-muted-foreground" />
-                      <span className="text-xs font-medium">
+                      <MessageCircle className="size-4 shrink-0 text-muted-foreground" />
+                      <span className="text-sm font-medium">
                         Use conversation history as source
                       </span>
                     </label>
@@ -259,14 +260,10 @@ export function CreateArtifactDialog({
             </div>
 
             <div className="flex justify-end gap-2">
-              <Button onClick={onClose} size="sm" variant="ghost">
+              <Button onClick={onClose} variant="ghost">
                 Cancel
               </Button>
-              <Button
-                disabled={!canSubmit}
-                onClick={() => void submit()}
-                size="sm"
-              >
+              <Button disabled={!canSubmit} onClick={() => void submit()}>
                 {submitting ? (
                   <Loader2
                     className="size-3.5 animate-spin"

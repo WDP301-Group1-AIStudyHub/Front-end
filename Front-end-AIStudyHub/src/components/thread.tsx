@@ -290,9 +290,9 @@ const ThreadSuggestions: FC = () => {
           >
             <Button
               variant="ghost"
-              className="text-muted-foreground hover:bg-muted border-border h-auto gap-1.5 rounded-full border px-3.5 py-2 font-normal whitespace-nowrap transition-colors"
+              className="hover:bg-muted border-border text-muted-foreground shadow-xs h-auto gap-1.5 rounded-full border px-3.5 py-2 font-normal whitespace-nowrap transition-colors"
             >
-              <Icon className="size-4 text-muted-foreground" />
+              <Icon className="size-4" />
               {prompt}
             </Button>
           </ThreadPrimitive.Suggestion>
@@ -308,7 +308,7 @@ const ThreadSuggestionItem: FC = () => {
       <SuggestionPrimitive.Trigger asChild>
         <Button
           variant="ghost"
-          className="aui-thread-welcome-suggestion text-foreground hover:bg-muted border-border/60 h-auto gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-normal whitespace-nowrap transition-colors"
+          className="aui-thread-welcome-suggestion text-foreground hover:bg-muted border-border/60 h-auto gap-1.5 rounded-full border px-3.5 py-1.5 font-normal whitespace-nowrap transition-colors"
         >
           <SuggestionPrimitive.Title className="aui-thread-welcome-suggestion-text-1" />
           <SuggestionPrimitive.Description className="aui-thread-welcome-suggestion-text-2 empty:hidden" />
@@ -389,7 +389,7 @@ const ComposerInputArea: FC = () => {
       {ComposerInputOverlay && <ComposerInputOverlay />}
       <ComposerPrimitive.Input
         placeholder="Ask anything — @ for documents, / for actions"
-        className="aui-composer-input text-sm caret-primary placeholder:text-muted-foreground/80 max-h-32 min-h-10 w-full resize-none bg-transparent px-2 py-1 outline-none"
+        className="aui-composer-input caret-primary placeholder:text-muted-foreground/80 max-h-32 min-h-10 w-full resize-none bg-transparent px-2 py-1 outline-none"
         rows={1}
         autoFocus
         enterKeyHint="send"
@@ -542,7 +542,7 @@ const AssistantMessage: FC = () => {
     >
       <div
         data-slot="aui_assistant-message-content"
-        className="text-foreground px-2 leading-relaxed wrap-break-word text-sm"
+        className="text-foreground px-2 leading-relaxed wrap-break-word"
       >
         <MessagePrimitive.GroupedParts groupBy={groupAskParts}>
           {({ part, children }) => {
@@ -570,7 +570,7 @@ const AssistantMessage: FC = () => {
                 }
                 const running = part.status.type === "running";
                 return (
-                  <ReasoningRoot streaming={running}>
+                  <ReasoningRoot streaming={running} variant={"ghost"}>
                     <ReasoningTrigger active={running} />
                     <ReasoningContent aria-busy={running}>
                       <ReasoningText>{children}</ReasoningText>
@@ -679,7 +679,7 @@ const UserMessage: FC = () => {
       <UserMessageAttachments />
 
       <div className="aui-user-message-content-wrapper relative col-start-2 min-w-0">
-        <div className="aui-user-message-content peer bg-muted text-foreground text-sm rounded-xl px-4 py-2 wrap-break-word empty:hidden">
+        <div className="aui-user-message-content peer bg-muted text-foreground rounded-xl px-4 py-2 wrap-break-word empty:hidden">
           <MessagePrimitive.Parts
             components={UserMessageText ? { Text: UserMessageText } : undefined}
           />
@@ -721,7 +721,7 @@ const EditComposer: FC = () => {
     >
       <ComposerPrimitive.Root className="aui-edit-composer-root border-border/60 dark:border-muted-foreground/15 ms-auto flex w-full max-w-[85%] flex-col rounded-(--composer-radius) border bg-(--composer-bg) shadow-[0_4px_16px_-8px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-none">
         <ComposerPrimitive.Input
-          className="aui-edit-composer-input text-foreground min-h-14 w-full resize-none bg-transparent px-4 pt-3 pb-1 text-sm outline-none"
+          className="aui-edit-composer-input text-foreground min-h-14 w-full resize-none bg-transparent px-4 pt-3 pb-1 outline-none"
           autoFocus
         />
         <div className="aui-edit-composer-footer mx-2.5 mb-2.5 flex items-center gap-1.5 self-end">

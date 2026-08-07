@@ -21,7 +21,12 @@ import { TYPE_META } from "./artifactTypes";
 import { ArtifactPreviewDialog } from "./ArtifactPreviewDialog";
 import { CreateArtifactDialog } from "./CreateArtifactDialog";
 
-export function ArtifactsPanel({ className }: { className?: string }) {
+export function ArtifactsPanel({
+  className,
+}: {
+  className?: string;
+  collapsible?: boolean;
+}) {
   const { artifacts, create, remove, retry } = useArtifacts();
   const [isOpen, setIsOpen] = useState(true);
   const [createType, setCreateType] = useState<ArtifactType | null>(null);
@@ -46,7 +51,7 @@ export function ArtifactsPanel({ className }: { className?: string }) {
           className ?? ""
         }`}
       >
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border/60">
+        <div className="flex items-center justify-between px-4 py-3">
           <CollapsibleTrigger asChild>
             <button
               type="button"
@@ -80,10 +85,10 @@ export function ArtifactsPanel({ className }: { className?: string }) {
                   key={type}
                   variant="outline"
                   size="sm"
-                  className="h-7 text-xs gap-1.5 rounded-lg border-border/60 text-muted-foreground hover:text-foreground"
+                  className="h-7 text-xs bg-card gap-1.5 rounded-lg border-border/60"
                   onClick={() => setCreateType(type)}
                 >
-                  <Icon className="size-3.5" />
+                  <Icon className="size-3.5 text-primary" />
                   {meta.label}
                   <Plus className="size-3 opacity-60" />
                 </Button>
@@ -145,7 +150,7 @@ export function ArtifactsPanel({ className }: { className?: string }) {
                 return (
                   <div
                     key={record._id}
-                    className="group flex items-center justify-between gap-2 rounded-lg border border-border/70 bg-background/50 p-2.5 text-xs hover:bg-muted/50 transition-colors"
+                    className="group flex items-center justify-between gap-2 rounded-lg border border-border/70 bg-card shadow-xs p-2.5 text-xs hover:bg-muted/50 transition-colors"
                   >
                     <button
                       type="button"

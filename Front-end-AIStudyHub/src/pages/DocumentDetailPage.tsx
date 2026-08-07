@@ -55,9 +55,7 @@ import {
   deriveAiPlanState,
   notifyAiUsageChanged,
 } from "@/hooks/useAiUsage";
-import {
-  MARKDOWN_PREVIEW_CLASS,
-} from "@/components/chat/artifacts/artifactTypes";
+import { MARKDOWN_PREVIEW_CLASS } from "@/components/chat/artifacts/artifactTypes";
 import { CopyButton } from "@/components/chat/artifacts/ArtifactPreviewDialog";
 import {
   Select,
@@ -76,6 +74,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+} from "@/components/ui/card";
+import { BorderBeam } from "border-beam";
 
 const SUMMARY_POLL_INTERVAL_MS = 2000;
 const SUMMARY_POLL_TIMEOUT_MS = 90_000;
@@ -102,7 +107,7 @@ function QuotaBadge() {
 
   if (planState.kind === "byok" || planState.kind === "exempt") {
     return (
-      <span className="text-xs font-medium text-muted-foreground">
+      <span className="text-sm font-medium text-muted-foreground">
         Unlimited summaries
       </span>
     );
@@ -114,9 +119,8 @@ function QuotaBadge() {
   ) {
     return (
       <span className="text-xs font-medium text-warning">
-        Your API key has an issue — using free quota (
-        {planState.used}/{planState.limit})
-        {" · "}
+        Your API key has an issue — using free quota ({planState.used}/
+        {planState.limit}){" · "}
         <Link className="underline" to="/settings">
           Fix key
         </Link>
@@ -126,8 +130,8 @@ function QuotaBadge() {
 
   return (
     <span className="text-xs font-medium text-muted-foreground">
-      {planState.limit - planState.used}/{planState.limit} summaries left
-      this week
+      {planState.limit - planState.used}/{planState.limit} summaries left this
+      week
     </span>
   );
 }
@@ -162,21 +166,25 @@ function InfoCard({
   items: Array<{ label: string; value: string | number }>;
 }) {
   return (
-    <section className="p-5">
-      <h2 className="text-lg font-black">{title}</h2>
-      <dl className="mt-4 grid gap-4 sm:grid-cols-2">
-        {items.map((item) => (
-          <div className="min-w-0" key={item.label}>
-            <dt className="text-xs font-black uppercase tracking-[0.12em] text-muted-foreground">
-              {item.label}
-            </dt>
-            <dd className="mt-1 wrap-break-word text-sm">
-              {item.value || "None"}
-            </dd>
-          </div>
-        ))}
-      </dl>
-    </section>
+    <Card className="gap-0">
+      <CardHeader>
+        <h2 className="text-base font-medium">{title}</h2>
+      </CardHeader>
+      <CardContent>
+        <dl className="mt-4 grid gap-4 sm:grid-cols-2">
+          {items.map((item) => (
+            <div className="min-w-0" key={item.label}>
+              <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                {item.label}
+              </dt>
+              <dd className="mt-1 wrap-break-word text-sm">
+                {item.value || "None"}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -511,102 +519,115 @@ export default function DocumentDetailPage() {
   return (
     <PageShell>
       <PageHeader
-        title={document?.title || "Document Details"}
-        description="Review document metadata, AI insights, chunks, and analysis."
-        actions={
-          <div className="flex flex-wrap items-center gap-2">
-            <Button asChild variant="outline">
-              <Link to={document?.isShared ? "/library?view=shared" : "/library"}>
-                <ArrowLeft className="size-4 mr-1.5" aria-hidden="true" />
-                Back to Library
-              </Link>
-            </Button>
-            <Button
-              disabled={!document || isStarring}
-              onClick={toggleStar}
-              type="button"
-              variant="secondary"
-            >
-              <Star
-                aria-hidden="true"
-                className={`size-4 mr-1.5 ${
-                  document?.isStarred
-                    ? "fill-amber-400 text-amber-500"
-                    : ""
-                }`}
-              />
-              {document?.isStarred ? "Unstar" : "Star"}
-            </Button>
-            {canManage && (
-              <Button
-                disabled={!document}
-                onClick={() => setIsShareOpen(true)}
-                type="button"
-                variant="secondary"
-              >
-                <Users className="size-4 mr-1.5" aria-hidden="true" />
-                Share
-              </Button>
-            )}
-            {canClassifyShared && (
-              <Button
-                disabled={!document}
-                onClick={() => setIsSubjectProfileOpen(true)}
-                type="button"
-                variant="secondary"
-              >
-                <BookOpen className="size-4 mr-1.5" aria-hidden="true" />
-                Assign subject
-              </Button>
-            )}
-            {canEdit && (
-              <Button
-                disabled={!document}
-                onClick={openEdit}
-                type="button"
-                variant="secondary"
-              >
-                <Pencil className="size-4 mr-1.5" aria-hidden="true" />
-                Edit details
-              </Button>
-            )}
-            {document?.isOwner && summaryPhase !== "done" && (
-              <Button
-                disabled={summaryPhase === "starting" || summaryPhase === "polling"}
-                onClick={handleSummarize}
-                type="button"
-                variant="secondary"
-              >
-                <Sparkles className="size-4 mr-1.5" aria-hidden="true" />
-                {summaryPhase === "starting" || summaryPhase === "polling"
-                  ? "Summarizing..."
-                  : summaryPhase === "error"
-                    ? "Retry summary"
-                    : "Summarize with AI"}
-              </Button>
-            )}
-            <Button
-              disabled={!document?.fileUrl}
-              onClick={downloadDocument}
-              type="button"
-            >
-              <Download className="size-4 mr-1.5" aria-hidden="true" />
-              Download
-            </Button>
-            {canManage && (
-              <Button
-                disabled={!document || isDeleting}
-                onClick={handleDelete}
-                type="button"
-                variant="destructive"
-              >
-                <Trash2 className="size-4 mr-1.5" aria-hidden="true" />
-                {isDeleting ? "Moving..." : "Move to trash"}
-              </Button>
-            )}
-          </div>
+        title={
+          document?.title || (
+            <>
+              <Skeleton className="h-6 w-48" />
+            </>
+          )
+        }
+        description={
+          document?.title ? (
+            "Review document metadata, AI insights, chunks, and analysis."
+          ) : (
+            <Skeleton className="h-4 w-5/6" />
+          )
         }
       />
+
+      <div className="flex items-center justify-between">
+        <Button asChild variant="outline">
+          <Link to={document?.isShared ? "/library?view=shared" : "/library"}>
+            <ArrowLeft className="size-4 mr-1.5" aria-hidden="true" />
+            Back
+          </Link>
+        </Button>
+        <div className="flex gap-2">
+          <Button
+            disabled={!document || isStarring}
+            onClick={toggleStar}
+            type="button"
+            variant="outline"
+          >
+            <Star
+              aria-hidden="true"
+              className={`size-4 mr-1.5 ${
+                document?.isStarred ? "fill-amber-400 text-amber-500" : ""
+              }`}
+            />
+            {document?.isStarred ? "Unstar" : "Star"}
+          </Button>
+          {canManage && (
+            <Button
+              disabled={!document}
+              onClick={() => setIsShareOpen(true)}
+              type="button"
+              variant="outline"
+            >
+              <Users className="size-4 mr-1.5" aria-hidden="true" />
+              Share
+            </Button>
+          )}
+          {canClassifyShared && (
+            <Button
+              disabled={!document}
+              onClick={() => setIsSubjectProfileOpen(true)}
+              type="button"
+              variant="outline"
+            >
+              <BookOpen className="size-4 mr-1.5" aria-hidden="true" />
+              Assign subject
+            </Button>
+          )}
+          {canEdit && (
+            <Button
+              disabled={!document}
+              onClick={openEdit}
+              type="button"
+              variant="outline"
+            >
+              <Pencil className="size-4 mr-1.5" aria-hidden="true" />
+              Edit details
+            </Button>
+          )}
+          {document?.isOwner && summaryPhase !== "done" && (
+            <Button
+              disabled={
+                summaryPhase === "starting" || summaryPhase === "polling"
+              }
+              onClick={handleSummarize}
+              type="button"
+              variant="outline"
+            >
+              <Sparkles className="size-4 mr-1.5" aria-hidden="true" />
+              {summaryPhase === "starting" || summaryPhase === "polling"
+                ? "Summarizing..."
+                : summaryPhase === "error"
+                  ? "Retry summary"
+                  : "Summarize"}
+            </Button>
+          )}
+          <Button
+            disabled={!document?.fileUrl}
+            onClick={downloadDocument}
+            type="button"
+          >
+            <Download className="size-4 mr-1.5" aria-hidden="true" />
+            Download
+          </Button>
+          {canManage && (
+            <Button
+              disabled={!document || isDeleting}
+              onClick={handleDelete}
+              type="button"
+              variant="destructive"
+            >
+              <Trash2 className="size-4 mr-1.5" aria-hidden="true" />
+              {isDeleting ? "Moving..." : "Move to trash"}
+            </Button>
+          )}
+        </div>
+      </div>
 
       {document?.isOwner ? (
         <div className="-mt-2 flex justify-end">
@@ -643,7 +664,9 @@ export default function DocumentDetailPage() {
             return (
               <Alert className="mb-4 border-amber-500/50 bg-amber-500/10 text-amber-900 dark:text-amber-200">
                 <AlertTriangle className="size-4 text-amber-600 dark:text-amber-400" />
-                <AlertTitle className="font-semibold">{indexIssue.summary}</AlertTitle>
+                <AlertTitle className="font-semibold">
+                  {indexIssue.summary}
+                </AlertTitle>
                 <AlertDescription className="text-amber-800 dark:text-amber-300">
                   {indexIssue.action}
                 </AlertDescription>
@@ -704,79 +727,91 @@ export default function DocumentDetailPage() {
           </div>
 
           {summaryPhase !== "idle" ? (
-            <section className="mt-4 p-5">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <h2 className="text-lg font-black">AI summary</h2>
-                {summaryPhase === "done" && summaryRecord?.content &&
+            <Card className="gap-0">
+              <CardHeader>
+                <h2 className="text-base font-medium leading-5">
+                  <Sparkles
+                    className="size-5 text-primary mr-2 inline-block"
+                    aria-hidden="true"
+                  />
+                  AI Summary
+                </h2>
+                <CardAction>
+                  {summaryPhase === "done" &&
+                  summaryRecord?.content &&
+                  "markdown" in summaryRecord.content ? (
+                    <div className="flex items-center gap-2">
+                      <CopyButton text={summaryRecord.content.markdown} />
+                      <Button
+                        onClick={() => setIsSummaryShareOpen(true)}
+                        size="sm"
+                        type="button"
+                        variant="outline"
+                      >
+                        <Share2 data-icon="inline-start" aria-hidden="true" />
+                        Share
+                      </Button>
+                    </div>
+                  ) : null}
+                </CardAction>
+              </CardHeader>
+
+              <CardContent>
+                {(summaryPhase === "starting" ||
+                  summaryPhase === "polling") && (
+                  <div className="mt-4 flex flex-col gap-2">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-5/6" />
+                    <Skeleton className="h-4 w-2/3" />
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Generating summary...
+                    </p>
+                  </div>
+                )}
+
+                {summaryPhase === "error" && summaryError ? (
+                  <Alert className="mt-4" variant="destructive">
+                    <AlertTitle>
+                      {summaryError.code === "QUOTA_EXHAUSTED_NO_KEY" ||
+                      summaryError.code === "QUOTA_EXHAUSTED_INVALID_KEY"
+                        ? "Weekly AI quota exhausted"
+                        : "Couldn't create summary"}
+                    </AlertTitle>
+                    <AlertDescription>
+                      {summaryError.message}
+                      {summaryError.details &&
+                      typeof summaryError.details.resetAt === "string" ? (
+                        <div className="mt-1">
+                          Resets {formatDate(summaryError.details.resetAt)}.
+                        </div>
+                      ) : null}
+                      {summaryError.code === "QUOTA_EXHAUSTED_NO_KEY" ||
+                      summaryError.code === "QUOTA_EXHAUSTED_INVALID_KEY" ? (
+                        <div className="mt-2">
+                          <Link
+                            className="inline-flex items-center gap-1 font-semibold underline"
+                            to="/settings"
+                          >
+                            Add your own API key
+                            <ExternalLink className="size-3" />
+                          </Link>
+                        </div>
+                      ) : null}
+                    </AlertDescription>
+                  </Alert>
+                ) : null}
+
+                {summaryPhase === "done" &&
+                summaryRecord?.content &&
                 "markdown" in summaryRecord.content ? (
-                  <div className="flex items-center gap-2">
-                    <CopyButton text={summaryRecord.content.markdown} />
-                    <Button
-                      onClick={() => setIsSummaryShareOpen(true)}
-                      size="sm"
-                      type="button"
-                      variant="outline"
-                    >
-                      <Share2 data-icon="inline-start" aria-hidden="true" />
-                      Share
-                    </Button>
+                  <div className={`mt-4 ${MARKDOWN_PREVIEW_CLASS}`}>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {summaryRecord.content.markdown}
+                    </ReactMarkdown>
                   </div>
                 ) : null}
-              </div>
-
-              {(summaryPhase === "starting" || summaryPhase === "polling") && (
-                <div className="mt-4 flex flex-col gap-2">
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-5/6" />
-                  <Skeleton className="h-4 w-2/3" />
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Generating summary...
-                  </p>
-                </div>
-              )}
-
-              {summaryPhase === "error" && summaryError ? (
-                <Alert className="mt-4" variant="destructive">
-                  <AlertTitle>
-                    {summaryError.code === "QUOTA_EXHAUSTED_NO_KEY" ||
-                    summaryError.code === "QUOTA_EXHAUSTED_INVALID_KEY"
-                      ? "Weekly AI quota exhausted"
-                      : "Couldn't create summary"}
-                  </AlertTitle>
-                  <AlertDescription>
-                    {summaryError.message}
-                    {summaryError.details &&
-                    typeof summaryError.details.resetAt === "string" ? (
-                      <div className="mt-1">
-                        Resets {formatDate(summaryError.details.resetAt)}.
-                      </div>
-                    ) : null}
-                    {summaryError.code === "QUOTA_EXHAUSTED_NO_KEY" ||
-                    summaryError.code === "QUOTA_EXHAUSTED_INVALID_KEY" ? (
-                      <div className="mt-2">
-                        <Link
-                          className="inline-flex items-center gap-1 font-semibold underline"
-                          to="/settings"
-                        >
-                          Add your own API key
-                          <ExternalLink className="size-3" />
-                        </Link>
-                      </div>
-                    ) : null}
-                  </AlertDescription>
-                </Alert>
-              ) : null}
-
-              {summaryPhase === "done" &&
-              summaryRecord?.content &&
-              "markdown" in summaryRecord.content ? (
-                <div className={`mt-4 ${MARKDOWN_PREVIEW_CLASS}`}>
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {summaryRecord.content.markdown}
-                  </ReactMarkdown>
-                </div>
-              ) : null}
-            </section>
+              </CardContent>
+            </Card>
           ) : null}
         </>
       ) : null}
@@ -858,7 +893,7 @@ export default function DocumentDetailPage() {
               <Button
                 disabled={isSavingEdit}
                 type="button"
-                variant="secondary"
+                variant="outline"
                 onClick={() => setIsEditOpen(false)}
               >
                 Cancel

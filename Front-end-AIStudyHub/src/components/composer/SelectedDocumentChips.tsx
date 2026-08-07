@@ -19,7 +19,7 @@ export const SelectedDocumentChips: FC<SelectedDocumentChipsProps> = ({
   if (documents.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5 px-2 pt-1">
+    <div className="flex flex-wrap items-center gap-1.5 px-1 pt-0.5">
       {documents.map((doc) => (
         <div
           key={doc.id}
