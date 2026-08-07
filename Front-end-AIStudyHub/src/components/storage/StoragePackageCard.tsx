@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { IconTile } from "@/components/shared/IconTile";
 import { cn } from "@/lib/utils";
 
 export function StoragePackageCard({

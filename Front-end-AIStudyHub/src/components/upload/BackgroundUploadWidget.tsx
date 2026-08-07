@@ -200,13 +200,11 @@ function UploadWidgetCard({
                         {getFileExtension(item.fileName)}
                       </span>
                       <span className="truncate text-[11px] text-muted-foreground">
-                        {item.status === "pending" && "Queued"}
+                        {item.status === "pending" && (item.message || "Queued")}
                         {item.status === "uploading" &&
-                          `Uploading (${item.progress}%)`}
+                          (item.message || `Uploading (${item.progress}%)`)}
                         {item.status === "processing" &&
-                          (item.progress >= 95
-                            ? "Indexing"
-                            : "Extracting text")}
+                          (item.message || `Processing (${item.progress}%)`)}
                         {item.status === "success" &&
                           !item.warning &&
                           "Completed"}

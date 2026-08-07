@@ -1438,7 +1438,7 @@ export default function NewLibraryPage() {
                             />
                           </Button>
                           <button
-                            className="flex min-w-0 items-center gap-3 text-left group outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                            className="flex min-w-0 max-w-100 items-center gap-3 text-left group outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                             onClick={() => openFile(document)}
                             type="button"
                           >

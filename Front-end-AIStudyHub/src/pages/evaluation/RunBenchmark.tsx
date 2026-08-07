@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import { Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { PageShell } from "@/components/layout/PageShell";
@@ -59,19 +65,9 @@ function scoreText(value: unknown): string {
   return normalizeScore(value).toFixed(2);
 }
 
-function formatDate(value?: string): string {
-  if (!value) return "just now";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "just now";
-  return date.toLocaleString(undefined, {
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    month: "short",
-  });
-}
-
-function normalizeScores(evaluation: BenchmarkEvaluationScore): BenchmarkScores {
+function normalizeScores(
+  evaluation: BenchmarkEvaluationScore,
+): BenchmarkScores {
   return {
     completeness: normalizeScore(evaluation.completeness),
     correctness: normalizeScore(evaluation.answerCorrectness),
@@ -91,13 +87,7 @@ function Panel({
   return <section className={className}>{children}</section>;
 }
 
-function ScoreCard({
-  label,
-  value,
-}: {
-  label: string;
-  value: number;
-}) {
+function ScoreCard({ label, value }: { label: string; value: number }) {
   return (
     <div className="rounded-lg border border-border/70 bg-background/40 p-3">
       <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
@@ -151,7 +141,9 @@ export default function RunBenchmark() {
         const response = await runBenchmarkQuestion(questionId);
         setResult(response);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to run benchmark");
+        setError(
+          err instanceof Error ? err.message : "Failed to run benchmark",
+        );
       } finally {
         setLoading(false);
         setRerunning(false);
@@ -219,88 +211,95 @@ export default function RunBenchmark() {
         }
       />
 
-        {error && (
-          <div className="flex flex-col gap-3 rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive sm:flex-row sm:items-center sm:justify-between">
-            <span className="inline-flex items-center gap-2">
-              <AlertCircle className="size-4" />
-              {error}
-            </span>
-            <Button
-              className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
-              onClick={() => runBenchmark()}
-              size="sm"
-              type="button"
-              variant="outline"
-            >
-              <RefreshCw data-icon="inline-start" aria-hidden="true" />
-              Retry
-            </Button>
+      {error && (
+        <div className="flex flex-col gap-3 rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive sm:flex-row sm:items-center sm:justify-between">
+          <span className="inline-flex items-center gap-2">
+            <AlertCircle className="size-4" />
+            {error}
+          </span>
+          <Button
+            className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+            onClick={() => runBenchmark()}
+            size="sm"
+            type="button"
+            variant="outline"
+          >
+            <RefreshCw data-icon="inline-start" aria-hidden="true" />
+            Retry
+          </Button>
+        </div>
+      )}
+
+      {loading ? (
+        <Panel className="grid min-h-80 place-items-center p-8">
+          <div className="text-center">
+            <Loader2 className="mx-auto size-8 animate-spin text-muted-foreground" />
+            <p className="mt-3 text-sm text-muted-foreground">
+              Running DR-RAG benchmark...
+            </p>
           </div>
-        )}
-
-        {loading ? (
-          <Panel className="grid min-h-80 place-items-center p-8">
-            <div className="text-center">
-              <Loader2 className="mx-auto size-8 animate-spin text-muted-foreground" />
-              <p className="mt-3 text-sm text-muted-foreground">
-                Running DR-RAG benchmark...
+        </Panel>
+      ) : result && scores ? (
+        <>
+          <section className="grid gap-4 md:grid-cols-[1fr_260px]">
+            <Panel className="p-4 md:p-5">
+              <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                <FileText className="size-4" />
+                Expected Answer
+                <span className="rounded-full bg-muted px-2 py-1 text-[10px]">
+                  ground truth
+                </span>
+              </div>
+              <p className="text-sm leading-6 text-foreground/90">
+                {result.expectedAnswer ||
+                  "No expected answer returned for this run."}
               </p>
-            </div>
-          </Panel>
-        ) : result && scores ? (
-          <>
-            <section className="grid gap-4 md:grid-cols-[1fr_260px]">
-              <Panel className="p-4 md:p-5">
-                <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                  <FileText className="size-4" />
-                  Expected Answer
-                  <span className="rounded-full bg-muted px-2 py-1 text-[10px]">
-                    ground truth
-                  </span>
-                </div>
-                <p className="text-sm leading-6 text-foreground/90">
-                  {result.expectedAnswer || "No expected answer returned for this run."}
-                </p>
-              </Panel>
-
-              <Panel className="tone-teal grid content-center gap-2 p-4 text-center md:p-5">
-                <BarChart3 className="mx-auto size-5 text-primary" />
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                  Overall score
-                </p>
-                <p className="text-4xl font-semibold">{percent(scores.totalScore)}</p>
-              </Panel>
-            </section>
-
-            <Panel className="grid gap-4 p-4 md:p-5">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                  DR-RAG answer
-                </p>
-                <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-foreground/90">
-                  {result.answer}
-                </p>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                {metricKeys.map((key) => (
-                  <ScoreCard key={key} label={metricLabels[key]} value={scores[key]} />
-                ))}
-              </div>
             </Panel>
 
-            <ExplanationPanel explanation={result.evaluation.explanation} />
-          </>
-        ) : (
-          <Panel className="grid min-h-80 place-items-center p-8 text-center">
+            <Panel className="tone-teal grid content-center gap-2 p-4 text-center md:p-5">
+              <BarChart3 className="mx-auto size-5 text-primary" />
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                Overall score
+              </p>
+              <p className="text-4xl font-semibold">
+                {percent(scores.totalScore)}
+              </p>
+            </Panel>
+          </section>
+
+          <Panel className="grid gap-4 p-4 md:p-5">
             <div>
-              <AlertCircle className="mx-auto size-9 text-muted-foreground" />
-              <h2 className="mt-3 text-lg font-semibold">No benchmark result</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Run the benchmark again or return to the question list.
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                DR-RAG answer
+              </p>
+              <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-foreground/90">
+                {result.answer}
               </p>
             </div>
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {metricKeys.map((key) => (
+                <ScoreCard
+                  key={key}
+                  label={metricLabels[key]}
+                  value={scores[key]}
+                />
+              ))}
+            </div>
           </Panel>
-        )}
+
+          <ExplanationPanel explanation={result.evaluation.explanation} />
+        </>
+      ) : (
+        <Panel className="grid min-h-80 place-items-center p-8 text-center">
+          <div>
+            <AlertCircle className="mx-auto size-9 text-muted-foreground" />
+            <h2 className="mt-3 text-lg font-semibold">No benchmark result</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Run the benchmark again or return to the question list.
+            </p>
+          </div>
+        </Panel>
+      )}
     </PageShell>
   );
 }

@@ -229,13 +229,26 @@ export async function findOrCreateSubjectByName(name: string): Promise<string> {
   if (!normalized) {
     throw new Error('Subject name cannot be empty')
   }
+
   const subjects = await listSubjects()
+
+  // 1. Direct match by _id
+  const matchById = subjects.find((s) => s._id === normalized)
+  if (matchById) {
+    return matchById._id
+  }
+
+  // 2. Match by name or code (case-insensitive)
   const match = subjects.find(
-    (s) => s.name.trim().toLowerCase() === normalized.toLowerCase(),
+    (s) =>
+      s.name.trim().toLowerCase() === normalized.toLowerCase() ||
+      (s.code && s.code.trim().toLowerCase() === normalized.toLowerCase()),
   )
   if (match) {
     return match._id
   }
+
+  // 3. Fallback: create new subject
   const newSubject = await createSubject(normalized)
   return newSubject._id
 }

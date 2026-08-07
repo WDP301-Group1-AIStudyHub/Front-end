@@ -21,7 +21,6 @@ import { StorageUsageBar } from "../components/storage/StorageUsageBar";
 import { StoragePackageCard } from "../components/storage/StoragePackageCard";
 import { PurchaseConfirmDialog } from "../components/storage/PurchaseConfirmDialog";
 import { useStoragePurchase } from "../hooks/useStoragePurchase";
-import { useUploadStore } from "../store/useUploadStore";
 import { useStorageStore } from "../store/useStorageStore";
 import type { DocumentItem } from "../types/document";
 import { IconTile } from "@/components/shared/IconTile";
@@ -34,9 +33,6 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-
-/** Matches the multer limit in the backend and Cloudinary's raw-file cap. */
-const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 function formatRelativeTime(dateStr: string): string {
   const date = new Date(dateStr);
@@ -59,28 +55,6 @@ export default function DashboardPage() {
   const [docs, setDocs] = useState<DocumentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDragActive, setIsDragActive] = useState(false);
-  const [uploadFeedback, setUploadFeedback] = useState<string | null>(null);
-
-  const isUploading = useUploadStore((state) =>
-    state.uploads.some(
-      (u) =>
-        u.status === "uploading" ||
-        u.status === "pending" ||
-        u.status === "processing",
-    ),
-  );
-
-  const handleUploadFile = (file: File) => {
-    const payload = {
-      file,
-      title: file.name.replace(/\.[^/.]+$/, ""),
-      description: "Uploaded via Quick Upload",
-      subject: "General",
-    };
-    useUploadStore.getState().processIncomingUpload(payload, docs, () => {
-      listDocuments().then(setDocs);
-    });
-  };
 
   const storage = useStorageStore((state) => state.storage);
   const storageLoading = useStorageStore((state) => state.loading);
@@ -148,66 +122,6 @@ export default function DashboardPage() {
     }
   };
 
-  const handleDrop = async (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragActive(false);
-
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const files = Array.from(e.dataTransfer.files);
-
-      // This dropzone historically had no validation at all — not even the
-      // 10 MB per-file limit the library dialog enforces. Check both here, and
-      // check the batch as a whole so ten files that each fit but together do
-      // not cannot slip through.
-      const oversized = files.filter((file) => file.size > MAX_FILE_SIZE);
-      if (oversized.length > 0) {
-        setUploadFeedback(
-          `${oversized.length} file(s) exceed the 10 MB limit and were skipped: ${oversized.map((f) => f.name).join(", ")}`,
-        );
-      }
-
-      const accepted = files.filter((file) => file.size <= MAX_FILE_SIZE);
-      const totalBytes = accepted.reduce((sum, file) => sum + file.size, 0);
-      const capacity = useStorageStore.getState().hasCapacityFor(totalBytes);
-
-      if (capacity.known && !capacity.ok) {
-        setUploadFeedback(
-          `Not enough storage. These files need ${formatStorageBytes(totalBytes)} but only ${formatStorageBytes(capacity.available)} is free. Delete some documents or upgrade your plan.`,
-        );
-        setTimeout(() => setUploadFeedback(null), 6000);
-        return;
-      }
-
-      if (accepted.length === 0) {
-        setTimeout(() => setUploadFeedback(null), 6000);
-        return;
-      }
-
-      setUploadFeedback(`Queueing ${accepted.length} document(s)...`);
-
-      for (const file of accepted) {
-        const payload = {
-          file,
-          title: file.name.replace(/\.[^/.]+$/, ""),
-          description: "Uploaded via Quick Dropzone",
-          subject: "General",
-        };
-
-        try {
-          useUploadStore.getState().processIncomingUpload(payload, docs, () => {
-            // refresh library on successful upload
-            listDocuments().then(setDocs);
-          });
-        } catch (err) {
-          console.error("Dropzone upload failed:", err);
-        }
-      }
-
-      setTimeout(() => setUploadFeedback(null), 4000);
-    }
-  };
-
   const chartData = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -251,7 +165,7 @@ export default function DashboardPage() {
             exit={{ opacity: 0 }}
             onDragLeave={handleDrag}
             onDragOver={handleDrag}
-            onDrop={handleDrop}
+            onDrop={() => {}}
             className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-md p-6"
           >
             <div className="flex w-full max-w-lg flex-col items-center justify-center gap-4 rounded-xl border border-dashed border-border bg-card p-12 text-center shadow-sm">
@@ -556,7 +470,7 @@ export default function DashboardPage() {
           {/* Quick upload card dropzone button */}
           <div
             onDragOver={handleDrag}
-            onDrop={handleDrop}
+            onDrop={() => {}}
             className="group flex cursor-pointer items-center justify-between gap-5 rounded-xl border border-dashed border-border bg-card p-5 transition-all hover:border-primary active:scale-[0.98]"
           >
             <div>

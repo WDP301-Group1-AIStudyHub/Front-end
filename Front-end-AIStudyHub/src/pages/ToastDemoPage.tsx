@@ -4,12 +4,22 @@ import { useToast } from "@/hooks/useToast";
 import { useUploadStore } from "@/store/useUploadStore";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CreateArtifactDialog } from "@/components/chat/artifacts/CreateArtifactDialog";
 import SummaryShareDialog from "@/components/artifacts/SummaryShareDialog";
 import { TYPE_META } from "@/components/chat/artifacts/artifactTypes";
-import type { ArtifactType, ArtifactRecord } from "@/services/artifactApi";
+import type {
+  ArtifactType,
+  ArtifactRecord,
+  ArtifactContent,
+} from "@/services/artifactApi";
 import {
   CheckCircle2,
   AlertTriangle,
@@ -22,32 +32,35 @@ import {
   FilePlus,
   Share2,
   AlertOctagon,
-  FileText,
   BrainCircuit,
-  HelpCircle,
-  Sparkle,
   RotateCw,
-  Layers,
   Trash2,
 } from "lucide-react";
 
 export default function ToastDemoPage() {
   const { showToast } = useToast();
-  const [loadingToastId, setLoadingToastId] = useState<string | number | null>(null);
+  const [loadingToastId, setLoadingToastId] = useState<string | number | null>(
+    null,
+  );
 
   // Artifact creation dialog state
-  const [activeArtifactType, setActiveArtifactType] = useState<ArtifactType | null>(null);
+  const [activeArtifactType, setActiveArtifactType] =
+    useState<ArtifactType | null>(null);
 
   // Summary share dialog state
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
 
   // Interactive mock state for Artifact Tool Cards
-  const [cardStatus, setCardStatus] = useState<"GENERATING" | "COMPLETED" | "FAILED">("COMPLETED");
+  const [cardStatus, setCardStatus] = useState<
+    "GENERATING" | "COMPLETED" | "FAILED"
+  >("COMPLETED");
 
   // ----------------------------------------------------
   // Toast Trigger Handlers
   // ----------------------------------------------------
-  const triggerCustomToast = (tone: "success" | "error" | "warning" | "info") => {
+  const triggerCustomToast = (
+    tone: "success" | "error" | "warning" | "info",
+  ) => {
     const messages = {
       success: "Operation completed successfully!",
       error: "Failed to process request.",
@@ -77,7 +90,8 @@ export default function ToastDemoPage() {
 
   const triggerSonnerInfo = () => {
     toast.info("New Feature Available", {
-      description: "Check out the new AI Study Assistant tools in your dashboard.",
+      description:
+        "Check out the new AI Study Assistant tools in your dashboard.",
     });
   };
 
@@ -129,10 +143,30 @@ export default function ToastDemoPage() {
   // ----------------------------------------------------
   const triggerMockUpload = () => {
     const mockFiles = [
-      { name: "Organic_Chemistry_Chapter_4.pdf", progress: 45, status: "uploading" as const },
-      { name: "Machine_Learning_Notes_Final.pdf", progress: 85, status: "uploading" as const },
-      { name: "Algorithms_Lab_2_Solution.pdf", progress: 100, status: "success" as const },
-      { name: "Corrupted_File_Scan.pdf", progress: 20, status: "failed" as const, error: "Unreadable text layer" },
+      {
+        name: "Organic_Chemistry_Chapter_4.pdf",
+        progress: 45,
+        status: "uploading" as const,
+        message: "Uploading binary bytes...",
+      },
+      {
+        name: "Machine_Learning_Notes_Final.pdf",
+        progress: 65,
+        status: "processing" as const,
+        message: "Generating AI embeddings for 18 chunks...",
+      },
+      {
+        name: "Algorithms_Lab_2_Solution.pdf",
+        progress: 100,
+        status: "success" as const,
+        message: "Upload completed successfully",
+      },
+      {
+        name: "Corrupted_File_Scan.pdf",
+        progress: 20,
+        status: "failed" as const,
+        error: "Unreadable text layer",
+      },
     ];
     const item = mockFiles[Math.floor(Math.random() * mockFiles.length)];
 
@@ -144,6 +178,7 @@ export default function ToastDemoPage() {
           fileName: item.name,
           progress: item.progress,
           status: item.status,
+          message: item.message,
           error: item.error,
         },
       ],
@@ -154,11 +189,108 @@ export default function ToastDemoPage() {
     });
   };
 
+  const triggerMockSocketStream = () => {
+    const id = crypto.randomUUID();
+    const fileName = "Realtime_Socket_Indexed_Doc.pdf";
+
+    // Initialize store item at 10%
+    useUploadStore.setState((state) => ({
+      uploads: [
+        {
+          id,
+          fileName,
+          progress: 10,
+          status: "processing",
+          step: "UPLOADING_FILE",
+          message: "Validating storage quota and format...",
+        },
+        ...state.uploads,
+      ],
+    }));
+
+    toast.info("Socket.IO Stream Simulation Started", {
+      description: `Watch background widget cycle through 5 RAG indexing stages for '${fileName}'.`,
+    });
+
+    const stages = [
+      {
+        step: "EXTRACTING_TEXT",
+        progress: 25,
+        message: "Extracting text and outline...",
+      },
+      {
+        step: "CHUNKING_TEXT",
+        progress: 50,
+        message: "Generating text chunks...",
+      },
+      {
+        step: "GENERATING_EMBEDDINGS",
+        progress: 65,
+        message: "Generating embeddings for 34 chunks...",
+      },
+      {
+        step: "UPSERTING_VECTORS",
+        progress: 85,
+        message: "Upserting vectors (batch 1/2)",
+      },
+      {
+        step: "UPSERTING_VECTORS",
+        progress: 95,
+        message: "Upserting vectors (batch 2/2)",
+      },
+      {
+        step: "COMPLETED",
+        progress: 100,
+        message: "Upload completed successfully",
+        status: "success",
+      },
+    ];
+
+    stages.forEach((stage, index) => {
+      setTimeout(
+        () => {
+          useUploadStore.setState((state) => ({
+            uploads: state.uploads.map((item) =>
+              item.id === id
+                ? {
+                    ...item,
+                    progress: stage.progress,
+                    status: (stage.status as any) || "processing",
+                    step: stage.step,
+                    message: stage.message,
+                  }
+                : item,
+            ),
+          }));
+        },
+        (index + 1) * 7500,
+      );
+    });
+  };
+
   const triggerMockBatchUpload = () => {
     const newItems = [
-      { id: crypto.randomUUID(), fileName: "Linear_Algebra_Notes.pdf", progress: 60, status: "uploading" as const },
-      { id: crypto.randomUUID(), fileName: "Microeconomics_Quiz_1.pdf", progress: 100, status: "success" as const },
-      { id: crypto.randomUUID(), fileName: "Scanned_Book_Pages.pdf", progress: 30, status: "failed" as const, error: "OCR extraction failed" },
+      {
+        id: crypto.randomUUID(),
+        fileName: "Linear_Algebra_Notes.pdf",
+        progress: 65,
+        status: "processing" as const,
+        message: "Generating AI embeddings...",
+      },
+      {
+        id: crypto.randomUUID(),
+        fileName: "Microeconomics_Quiz_1.pdf",
+        progress: 100,
+        status: "success" as const,
+        message: "Upload completed successfully",
+      },
+      {
+        id: crypto.randomUUID(),
+        fileName: "Scanned_Book_Pages.pdf",
+        progress: 30,
+        status: "failed" as const,
+        error: "OCR extraction failed",
+      },
     ];
 
     useUploadStore.setState((state) => ({
@@ -180,7 +312,9 @@ export default function ToastDemoPage() {
         [conflictId]: {
           id: conflictId,
           payload: {
-            file: new File(["mock binary content"], mockFileName, { type: "application/pdf" }),
+            file: new File(["mock binary content"], mockFileName, {
+              type: "application/pdf",
+            }),
             title: "Database Systems Notes",
           },
           existingDocumentMeta: {
@@ -211,13 +345,45 @@ export default function ToastDemoPage() {
   // ----------------------------------------------------
   // Mock Artifact Record for Tool Card
   // ----------------------------------------------------
+  const mockArtifactContent: ArtifactContent = {
+    root: {
+      label: "Data Structures & Trees",
+      children: [
+        {
+          label: "Binary Trees",
+          children: [
+            { label: "Traversal Algorithms" },
+            { label: "Balanced Trees" },
+          ],
+        },
+        {
+          label: "Graphs",
+          children: [
+            { label: "DFS & BFS" },
+            { label: "Shortest Path Algorithms" },
+          ],
+        },
+      ],
+    },
+  };
+
   const mockArtifactRecord: ArtifactRecord = {
     _id: "art-demo-001",
+    userId: "user-demo-123",
+    sourceDocumentIds: ["doc-1", "doc-2"],
     type: "MINDMAP",
     title: "Data Structures & Trees Mindmap",
-    content: "Root Node -> Binary Tree -> BST -> AVL Tree",
-    status: cardStatus === "COMPLETED" ? "COMPLETED" : cardStatus === "GENERATING" ? "GENERATING" : "FAILED",
-    error: cardStatus === "FAILED" ? "Generation timed out after 30 seconds." : undefined,
+    content: mockArtifactContent,
+    status:
+      cardStatus === "COMPLETED"
+        ? "COMPLETED"
+        : cardStatus === "GENERATING"
+          ? "GENERATING"
+          : "FAILED",
+    error:
+      cardStatus === "FAILED"
+        ? "Generation timed out after 30 seconds."
+        : undefined,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
@@ -233,7 +399,9 @@ export default function ToastDemoPage() {
       <section className="space-y-4">
         <div className="flex items-center gap-2">
           <Bell className="size-5 text-primary" />
-          <h2 className="text-xl font-semibold tracking-tight">1. Toast Notifications (Sonner + richColors)</h2>
+          <h2 className="text-xl font-semibold tracking-tight">
+            1. Toast Notifications (Sonner + richColors)
+          </h2>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
@@ -247,7 +415,8 @@ export default function ToastDemoPage() {
                 </Badge>
               </div>
               <CardDescription className="text-xs">
-                Triggers styled alert toasts powered by Sonner with full color palette themes.
+                Triggers styled alert toasts powered by Sonner with full color
+                palette themes.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -295,13 +464,16 @@ export default function ToastDemoPage() {
           <Card className="border-border shadow-sm flex flex-col justify-between">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg">Advanced Toast Actions</CardTitle>
+                <CardTitle className="text-lg">
+                  Advanced Toast Actions
+                </CardTitle>
                 <Badge variant="secondary" className="font-mono text-xs">
                   Async & Actions
                 </Badge>
               </div>
               <CardDescription className="text-xs">
-                Supports interactive undo buttons, loading state updates, and promise resolution.
+                Supports interactive undo buttons, loading state updates, and
+                promise resolution.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -322,7 +494,9 @@ export default function ToastDemoPage() {
                   onClick={triggerSonnerLoading}
                   disabled={loadingToastId !== null}
                 >
-                  {loadingToastId !== null ? <Loader2 className="size-3 animate-spin" /> : null}
+                  {loadingToastId !== null ? (
+                    <Loader2 className="size-3 animate-spin" />
+                  ) : null}
                   Loading State
                 </Button>
 
@@ -361,7 +535,9 @@ export default function ToastDemoPage() {
       <section className="space-y-4">
         <div className="flex items-center gap-2">
           <UploadCloud className="size-5 text-primary" />
-          <h2 className="text-xl font-semibold tracking-tight">2. Document Upload Widgets</h2>
+          <h2 className="text-xl font-semibold tracking-tight">
+            2. Document Upload Widgets
+          </h2>
         </div>
 
         <Card className="border-border shadow-sm">
@@ -373,11 +549,23 @@ export default function ToastDemoPage() {
               </Badge>
             </CardTitle>
             <CardDescription className="text-xs">
-              Clicking these buttons pushes items to <code className="bg-muted px-1 rounded">useUploadStore</code>, bringing up the bottom-right upload manager widget or filename conflict modal.
+              Clicking these buttons pushes items to{" "}
+              <code className="bg-muted px-1 rounded">useUploadStore</code>,
+              bringing up the bottom-right upload manager widget or filename
+              conflict modal.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <Button
+                variant="outline"
+                className="gap-2 justify-start border-primary/40 bg-primary/5 hover:bg-primary/10 text-primary font-medium"
+                onClick={triggerMockSocketStream}
+              >
+                <Sparkles className="size-4 text-primary animate-pulse" />
+                Simulate Real-Time Socket Stream
+              </Button>
+
               <Button
                 variant="outline"
                 className="gap-2 justify-start"
@@ -407,7 +595,7 @@ export default function ToastDemoPage() {
 
               <Button
                 variant="ghost"
-                className="gap-2 justify-start text-destructive hover:bg-destructive/10"
+                className="gap-2 justify-start text-destructive hover:bg-destructive/10 sm:col-span-2 lg:col-span-4"
                 onClick={clearAllUploads}
               >
                 <Trash2 className="size-4" />
@@ -422,7 +610,9 @@ export default function ToastDemoPage() {
       <section className="space-y-4">
         <div className="flex items-center gap-2">
           <BrainCircuit className="size-5 text-primary" />
-          <h2 className="text-xl font-semibold tracking-tight">3. AI Artifact Creation & Tool Cards</h2>
+          <h2 className="text-xl font-semibold tracking-tight">
+            3. AI Artifact Creation & Tool Cards
+          </h2>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
@@ -431,11 +621,14 @@ export default function ToastDemoPage() {
             <CardHeader>
               <CardTitle className="text-lg">Create Artifact Dialog</CardTitle>
               <CardDescription className="text-xs">
-                Opens the creation dialog where users provide optional focus instructions before generating study materials.
+                Opens the creation dialog where users provide optional focus
+                instructions before generating study materials.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <p className="text-xs font-medium text-muted-foreground">Select artifact type to test dialog:</p>
+              <p className="text-xs font-medium text-muted-foreground">
+                Select artifact type to test dialog:
+              </p>
               <div className="flex flex-wrap gap-2">
                 {(Object.keys(TYPE_META) as ArtifactType[]).map((type) => {
                   const meta = TYPE_META[type];
@@ -473,7 +666,9 @@ export default function ToastDemoPage() {
           <Card className="border-border shadow-sm">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg">Artifact Tool Card States</CardTitle>
+                <CardTitle className="text-lg">
+                  Artifact Tool Card States
+                </CardTitle>
                 <div className="flex items-center gap-1 bg-muted p-1 rounded-lg">
                   <Button
                     size="xs"
@@ -499,7 +694,8 @@ export default function ToastDemoPage() {
                 </div>
               </div>
               <CardDescription className="text-xs">
-                Inline widget rendered inside AI chat threads to indicate artifact generation status.
+                Inline widget rendered inside AI chat threads to indicate
+                artifact generation status.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -571,12 +767,21 @@ export default function ToastDemoPage() {
         onClose={() => setActiveArtifactType(null)}
         sources={[
           { id: "src-1", title: "mln chuong 2", subtitle: "MLN122 · CHƯƠNG 2" },
-          { id: "src-2", title: "Data_Structures_Lecture_4.pdf", subtitle: "CS201 · TREES & GRAPHS" },
-          { id: "src-3", title: "Linear_Algebra_Review.pdf", subtitle: "MATH102 · VECTORS & MATRICES" },
+          {
+            id: "src-2",
+            title: "Data_Structures_Lecture_4.pdf",
+            subtitle: "CS201 · TREES & GRAPHS",
+          },
+          {
+            id: "src-3",
+            title: "Linear_Algebra_Review.pdf",
+            subtitle: "MATH102 · VECTORS & MATRICES",
+          },
         ]}
         onCreate={async (type, instructions, scopeOptions) => {
           const docCount = scopeOptions?.documentIds?.length ?? 0;
-          const scopeLabel = docCount > 0 ? `${docCount} document(s)` : "Conversation history";
+          const scopeLabel =
+            docCount > 0 ? `${docCount} document(s)` : "Conversation history";
           toast.success(`Started generating ${TYPE_META[type].label}!`, {
             description: `Source scope: ${scopeLabel}${instructions ? ` | Focus: "${instructions}"` : ""}`,
           });

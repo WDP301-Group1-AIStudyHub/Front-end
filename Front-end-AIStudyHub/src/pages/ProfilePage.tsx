@@ -3,7 +3,6 @@ import {
   CheckCircle2,
   Info,
   Settings,
-  ShieldCheck,
   UserRound,
 } from "lucide-react";
 import { Link } from "react-router-dom";
