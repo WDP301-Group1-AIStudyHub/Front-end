@@ -149,3 +149,25 @@ export async function forgotPassword(
     method: 'POST',
   })
 }
+
+export async function resetPassword(payload: {
+  token: string
+  email?: string
+  password: string
+}): Promise<ApiResponse<void>> {
+  return request<void>('/api/auth/reset-password', {
+    body: payload,
+    method: 'POST',
+  })
+}
+
+export async function changePassword(payload: {
+  currentPassword: string
+  newPassword: string
+}): Promise<ApiResponse<void>> {
+  return request<void>('/api/auth/change-password', {
+    authenticated: true,
+    body: payload,
+    method: 'POST',
+  })
+}

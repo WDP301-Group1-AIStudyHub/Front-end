@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { RefreshCw, Sparkles, Users } from "lucide-react";
+import { ExternalLink, RefreshCw, Sparkles, Users } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PageHeader } from "@/components/layout/PageHeader";
-import { PageShell } from "@/components/layout/PageShell";
 import { CopyButton } from "@/components/chat/artifacts/ArtifactPreviewDialog";
 import { MARKDOWN_PREVIEW_CLASS } from "@/components/chat/artifacts/artifactTypes";
 import { recordToCopyText } from "@/components/chat/artifacts/artifactTypes";
@@ -106,11 +106,16 @@ export default function SharedSummariesPage() {
   const selected = entries.find((entry) => entry.artifact._id === selectedId);
 
   return (
-    <PageShell>
-      <PageHeader
-        title="Shared Summaries"
-        description="AI summaries other people have shared with you. You can read these without access to the original document."
-      />
+    <main className="moonlit-page flex min-h-svh w-full min-w-0 flex-col overflow-y-auto text-foreground">
+      <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-5 py-6 sm:px-8 lg:px-10">
+        <header>
+          <p className="botanical-kicker">Summaries</p>
+          <h1 className="moonlit-title page-title">Shared with me</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            AI summaries other people have shared with you. Sharing a summary
+            also gives you view access to its source document.
+          </p>
+        </header>
 
         {isLoading ? (
           <div className="grid gap-4 sm:grid-cols-2">
@@ -196,7 +201,22 @@ export default function SharedSummariesPage() {
                     <h2 className="text-lg font-semibold">
                       {selected.artifact.title}
                     </h2>
-                    <CopyButton text={recordToCopyText(selected.artifact)} />
+                    <div className="flex items-center gap-2">
+                      {selected.artifact.summaryDocumentId ? (
+                        <Button asChild size="sm" variant="outline">
+                          <Link
+                            to={`/library?preview=${selected.artifact.summaryDocumentId}`}
+                          >
+                            <ExternalLink
+                              data-icon="inline-start"
+                              aria-hidden="true"
+                            />
+                            Open document
+                          </Link>
+                        </Button>
+                      ) : null}
+                      <CopyButton text={recordToCopyText(selected.artifact)} />
+                    </div>
                   </div>
                   <div className={MARKDOWN_PREVIEW_CLASS}>
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>
@@ -211,6 +231,7 @@ export default function SharedSummariesPage() {
             </div>
           </div>
         )}
-    </PageShell>
+      </div>
+    </main>
   );
 }

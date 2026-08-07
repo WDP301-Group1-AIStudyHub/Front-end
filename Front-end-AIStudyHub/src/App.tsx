@@ -48,6 +48,7 @@ const NewQuestion = lazy(() => import("@/pages/evaluation/NewQuestion"));
 const RunBenchmark = lazy(() => import("@/pages/evaluation/RunBenchmark"));
 const Summary = lazy(() => import("@/pages/evaluation/Summary"));
 const UserProfilePage = lazy(() => import("@/pages/UserProfilePage"));
+const ChangePasswordPage = lazy(() => import("@/pages/ChangePasswordPage"));
 const ProfilePage = lazy(() => import("@/pages/ProfilePage"));
 const AdminDashboardPage = lazy(
   () => import("@/pages/admin/AdminDashboardPage"),
@@ -395,6 +396,14 @@ function App() {
             element={
               <ProtectedRoute>
                 {() => routeWithShell(<UserProfilePage />)}
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile/change-password"
+            element={
+              <ProtectedRoute userOnly>
+                {() => routeWithShell(<ChangePasswordPage />)}
               </ProtectedRoute>
             }
           />
