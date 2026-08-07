@@ -139,12 +139,23 @@ export function DocumentPreviewPage({
   const fetchedDocumentIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    setDocument(initialDocument);
-
     const documentId = initialDocument?.id ||
       (/^[a-f0-9]{24}$/i.test(previewParam) ? previewParam : "");
-    if (!documentId || fetchedDocumentIdRef.current === documentId) return;
 
+    if (!documentId) {
+      setDocument(initialDocument);
+      return;
+    }
+
+    // Already have (or are fetching) the authoritative detail for this id —
+    // leave it alone. Without this guard, a parent re-render that briefly
+    // hands us a null/stale initialDocument for the same id (e.g. its list
+    // re-fetching) would wipe out an already-loaded document via the
+    // setDocument below, with nothing left to restore it since the fetch
+    // itself is correctly skipped as a dupe.
+    if (fetchedDocumentIdRef.current === documentId) return;
+
+    setDocument(initialDocument);
     fetchedDocumentIdRef.current = documentId;
     let cancelled = false;
     getDocument(documentId)
