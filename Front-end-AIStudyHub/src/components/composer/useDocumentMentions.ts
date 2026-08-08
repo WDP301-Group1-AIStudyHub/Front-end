@@ -104,11 +104,15 @@ export function useDocumentMentions({
         selectedSubjectKey && selectedSubjectKey !== sKey
       );
 
+      const docDesc = doc.title && doc.title !== doc.fileName
+        ? `${doc.title} (${sName})`
+        : sName;
+
       return {
         id: doc.id,
         type: "document",
         label: doc.fileName,
-        description: sName,
+        description: docDesc,
         icon: "document",
         metadata: {
           icon: "document",

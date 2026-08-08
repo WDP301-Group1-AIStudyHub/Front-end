@@ -484,7 +484,10 @@ function AskPageContent() {
       <AssistantRuntimeProvider runtime={runtime}>
         <SourcesPanelProvider>
           <Thread components={threadComponents} />
-          <SourcesAside className="absolute top-17 right-4 max-w-90" />
+          <SourcesAside
+            className="absolute top-17 right-4 max-w-90"
+            attachedDocuments={selectedDocs.length > 0 ? selectedDocs : documents}
+          />
         </SourcesPanelProvider>
       </AssistantRuntimeProvider>
     </PageShell>

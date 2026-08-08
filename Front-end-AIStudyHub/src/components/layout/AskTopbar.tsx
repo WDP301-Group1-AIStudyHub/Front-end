@@ -7,7 +7,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,8 +19,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
-  SparklesIcon,
-  GlobeIcon,
   MoreHorizontalIcon,
   PanelRightIcon,
   PinIcon,
@@ -32,7 +29,6 @@ import {
   Trash2Icon,
 } from "lucide-react";
 import { SourcesOverlay } from "@/components/chat/sources/SourcesAside";
-import { useArtifacts } from "@/components/chat/artifacts/artifactsStore";
 import { useAuiState, useThreadListItemRuntime } from "@assistant-ui/react";
 import { getStoredUser } from "@/services/authStorage";
 import { useChatThreadStore } from "@/store/useChatThreadStore";
@@ -54,8 +50,6 @@ export interface AskTopbarProps {
 }
 
 export function AskTopbar({
-  activeTab = "answer",
-  onTabChange,
   sessionTitle,
   createdBy,
   lastUpdated,
@@ -67,11 +61,9 @@ export function AskTopbar({
   onExportDocx,
   onDeleteSession,
 }: AskTopbarProps) {
-  const [selectedTab, setSelectedTab] = useState(activeTab);
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameValue, setRenameValue] = useState("");
   const navigate = useNavigate();
-  const { toggleRail } = useArtifacts();
 
   const threadListItem = useAuiState(
     (s) =>
@@ -97,15 +89,6 @@ export function AskTopbar({
     (threadListItem?.lastMessageAt
       ? new Date(threadListItem.lastMessageAt).toLocaleDateString()
       : "Just now");
-
-  const handleTabChange = (value: string) => {
-    if (value === "artifacts") {
-      toggleRail();
-      return;
-    }
-    setSelectedTab(value);
-    onTabChange?.(value);
-  };
 
   const handleRenameClick = () => {
     if (onRenameSession) {
@@ -144,23 +127,7 @@ export function AskTopbar({
 
   return (
     <header className="flex w-full items-center justify-between border-b bg-background px-4 py-2">
-      {/* Left Navigation Tabs */}
-      <Tabs value={selectedTab} onValueChange={handleTabChange}>
-        <TabsList variant="default">
-          <TabsTrigger value="answer" className="gap-1.5 px-3">
-            <SparklesIcon className="size-4" data-icon="inline-start" />
-            Answer
-          </TabsTrigger>
-          <TabsTrigger value="links" className="gap-1.5 px-3">
-            <GlobeIcon className="size-4" data-icon="inline-start" />
-            Links
-          </TabsTrigger>
-          <TabsTrigger value="artifacts" className="gap-1.5 px-3">
-            <SparklesIcon className="size-4" data-icon="inline-start" />
-            Artifacts
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
+      <div />
 
       {/* Right Action Controls */}
       <div className="flex items-center gap-2">

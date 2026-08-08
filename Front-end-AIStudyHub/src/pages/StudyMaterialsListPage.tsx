@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -54,6 +55,7 @@ import {
   InputGroupAddon,
   InputGroupInput,
 } from "@/components/ui/input-group";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function StudyMaterialsListPage() {
   const location = useLocation();
@@ -423,26 +425,10 @@ export default function StudyMaterialsListPage() {
                   >
                     <div className="space-y-3">
                       <div className="flex items-center justify-between gap-2">
-                        <span
-                          className={`text-2xs font-bold px-2 py-0.5 rounded-full ${
-                            mat.type === "MCQ"
-                              ? "bg-blue-500/10 text-blue-700 "
-                              : "bg-purple-500/10 text-purple-700 "
-                          }`}
-                        >
-                          {mat.type === "MCQ" ? "Quiz" : "Flashcards"}
-                        </span>
-
-                        {isGenerating && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            disabled
-                            className="flex-1 text-xs"
-                          >
-                            <Clock3 className="size-3.5 mr-1.5 animate-spin" />
-                            {isGenerating ? "Generating..." : "Generate"}
-                          </Button>
+                        {mat.type === "MCQ" ? (
+                          <Brain className="size-6 text-primary" />
+                        ) : (
+                          <HelpCircle className="size-6 text-primary" />
                         )}
 
                         {isGenerating && (
@@ -465,65 +451,53 @@ export default function StudyMaterialsListPage() {
                             Source deleted
                           </span>
                         )}
+
+                        {isSuccess && progressData[mat._id || mat.id] && (
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/20 px-2 py-1.5 rounded-lg border border-border/50">
+                            <Target className="size-3.5 text-primary" />
+                            {progressData[mat._id || mat.id].isFinished ? (
+                              <span className="font-bold text-emerald-600 ">
+                                Completed
+                              </span>
+                            ) : (
+                              <span className="font-medium text-foreground">
+                                In Progress:{" "}
+                                <span className="font-bold">
+                                  {progressData[mat._id || mat.id].currentIndex}
+                                </span>{" "}
+                                / {progressData[mat._id || mat.id].totalItems}
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
 
-                      <h3 className="text-base font-bold text-foreground line-clamp-2 leading-snug">
-                        {mat.title}
-                      </h3>
+                      <div>
+                        <h3 className="text-base font-medium text-foreground line-clamp-2 leading-snug">
+                          {mat.title}
+                        </h3>
 
-                      {isSuccess && progressData[mat._id || mat.id] && (
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/20 px-2 py-1.5 rounded-lg border border-border/50">
-                          <Target className="size-3.5 text-primary" />
-                          {progressData[mat._id || mat.id].isFinished ? (
-                            <span className="font-bold text-emerald-600 ">
-                              Completed
-                            </span>
-                          ) : (
-                            <span className="font-medium text-foreground">
-                              In Progress:{" "}
-                              <span className="font-bold">
-                                {progressData[mat._id || mat.id].currentIndex}
-                              </span>{" "}
-                              / {progressData[mat._id || mat.id].totalItems}
-                            </span>
-                          )}
-                        </div>
-                      )}
-
-                      <p className="text-2xs text-muted-foreground mt-1">
-                        Generated on {formatDate(mat.createdAt)}
-                      </p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Generated on {formatDate(mat.createdAt)}
+                        </p>
+                      </div>
                     </div>
 
-                    <div className="flex items-center justify-between gap-4 pt-2 border-t border-border/60">
+                    <div className="flex items-center justify-between gap-4 pt-2">
                       {isSuccess ? (
-                        <Button
-                          size="sm"
-                          asChild
-                          className="flex-1 font-bold text-xs"
-                        >
+                        <Button asChild>
                           <Link to={`/library/study/${mat._id || mat.id}`}>
                             <Play className="size-3.5 mr-1.5" />
                             Practice
                           </Link>
                         </Button>
                       ) : isGenerating ? (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled
-                          className="flex-1 text-xs"
-                        >
+                        <Button variant="outline" disabled>
                           <Clock3 className="size-3.5 mr-1.5 animate-spin" />
                           Processing
                         </Button>
                       ) : (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled
-                          className="flex-1 text-xs"
-                        >
+                        <Button variant="outline" disabled>
                           Failed set
                         </Button>
                       )}
@@ -550,14 +524,14 @@ export default function StudyMaterialsListPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-card border border-border rounded-2xl max-w-lg w-full overflow-hidden shadow-sm animate-in fade-in zoom-in-95 duration-200">
             {/* Dialog Header */}
-            <div className="flex items-center justify-between border-b border-border/80 px-6 py-4">
+            <div className="flex items-center justify-between px-6 py-4">
               <div className="flex items-center gap-2">
                 {customiseType === "MCQ" ? (
-                  <HelpCircle className="size-5 text-blue-500" />
+                  <HelpCircle className="size-5 text-primary" />
                 ) : (
-                  <Brain className="size-5 text-purple-500" />
+                  <Brain className="size-5 text-primary" />
                 )}
-                <h2 className="text-lg font-black text-foreground">
+                <h2 className="text-lg font-semibold text-foreground">
                   Customise {customiseType === "MCQ" ? "quiz" : "flashcards"}
                 </h2>
               </div>
@@ -576,7 +550,7 @@ export default function StudyMaterialsListPage() {
             <div className="p-6 space-y-5">
               {/* Subject Selection */}
               <div className="space-y-2">
-                <label className="text-xs font-black uppercase tracking-wider text-muted-foreground">
+                <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                   Select Subject
                 </label>
                 {subjectsLoading ? (
@@ -590,17 +564,17 @@ export default function StudyMaterialsListPage() {
                     }}
                   >
                     <SelectTrigger className="w-full h-10">
-                      <SelectValue placeholder="-- Choose a subject --" />
+                      <SelectValue placeholder="Choose a subject" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">
-                        -- Choose a subject --
-                      </SelectItem>
-                      {subjects.map((sub) => (
-                        <SelectItem key={sub._id} value={sub._id}>
-                          {sub.name} {sub.code ? `(${sub.code})` : ""}
-                        </SelectItem>
-                      ))}
+                      <SelectGroup>
+                        <SelectItem value="none">Choose a subject</SelectItem>
+                        {subjects.map((sub) => (
+                          <SelectItem key={sub._id} value={sub._id}>
+                            {sub.name} {sub.code ? `(${sub.code})` : ""}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
                     </SelectContent>
                   </Select>
                 )}
@@ -608,7 +582,7 @@ export default function StudyMaterialsListPage() {
 
               {/* Document Selection */}
               <div className="space-y-2">
-                <label className="text-xs font-black uppercase tracking-wider text-muted-foreground">
+                <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                   Select Source Document
                 </label>
                 {documentsLoading ? (
@@ -625,42 +599,44 @@ export default function StudyMaterialsListPage() {
                       <SelectValue
                         placeholder={
                           !selectedSubjectId
-                            ? "-- Choose a subject first --"
-                            : "-- Select a document --"
+                            ? "Choose a subject first"
+                            : "Select a document"
                         }
                       />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">
-                        {!selectedSubjectId
-                          ? "-- Choose a subject first --"
-                          : "-- Select a document --"}
-                      </SelectItem>
-                      {availableDocs
-                        .filter((doc) => {
-                          const docSubId =
-                            doc.subjectId ||
-                            (doc.subject && typeof doc.subject === "object"
-                              ? doc.subject._id
-                              : doc.subject);
-                          return docSubId === selectedSubjectId;
-                        })
-                        .map((doc) => {
-                          const isExtracted =
-                            doc.extractionStatus === "COMPLETED";
-                          return (
-                            <SelectItem
-                              key={doc._id || doc.id}
-                              value={doc._id || doc.id}
-                              disabled={!isExtracted}
-                            >
-                              {doc.title}{" "}
-                              {!isExtracted
-                                ? " (Processing/Not extracted)"
-                                : ""}
-                            </SelectItem>
-                          );
-                        })}
+                      <SelectGroup>
+                        <SelectItem value="none">
+                          {!selectedSubjectId
+                            ? "Choose a subject first"
+                            : "Select a document"}
+                        </SelectItem>
+                        {availableDocs
+                          .filter((doc) => {
+                            const docSubId =
+                              doc.subjectId ||
+                              (doc.subject && typeof doc.subject === "object"
+                                ? doc.subject._id
+                                : doc.subject);
+                            return docSubId === selectedSubjectId;
+                          })
+                          .map((doc) => {
+                            const isExtracted =
+                              doc.extractionStatus === "COMPLETED";
+                            return (
+                              <SelectItem
+                                key={doc._id || doc.id}
+                                value={doc._id || doc.id}
+                                disabled={!isExtracted}
+                              >
+                                {doc.title}{" "}
+                                {!isExtracted
+                                  ? " (Processing/Not extracted)"
+                                  : ""}
+                              </SelectItem>
+                            );
+                          })}
+                      </SelectGroup>
                     </SelectContent>
                   </Select>
                 )}
@@ -668,7 +644,7 @@ export default function StudyMaterialsListPage() {
 
               {/* Number of questions */}
               <div className="space-y-2">
-                <label className="text-xs font-black uppercase tracking-wider text-muted-foreground">
+                <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                   Number of {customiseType === "MCQ" ? "questions" : "cards"}
                 </label>
                 <div className="grid grid-cols-3 gap-2">
@@ -682,8 +658,6 @@ export default function StudyMaterialsListPage() {
                       type="button"
                       onClick={() => setQuestionCount(opt.value)}
                       aria-pressed={questionCount === opt.value}
-                      className="px-3 text-xs"
-                      size="sm"
                       variant={
                         questionCount === opt.value ? "default" : "outline"
                       }
@@ -696,7 +670,7 @@ export default function StudyMaterialsListPage() {
 
               {/* Level of difficulty */}
               <div className="space-y-2">
-                <label className="text-xs font-black uppercase tracking-wider text-muted-foreground">
+                <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                   Level of difficulty
                 </label>
                 <div className="grid grid-cols-3 gap-2">
@@ -710,8 +684,6 @@ export default function StudyMaterialsListPage() {
                       type="button"
                       onClick={() => setDifficulty(opt.value)}
                       aria-pressed={difficulty === opt.value}
-                      className="px-3 text-xs"
-                      size="sm"
                       variant={difficulty === opt.value ? "default" : "outline"}
                     >
                       {opt.label}
@@ -722,17 +694,16 @@ export default function StudyMaterialsListPage() {
 
               {/* Topic focus */}
               <div className="space-y-2">
-                <label className="text-xs font-black uppercase tracking-wider text-muted-foreground">
+                <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                   What should the topic be?
                 </label>
-                <textarea
+                <Textarea
                   value={topicFocus}
                   onChange={(e) => setTopicFocus(e.target.value)}
                   placeholder="Things to try:
 • Create a quiz to help me prepare for my history exam on Ancient Egypt
 • Focus solely on key concepts of physics
 • Restrict questions to specific sections"
-                  className="w-full min-h-24 p-3 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary resize-none"
                 />
               </div>
             </div>

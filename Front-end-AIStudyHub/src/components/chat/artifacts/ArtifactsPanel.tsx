@@ -15,17 +15,22 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import type { DocumentItem } from "@/types/document";
 import type { ArtifactRecord, ArtifactType } from "@/services/artifactApi";
 import { useArtifacts } from "./artifactsStore";
 import { TYPE_META } from "./artifactTypes";
 import { ArtifactPreviewDialog } from "./ArtifactPreviewDialog";
-import { CreateArtifactDialog } from "./CreateArtifactDialog";
+import { CreateArtifactDialog, type SessionSource } from "./CreateArtifactDialog";
 
 export function ArtifactsPanel({
   className,
+  attachedDocuments,
+  sources,
 }: {
   className?: string;
   collapsible?: boolean;
+  attachedDocuments?: DocumentItem[];
+  sources?: SessionSource[];
 }) {
   const { artifacts, create, remove, retry } = useArtifacts();
   const [isOpen, setIsOpen] = useState(true);
@@ -193,6 +198,8 @@ export function ArtifactsPanel({
       <CreateArtifactDialog
         type={createType}
         onClose={() => setCreateType(null)}
+        attachedDocuments={attachedDocuments}
+        sources={sources}
         onCreate={async (type, instructions, scopeOptions) => {
           await create(type, instructions, scopeOptions);
         }}

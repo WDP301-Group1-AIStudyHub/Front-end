@@ -63,7 +63,7 @@ export function ArtifactPreviewDialog({
   const content = record?.content;
   return (
     <Dialog onOpenChange={(open) => !open && onClose()} open={record !== null}>
-      <DialogContent className="sm:max-w-3xl">
+      <DialogContent className="sm:max-w-4xl">
         {record && (
           <>
             <DialogHeader>
@@ -78,7 +78,7 @@ export function ArtifactPreviewDialog({
             </DialogHeader>
 
             {record.type === "FLASHCARD" && content && "items" in content && (
-              <div className="max-h-[70vh] overflow-y-auto">
+              <div className="max-h-[80vh] overflow-y-auto">
                 <FlashcardStudy
                   material={recordToStudyMaterial(record)}
                   title={record.title}
@@ -87,7 +87,7 @@ export function ArtifactPreviewDialog({
             )}
 
             {record.type === "QUIZ" && content && "items" in content && (
-              <div className="max-h-[70vh] overflow-y-auto">
+              <div className="max-h-[80vh] overflow-y-auto">
                 <McqQuiz
                   items={content.items as IMcqItem[]}
                   materialId={record._id}
